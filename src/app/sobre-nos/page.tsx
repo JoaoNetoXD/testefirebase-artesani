@@ -3,7 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import Image from 'next/image';
-import { Target, Eye, Gem, BadgeCheck, Users, Building } from 'lucide-react';
+import { Target, Eye, Gem, BadgeCheck, Users, Building, Award, ShieldCheck } from 'lucide-react'; // Adicionado Award, ShieldCheck
 
 export default function SobreNosPage() {
   const pilares = [
@@ -17,7 +17,7 @@ export default function SobreNosPage() {
       icon: Eye,
       title: 'Nossa Visão',
       description:
-        'Ser reconhecida como a principal farmácia de manipulação em Teresina e região, referência em qualidade, inovação e cuidado farmacêutico, expandindo nossa presença e impacto positivo na comunidade.',
+        'Ser reconhecida como farmácia de manipulação de referência em Teresina e região, destacando-nos pela qualidade, inovação e cuidado farmacêutico, expandindo nosso impacto positivo na comunidade.',
     },
     {
       icon: Gem,
@@ -34,73 +34,114 @@ export default function SobreNosPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />
-      <main className="flex-grow container mx-auto px-4 py-8 mb-20 md:mb-0">
-        <section className="py-12 md:py-16 animate-fade-in-up">
-          <div className="text-center mb-12">
+      <main className="flex-grow mb-20 md:mb-0">
+        <section className="py-12 md:py-16 bg-gradient-to-b from-primary/10 to-transparent">
+          <div className="container mx-auto px-4 text-center animate-fade-in-up">
             <h1 className="text-4xl sm:text-5xl font-headline font-bold text-primary mb-4">
-              Sobre a Farmácia Artesani Teresina
+              Farmácia Artesani: Cuidando de Você em Teresina
             </h1>
             <p className="text-lg md:text-xl text-foreground/80 max-w-3xl mx-auto">
-              Sua saúde e bem-estar são a nossa prioridade. Conheça mais sobre nossa história e compromisso com Teresina.
+              Descubra como unimos tradição, inovação e um cuidado farmacêutico excepcional para promover sua saúde e bem-estar.
             </p>
           </div>
+        </section>
 
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center mb-16">
-            <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-              <h2 className="text-3xl font-headline font-semibold text-foreground mb-6">Quem Somos</h2>
+        <section className="py-12 md:py-16">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center md:text-left animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+              <h2 className="text-3xl font-headline font-semibold text-primary mb-6">
+                Tradição e Inovação em Manipulados
+              </h2>
               <div className="space-y-4 text-foreground/90 text-base md:text-lg leading-relaxed">
                 <p>
-                  Bem-vindo à Farmácia Artesani em Teresina! Somos uma unidade orgulhosa da renomada rede Artesani, trazendo para a capital piauiense toda a tradição, qualidade e inovação que marcam nossa trajetória desde 1989.
-                  Com uma equipe de farmacêuticos altamente qualificados e apaixonados pelo que fazem, oferecemos um atendimento personalizado e soluções individualizadas para suas necessidades de saúde e bem-estar.
+                  Bem-vindo à Farmácia Artesani! Há mais de 30 anos, a Artesani é sinônimo de excelência e confiança em medicamentos manipulados. Em Teresina, orgulhosamente trazemos essa rica herança, combinando a profunda tradição farmacêutica com as mais modernas tecnologias para cuidar da sua saúde de forma única e personalizada.
                 </p>
                 <p>
-                  Nossa estrutura em Teresina foi cuidadosamente planejada para seguir os mais rigorosos padrões de qualidade, com laboratórios modernos e equipados para a manipulação de medicamentos, cosméticos e suplementos.
-                  Acreditamos que cada cliente é único, e por isso, dedicamos nosso conhecimento e tecnologia para formular produtos que realmente façam a diferença na sua vida.
+                  Nossa unidade em Teresina é um espaço dedicado integralmente ao seu bem-estar. Aqui, cada detalhe, desde a rigorosa seleção de ativos até a manipulação precisa em nossos laboratórios de ponta, é pensado para oferecer o máximo em segurança e eficácia.
                 </p>
                 <p>
-                  A confiança depositada em nós pela comunidade de Teresina é o nosso maior incentivo. Estamos comprometidos em ser mais do que uma farmácia: queremos ser seu parceiro de confiança na jornada por uma vida mais saudável e plena.
+                  Acreditamos que a saúde é uma jornada individual e que o cuidado farmacêutico de qualidade faz toda a diferença. Por isso, nosso compromisso vai além da simples manipulação de fórmulas: é sobre entender profundamente suas necessidades, oferecer orientação especializada e construir uma relação de confiança e parceria com cada cliente. Conte com a Farmácia Artesani Teresina para ser sua aliada em busca de uma vida mais saudável e plena.
                 </p>
               </div>
             </div>
-            <div className="relative aspect-video w-full h-64 md:h-auto rounded-lg overflow-hidden shadow-xl animate-fade-in-up" style={{ animationDelay: '400ms' }} data-ai-hint="pharmacy team">
-              <Image
-                src="https://placehold.co/600x400.png" 
-                alt="Equipe Farmácia Artesani Teresina"
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
-              />
+          </div>
+        </section>
+        
+        <section className="py-12 md:py-16 bg-muted/20">
+          <div className="container mx-auto px-4">
+            <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-center">
+              <div 
+                className="relative order-last md:order-first animate-fade-in-left" 
+                style={{ animationDelay: '300ms' }}
+              >
+                <div className="relative w-full max-w-sm mx-auto md:max-w-none aspect-[4/5] group">
+                  <Image
+                    src="/images/dr-guilherme-xavier.png"
+                    alt="Dr. Guilherme Xavier - Farmacêutico Responsável na Farmácia Artesani Teresina"
+                    fill
+                    sizes="(max-width: 768px) 80vw, (max-width: 1024px) 40vw, 350px"
+                    className="object-contain rounded-lg shadow-2xl group-hover:scale-105 transition-transform duration-300"
+                    data-ai-hint="pharmacist portrait"
+                  />
+                   <div className="absolute -bottom-4 -right-4 bg-accent text-accent-foreground p-3 rounded-full shadow-lg">
+                     <ShieldCheck size={32} />
+                   </div>
+                </div>
+              </div>
+              <div className="animate-fade-in-right" style={{ animationDelay: '500ms' }}>
+                <h2 className="text-3xl font-headline font-semibold text-primary mb-3">
+                  Cuidado Farmacêutico de Confiança
+                </h2>
+                <p className="text-xl text-foreground/70 mb-6">
+                  Dr. Guilherme Xavier, Farmacêutico Responsável
+                </p>
+                <div className="space-y-4 text-foreground/90 text-base md:text-lg leading-relaxed">
+                  <p>
+                    Com paixão pela ciência farmacêutica e um compromisso genuíno com o bem-estar dos pacientes, Dr. Guilherme Xavier lidera nossa equipe em Teresina. Sua vasta experiência em manipulação magistral garante que cada fórmula seja preparada com precisão, segurança e a máxima qualidade que você merece.
+                  </p>
+                  <p>
+                    Dr. Guilherme acredita no atendimento humanizado e na importância de ouvir cada cliente para oferecer soluções verdadeiramente personalizadas. Ele supervisiona de perto todos os processos, desde a seleção rigorosa de matérias-primas até a entrega do seu medicamento, assegurando que você receba o melhor cuidado possível em cada etapa.
+                  </p>
+                  <blockquote className="border-l-4 border-accent pl-4 italic text-foreground/80 my-4">
+                    "Minha missão é combinar o conhecimento técnico com a atenção individualizada, proporcionando tratamentos eficazes e seguros para a comunidade de Teresina, sempre com o padrão de qualidade Artesani."
+                  </blockquote>
+                </div>
+              </div>
             </div>
           </div>
+        </section>
 
-          <div className="mb-16">
-            <h2 className="text-3xl font-headline font-semibold text-foreground mb-8 text-center animate-fade-in-up" style={{ animationDelay: '500ms' }}>Nossos Pilares</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <section className="py-12 md:py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-headline font-semibold text-primary mb-10 text-center animate-fade-in-up" style={{ animationDelay: '500ms' }}>Nossos Pilares</h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
               {pilares.map((pilar, index) => (
                 <div
                   key={pilar.title}
-                  className="bg-card text-card-foreground p-6 rounded-xl shadow-lg hover:shadow-primary/20 transition-shadow duration-300 flex flex-col items-center text-center animate-fade-in-up"
+                  className="bg-card text-card-foreground p-6 rounded-xl shadow-lg hover:shadow-primary/20 transition-all duration-300 flex flex-col items-center text-center transform hover:-translate-y-1 animate-fade-in-up"
                   style={{ animationDelay: `${600 + index * 150}ms` }}
                 >
-                  <pilar.icon className="h-12 w-12 text-accent mb-4" />
-                  <h3 className="text-xl font-headline font-semibold text-primary mb-2">{pilar.title}</h3>
+                  <pilar.icon className="h-12 w-12 text-accent mb-5" />
+                  <h3 className="text-xl font-headline font-semibold text-card-foreground mb-2">{pilar.title}</h3>
                   <p className="text-sm text-card-foreground/80 flex-grow">{pilar.description}</p>
                 </div>
               ))}
             </div>
           </div>
+        </section>
           
-          <div className="text-center animate-fade-in-up" style={{ animationDelay: '1200ms' }}>
+        <section className="py-12 md:py-16 text-center bg-primary/5">
+          <div className="container mx-auto px-4 animate-fade-in-up" style={{ animationDelay: '1000ms' }}>
             <h3 className="text-2xl font-headline font-semibold text-primary mb-3">Visite-nos em Teresina!</h3>
             <p className="text-foreground/80 mb-6 max-w-xl mx-auto">
-                Estamos localizados na Rua 7 de Setembro, N° 226, Centro Sul. Venha nos conhecer e descubra como podemos cuidar da sua saúde!
+                Estamos localizados na Rua 7 de Setembro, N° 226, Centro Sul. Venha nos conhecer e descubra como podemos cuidar da sua saúde com a qualidade e confiança que só a Artesani oferece!
             </p>
             {/* Pode adicionar um botão para o mapa ou mais informações de contato aqui */}
           </div>
-
         </section>
+
       </main>
       <Footer />
       <MobileBottomNav />
