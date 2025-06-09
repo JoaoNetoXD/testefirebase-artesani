@@ -94,14 +94,14 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
 
         {/* Product Info */}
         <div className="space-y-6">
-          <h1 className="text-4xl font-headline font-bold">{product.name}</h1>
+          <h1 className="text-4xl font-headline font-bold text-foreground">{product.name}</h1>
           <div className="flex items-center space-x-2 text-muted-foreground">
             <div className="flex text-yellow-400">
               {[...Array(5)].map((_, i) => <Star key={i} className={i < 4 ? "fill-current" : ""} size={20}/>)}
             </div>
             <span>(123 avaliações)</span>
             <span>|</span>
-            <span>Categoria: <Link href={`/category/${product.category.toLowerCase().replace(/\s+/g, '-')}`} className="text-primary hover:underline">{product.category}</Link></span>
+            <span>Categoria: <Link href={`/category/${product.category.toLowerCase().replace(/\s+/g, '-')}`} className="text-accent hover:underline">{product.category}</Link></span>
           </div>
           <p className="text-3xl font-semibold text-primary">
             R$ {product.price.toFixed(2).replace('.', ',')}
@@ -127,7 +127,7 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
             <Button
               size="lg"
               variant="outline"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto border-primary text-primary hover:bg-primary/10"
               onClick={handleToggleFavorite}
               aria-label={currentIsFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
             >
@@ -143,24 +143,24 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
 
       {/* Tabs for more details */}
       <Tabs defaultValue="description" className="mb-12">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 mb-4">
-          <TabsTrigger value="description">Descrição Completa</TabsTrigger>
-          <TabsTrigger value="ingredients">Ingredientes</TabsTrigger>
-          <TabsTrigger value="reviews">Avaliações</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 mb-4 bg-muted">
+          <TabsTrigger value="description" className="data-[state=active]:bg-card data-[state=active]:text-card-foreground">Descrição Completa</TabsTrigger>
+          <TabsTrigger value="ingredients" className="data-[state=active]:bg-card data-[state=active]:text-card-foreground">Ingredientes</TabsTrigger>
+          <TabsTrigger value="reviews" className="data-[state=active]:bg-card data-[state=active]:text-card-foreground">Avaliações</TabsTrigger>
         </TabsList>
-        <TabsContent value="description" className="p-6 bg-card rounded-md shadow">
-          <h3 className="text-xl font-headline mb-2">Detalhes do Produto</h3>
-          <p className="text-foreground/80 whitespace-pre-line">{product.description}\n\nMais informações sobre o uso e benefícios do produto aqui. Consulte sempre um profissional de saúde.</p>
+        <TabsContent value="description" className="p-6 bg-card rounded-md shadow-lg">
+          <h3 className="text-xl font-headline mb-2 text-card-foreground">Detalhes do Produto</h3>
+          <p className="text-card-foreground/80 whitespace-pre-line">{product.description}\n\nMais informações sobre o uso e benefícios do produto aqui. Consulte sempre um profissional de saúde.</p>
         </TabsContent>
-        <TabsContent value="ingredients" className="p-6 bg-card rounded-md shadow">
-          <h3 className="text-xl font-headline mb-2">Composição</h3>
-          <ul className="list-disc list-inside text-foreground/80">
+        <TabsContent value="ingredients" className="p-6 bg-card rounded-md shadow-lg">
+          <h3 className="text-xl font-headline mb-2 text-card-foreground">Composição</h3>
+          <ul className="list-disc list-inside text-card-foreground/80">
             {product.ingredients?.split(',').map(ing => <li key={ing.trim()}>{ing.trim()}</li>) || <li>Informação não disponível.</li>}
           </ul>
         </TabsContent>
-        <TabsContent value="reviews" className="p-6 bg-card rounded-md shadow">
-          <h3 className="text-xl font-headline mb-2">Avaliações de Clientes</h3>
-          <p className="text-foreground/80">Funcionalidade de avaliações a ser implementada.</p>
+        <TabsContent value="reviews" className="p-6 bg-card rounded-md shadow-lg">
+          <h3 className="text-xl font-headline mb-2 text-card-foreground">Avaliações de Clientes</h3>
+          <p className="text-card-foreground/80">Funcionalidade de avaliações a ser implementada.</p>
           {/* Placeholder for reviews */}
         </TabsContent>
       </Tabs>
@@ -168,10 +168,11 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
       {/* Related Products */}
       {relatedProducts.length > 0 && (
         <section>
-          <h2 className="text-3xl font-headline font-semibold mb-6">Produtos Relacionados</h2>
+          <h2 className="text-3xl font-headline font-semibold mb-6 text-foreground">Produtos Relacionados</h2>
           <ProductList products={relatedProducts} />
         </section>
       )}
     </div>
   );
 }
+
