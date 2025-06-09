@@ -22,7 +22,7 @@ export function Logo({ className, width = DEFAULT_WIDTH, height = DEFAULT_HEIGHT
         width={width}
         height={height}
         priority={priority}
-        className="object-contain border-4 border-red-500" // Added visible red border for debugging
+        className="object-contain" // Borda vermelha removida daqui
         data-ai-hint="pharmacy logo"
       />
     </Link>
