@@ -67,27 +67,29 @@ export default function HomePage() {
             className="flex justify-center md:justify-end mt-8 md:mt-0 animate-fade-in"
             style={{ animationDelay: '400ms' }}
           >
-            <div className="relative bg-card p-4 sm:p-6 rounded-xl shadow-2xl max-w-sm w-full hover:shadow-primary/20 transition-shadow duration-300">
-               <Badge className="absolute top-4 right-4 bg-accent text-accent-foreground py-1 px-3 text-sm">Novidade!</Badge>
-              <div className="aspect-square relative w-full rounded-lg overflow-hidden mb-4">
-                <Image
-                  src={featuredProduct.images[0]}
-                  alt={featuredProduct.name}
-                  fill
-                  sizes="(max-width: 768px) 80vw, 400px"
-                  className="object-contain group-hover:scale-105 transition-transform duration-300"
-                  data-ai-hint="product bottle"
-                />
-              </div>
-              <h3 className="text-lg font-semibold text-card-foreground">{featuredProduct.name}</h3>
-              <p className="text-sm text-card-foreground/80 line-clamp-2 mb-2">{featuredProduct.description}</p>
-              <div className="flex items-center justify-between">
-                <p className="text-xl font-bold text-accent">R$ {featuredProduct.price.toFixed(2).replace('.',',')}</p>
-                <div className="flex items-center gap-1 text-sm text-yellow-500">
-                  <Star size={18} className="fill-current" /> 4.8/5
+            <Link href={`/products/${featuredProduct.slug}`} passHref className="block w-full max-w-sm">
+              <div className="relative bg-card p-4 sm:p-6 rounded-xl shadow-2xl w-full hover:shadow-primary/20 transition-shadow duration-300 group">
+                <Badge className="absolute top-4 right-4 bg-accent text-accent-foreground py-1 px-3 text-sm z-10">Novidade!</Badge>
+                <div className="aspect-square relative w-full rounded-lg overflow-hidden mb-4">
+                  <Image
+                    src={featuredProduct.images[0]}
+                    alt={featuredProduct.name}
+                    fill
+                    sizes="(max-width: 768px) 80vw, 400px"
+                    className="object-contain group-hover:scale-105 transition-transform duration-300"
+                    data-ai-hint="product bottle"
+                  />
+                </div>
+                <h3 className="text-lg font-semibold text-card-foreground group-hover:text-accent transition-colors">{featuredProduct.name}</h3>
+                <p className="text-sm text-card-foreground/80 line-clamp-2 mb-2">{featuredProduct.description}</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xl font-bold text-accent">R$ {featuredProduct.price.toFixed(2).replace('.',',')}</p>
+                  <div className="flex items-center gap-1 text-sm text-yellow-500">
+                    <Star size={18} className="fill-current" /> 4.8/5
+                  </div>
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </section>
