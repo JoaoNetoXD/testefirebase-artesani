@@ -1,4 +1,6 @@
+
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/generate-product-description.ts';
+// Removed import for '@/ai/flows/generate-product-description.ts';
+// This file can be used to register other Genkit flows if needed in the future.

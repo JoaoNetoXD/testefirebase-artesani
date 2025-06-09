@@ -9,9 +9,9 @@ import {
   Users, 
   BarChart2, 
   Settings, 
-  BotMessageSquare, 
-  Archive, // For Inventory
-  ArrowLeftRight // For general purpose, or replace if a better 'store front' icon is found
+  Archive, 
+  ArrowLeftRight,
+  PackagePlus // Changed icon
 } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
 import { cn } from '@/lib/utils';
@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 const adminNavLinks = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/products', label: 'Produtos', icon: Package },
-  { href: '/admin/products/new', label: 'Novo Produto (IA)', icon: BotMessageSquare, className: "text-accent-foreground bg-accent hover:bg-accent/90" },
+  { href: '/admin/products/new', label: 'Novo Produto', icon: PackagePlus }, // Changed label and icon, removed special class
   { href: '/admin/orders', label: 'Pedidos', icon: ShoppingBag },
   { href: '/admin/customers', label: 'Clientes', icon: Users },
   { href: '/admin/inventory', label: 'Estoque', icon: Archive },
@@ -46,7 +46,6 @@ export function AdminSidebar() {
                            
           const isNewProductActive = link.href === '/admin/products/new' && pathname === '/admin/products/new';
 
-
           return (
             <Link
               key={link.label}
@@ -55,8 +54,8 @@ export function AdminSidebar() {
                 "flex items-center space-x-3 p-2.5 rounded-md transition-colors text-sm font-medium",
                 (isActive || isNewProductActive)
                   ? "bg-primary text-primary-foreground shadow-sm" 
-                  : "hover:bg-muted hover:text-primary",
-                link.className // Apply special class for AI button
+                  : "hover:bg-muted hover:text-primary"
+                // link.className was removed as special styling for AI button is no longer needed
               )}
               aria-current={isActive || isNewProductActive ? "page" : undefined}
             >

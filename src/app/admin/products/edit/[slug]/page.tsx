@@ -1,16 +1,8 @@
 
-import { ProductFormAI } from '@/components/admin/ProductFormAI';
-import { mockProducts, getProductBySlug } from '@/lib/data'; // Assumindo que getProductBySlug existe
+import { ProductForm } from '@/components/admin/ProductForm';
+import { mockProducts, getProductBySlug } from '@/lib/data';
 import type { Product } from '@/lib/types';
 
-// Esta função é opcional se você não estiver usando SSG intensamente para esta rota admin
-// ou se os slugs dos produtos não forem conhecidos em tempo de build.
-// Se for usar, ela ajudaria o Next.js a saber quais slugs existem.
-// export async function generateStaticParams() {
-//   return mockProducts.map((product) => ({
-//     slug: product.slug,
-//   }));
-// }
 
 export default function EditProductPage({ params }: { params: { slug: string } }) {
   const product = getProductBySlug(params.slug);
@@ -27,7 +19,7 @@ export default function EditProductPage({ params }: { params: { slug: string } }
   return (
     <div>
       <h1 className="text-3xl font-headline mb-8">Editar Produto</h1>
-      <ProductFormAI productToEdit={product} />
+      <ProductForm productToEdit={product} />
     </div>
   );
 }
