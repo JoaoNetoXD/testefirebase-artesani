@@ -10,20 +10,23 @@ interface LogoProps {
   priority?: boolean;
 }
 
-// Default size for the logo image, can be overridden by props
 const DEFAULT_WIDTH = 70;
 const DEFAULT_HEIGHT = 70;
 
 export function Logo({ className, width = DEFAULT_WIDTH, height = DEFAULT_HEIGHT, priority = false }: LogoProps) {
+  // TEMPORARY: Using a placeholder image for troubleshooting
+  const placeholderSrc = `https://placehold.co/${width}x${height}.png`;
+
   return (
     <Link href="/" className={cn('inline-block align-middle', className)}>
       <Image
-        src="/images/artesani-logo.png" // IMPORTANT: User needs to place their logo image here
-        alt="Farmácia Artesani Logo"
+        src={placeholderSrc} // Using the placeholder
+        alt="Farmácia Artesani Logo - Placeholder"
         width={width}
         height={height}
         priority={priority}
-        className="object-contain" // Ensures the logo scales nicely within the dimensions
+        className="object-contain"
+        data-ai-hint="logo placeholder"
       />
     </Link>
   );
