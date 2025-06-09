@@ -1,8 +1,15 @@
-
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { CartProvider } from '@/context/CartContext';
+import { Inter } from 'next/font/google'; // Import next/font
+
+// Configure Inter font
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter', // Expose as CSS variable
+  display: 'swap',         // Good for performance and avoiding FOUT/FOIT
+});
 
 export const metadata: Metadata = {
   title: 'Artesani Pharmacy Online',
@@ -15,11 +22,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    // Apply the font variable to the html tag
+    <html lang="pt-BR" className={inter.variable}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        {/* Google Font <link> tags previously here are now removed */}
       </head>
       <body className="font-body antialiased">
         <CartProvider>
