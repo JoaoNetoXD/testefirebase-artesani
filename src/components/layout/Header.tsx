@@ -68,7 +68,7 @@ export function Header() {
       {/* Main Header */}
       <div className="bg-primary text-primary-foreground shadow-md">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <Logo taglineClassName="text-primary-foreground/70" />
+          <Logo priority />
 
           {/* Desktop Navigation Links (subset) */}
           <nav className="hidden lg:flex items-center space-x-5 font-medium">
@@ -114,7 +114,7 @@ export function Header() {
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[320px] bg-card text-card-foreground p-0">
                 <div className="p-4 border-b border-border">
-                  <Logo textClassName="text-primary" taglineClassName="text-muted-foreground" />
+                  <Logo width={60} height={60} />
                 </div>
                 <nav className="flex flex-col space-y-1 p-4">
                   {mainNavLinks.map((link) => (

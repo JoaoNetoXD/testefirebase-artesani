@@ -21,8 +21,8 @@ export function AdminSidebar() {
 
   return (
     <aside className="w-64 min-h-screen bg-primary text-primary-foreground p-4 flex flex-col fixed top-0 left-0 shadow-xl">
-      <div className="mb-8">
-        <Logo />
+      <div className="mb-8 flex justify-center">
+        <Logo width={60} height={60} />
       </div>
       <nav className="flex-grow space-y-2">
         {adminNavLinks.map((link) => {

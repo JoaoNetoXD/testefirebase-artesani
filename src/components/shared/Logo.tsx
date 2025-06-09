@@ -1,26 +1,30 @@
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 interface LogoProps {
   className?: string;
-  textClassName?: string;
-  taglineClassName?: string;
+  width?: number;
+  height?: number;
+  priority?: boolean;
 }
 
-export function Logo({ className, textClassName, taglineClassName }: LogoProps) {
+// Default size for the logo image, can be overridden by props
+const DEFAULT_WIDTH = 70;
+const DEFAULT_HEIGHT = 70;
+
+export function Logo({ className, width = DEFAULT_WIDTH, height = DEFAULT_HEIGHT, priority = false }: LogoProps) {
   return (
-    <Link href="/" className={cn(`inline-block`, className)}>
-      {/* The image shows an actual "Artesani" logo image, but we'll use text for now. */}
-      {/* The background is handled by the parent Header typically */}
-      <div>
-        <h1 className={cn("text-2xl font-headline font-bold tracking-tight text-primary-foreground", textClassName)}>
-          Farmácia Artesani
-        </h1>
-        <p className={cn("text-xs text-muted-foreground", taglineClassName)}>
-          Sua saúde em boas mãos
-        </p>
-      </div>
+    <Link href="/" className={cn('inline-block align-middle', className)}>
+      <Image
+        src="/images/artesani-logo.png" // IMPORTANT: User needs to place their logo image here
+        alt="Farmácia Artesani Logo"
+        width={width}
+        height={height}
+        priority={priority}
+        className="object-contain" // Ensures the logo scales nicely within the dimensions
+      />
     </Link>
   );
 }
