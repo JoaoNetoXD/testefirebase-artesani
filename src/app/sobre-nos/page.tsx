@@ -3,7 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import Image from 'next/image';
-import { Target, Eye, Gem, BadgeCheck, Users, Building, Award, ShieldCheck } from 'lucide-react'; // Adicionado Award, ShieldCheck
+import { Target, Eye, Gem, BadgeCheck, Users, Building, Award, ShieldCheck } from 'lucide-react';
 
 export default function SobreNosPage() {
   const pilares = [
@@ -78,7 +78,7 @@ export default function SobreNosPage() {
               >
                 <div className="relative w-full max-w-sm mx-auto md:max-w-none aspect-[4/5] group">
                   <Image
-                    src="/images/dr-guilherme-xavier.png"
+                    src="https://placehold.co/400x500.png" 
                     alt="Dr. Guilherme Xavier - Farmacêutico Responsável na Farmácia Artesani Teresina"
                     fill
                     sizes="(max-width: 768px) 80vw, (max-width: 1024px) 40vw, 350px"
