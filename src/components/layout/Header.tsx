@@ -55,7 +55,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50">
-      <div className="bg-primary/80 text-primary-foreground/90">
+      <div className="bg-primary text-primary-foreground/90"> {/* Alterado de bg-primary/80 para bg-primary */}
         <div className="container mx-auto px-4 py-1.5 flex flex-col sm:flex-row items-center justify-between text-xs">
           <div className="flex items-center gap-4">
             <a href="tel:+5511999999999" className="flex items-center gap-1 hover:text-primary-foreground">
