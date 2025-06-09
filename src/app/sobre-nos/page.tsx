@@ -71,18 +71,18 @@ export default function SobreNosPage() {
         
         <section className="py-12 md:py-16 bg-muted/20">
           <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-center">
+            <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-stretch"> {/* items-stretch para igualar altura */}
               <div 
-                className="relative order-last md:order-first animate-fade-in-left" 
+                className="relative order-last md:order-first animate-fade-in-left flex flex-col justify-center" 
                 style={{ animationDelay: '300ms' }}
               >
-                <div className="relative w-full max-w-sm mx-auto md:max-w-none aspect-[4/5] group">
+                <div className="relative w-full h-full min-h-[400px] md:min-h-[500px] group"> {/* Aumentado min-h */}
                   <Image
                     src="https://i.imgur.com/Z9NogEk.png" 
                     alt="Dr. Guilherme Xavier - Farmacêutico Responsável na Farmácia Artesani Teresina"
                     fill
-                    sizes="(max-width: 768px) 80vw, (max-width: 1024px) 40vw, 350px"
-                    className="object-contain rounded-lg shadow-2xl group-hover:scale-105 transition-transform duration-300"
+                    sizes="(max-width: 768px) 80vw, (max-width: 1024px) 40vw, 500px"
+                    className="object-cover rounded-lg shadow-2xl group-hover:scale-105 transition-transform duration-300" // object-cover para preencher
                     data-ai-hint="pharmacist portrait professional" 
                   />
                    <div className="absolute -bottom-4 -right-4 bg-accent text-accent-foreground p-3 rounded-full shadow-lg">
@@ -90,8 +90,8 @@ export default function SobreNosPage() {
                    </div>
                 </div>
               </div>
-              <div className="animate-fade-in-right" style={{ animationDelay: '500ms' }}>
-                <h2 className="text-3xl font-headline font-semibold text-primary mb-3">
+              <div className="animate-fade-in-right flex flex-col justify-center" style={{ animationDelay: '500ms' }}>
+                <h2 className="text-4xl font-headline font-semibold text-foreground mb-3"> {/* Alterado para text-foreground e text-4xl */}
                   Cuidado Farmacêutico de Confiança
                 </h2>
                 <p className="text-xl text-foreground/70 mb-6">
@@ -120,7 +120,7 @@ export default function SobreNosPage() {
               {pilares.map((pilar, index) => (
                 <div
                   key={pilar.title}
-                  className="bg-card text-card-foreground p-6 rounded-xl shadow-lg hover:shadow-primary/20 transition-all duration-300 flex flex-col items-center text-center transform hover:-translate-y-1 animate-fade-in-up"
+                  className="bg-card text-card-foreground p-6 rounded-xl shadow-lg hover:shadow-primary/20 transition-all duration-300 flex flex-col items-center text-center transform hover:-translate-y-1 animate-fade-in-up h-full" // Adicionado h-full
                   style={{ animationDelay: `${600 + index * 150}ms` }}
                 >
                   <pilar.icon className="h-12 w-12 text-accent mb-5" />
