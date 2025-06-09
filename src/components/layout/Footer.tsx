@@ -1,7 +1,9 @@
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
-  const mapEmbedUrl = "https://www.google.com/maps/embed/v1/place?q=Rua%207%20de%20Setembro%2C%20226%2C%20Centro%20Sul%2C%20Teresina%20-%20PI&zoom=16";
+  // Substitua SUA_API_KEY_AQUI pela sua chave de API do Google Maps
+  const apiKeyPlaceholder = "SUA_API_KEY_AQUI";
+  const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?q=Rua%207%20de%20Setembro%2C%20226%2C%20Centro%20Sul%2C%20Teresina%20-%20PI&zoom=16&key=${apiKeyPlaceholder}`;
 
   return (
     <footer className="bg-primary text-primary-foreground py-10 mt-16 border-t-4 border-secondary">
@@ -43,7 +45,7 @@ export function Footer() {
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
-                allowFullScreen={false} // Usually not needed or wanted for small footer maps
+                allowFullScreen={false}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 title="Localização Farmácia Artesani Teresina - Rodapé"

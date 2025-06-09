@@ -33,8 +33,9 @@ export default function SobreNosPage() {
     },
   ];
 
-  const mapEmbedUrl = "https://www.google.com/maps/embed/v1/place?q=Rua%207%20de%20Setembro%2C%20226%2C%20Centro%20Sul%2C%20Teresina%20-%20PI&zoom=17";
-
+  // Substitua SUA_API_KEY_AQUI pela sua chave de API do Google Maps
+  const apiKeyPlaceholder = "SUA_API_KEY_AQUI"; 
+  const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?q=Rua%207%20de%20Setembro%2C%20226%2C%20Centro%20Sul%2C%20Teresina%20-%20PI&zoom=17&key=${apiKeyPlaceholder}`;
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -59,10 +60,10 @@ export default function SobreNosPage() {
               </h2>
               <div className="space-y-4 text-foreground/90 text-base md:text-lg leading-relaxed">
                 <p>
-                  Bem-vindo à Farmácia Artesani! Com uma rica herança de excelência e confiança em medicamentos manipulados, estamos orgulhosamente presentes em Teresina, combinando profunda tradição farmacêutica com as mais modernas tecnologias para cuidar da sua saúde de forma única e personalizada.
+                  Bem-vindo à Farmácia Artesani! Com uma herança de excelência e confiança, estamos orgulhosamente presentes em Teresina há anos, combinando profunda tradição farmacêutica com as mais modernas tecnologias para cuidar da sua saúde de forma única e personalizada.
                 </p>
                 <p>
-                  Nossa unidade em Teresina é um espaço dedicado integralmente ao seu bem-estar. Aqui, cada detalhe, desde a rigorosa seleção de ativos até a manipulação precisa em nossos laboratórios de ponta, é pensado para oferecer o máximo em segurança e eficácia.
+                  Nossa unidade em Teresina é um espaço dedicado integralmente ao seu bem-estar. Aqui, cada detalhe, desde a rigorosa seleção de ativos até a manipulação precisa em nossos laboratórios de ponta, é pensado para oferecer o máximo em segurança e eficácia, sempre inovando em manipulados.
                 </p>
                 <p>
                   Acreditamos que a saúde é uma jornada individual e que o cuidado farmacêutico de qualidade faz toda a diferença. Por isso, nosso compromisso vai além da simples manipulação de fórmulas: é sobre entender profundamente suas necessidades, oferecer orientação especializada e construir uma relação de confiança e parceria com cada cliente. Conte com a Farmácia Artesani Teresina para ser sua aliada em busca de uma vida mais saudável e plena.
