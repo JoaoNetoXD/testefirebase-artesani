@@ -1,7 +1,7 @@
 
 "use client";
 import Link from 'next/link';
-import { ShoppingCart, UserCircle, Search, Menu } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, Phone, Mail, Info } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { useCart } from '@/hooks/useCart';
 import { useEffect, useState } from 'react';
-
+import { cn } from '@/lib/utils';
 
 export function Header() {
   const { cart } = useCart();
@@ -30,64 +30,123 @@ export function Header() {
     }
   }, [cart, isMounted]);
 
-
-  const navLinks = [
-    { href: '/', label: 'Home' },
+  const mainNavLinks = [
+    { href: '/', label: 'Início' },
     ...mockCategories.map(cat => ({ href: `/category/${cat.slug}`, label: cat.name })),
+    { href: '/#sobre', label: 'Sobre' }, // Assuming an ID on homepage
+    { href: '/#contato', label: 'Contato' }, // Assuming an ID on homepage
+  ];
+
+  const accountLinks = [
     { href: '/account', label: 'Minha Conta' },
     { href: '/admin', label: 'Admin' },
   ];
 
-  return (
-    <header className="bg-card shadow-md sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Logo />
-        <nav className="hidden lg:flex items-center space-x-6 font-medium">
-          {navLinks.slice(0, -2).map((link) => ( // Exclude Account and Admin for main nav
-            <Link key={link.label} href={link.href} className="text-foreground hover:text-primary transition-colors">
-              {link.label}
-            </Link>
-          ))}
-        </nav>
 
-        <div className="flex items-center space-x-4">
-          <div className="hidden md:flex items-center relative">
-            <Input type="search" placeholder="Buscar produtos..." className="pr-10" />
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+  return (
+    <header className="sticky top-0 z-50">
+      {/* Top Bar */}
+      <div className="bg-primary/80 text-primary-foreground/90">
+        <div className="container mx-auto px-4 py-1.5 flex flex-col sm:flex-row items-center justify-between text-xs">
+          <div className="flex items-center gap-4">
+            <a href="tel:+5511999999999" className="flex items-center gap-1 hover:text-primary-foreground">
+              <Phone size={14} />
+              (11) 9999-9999
+            </a>
+            <a href="mailto:contato@artesani.com.br" className="flex items-center gap-1 hover:text-primary-foreground">
+              <Mail size={14} />
+              contato@artesani.com.br
+            </a>
           </div>
-          <Link href="/cart" passHref>
-            <Button variant="ghost" size="icon" aria-label="Carrinho de Compras" className="relative">
-              <ShoppingCart />
-              {isMounted && cartItemCount > 0 && (
-                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-primary-foreground bg-primary rounded-full">
-                  {cartItemCount}
-                </span>
-              )}
-            </Button>
-          </Link>
-          <Link href="/account" passHref>
-            <Button variant="ghost" size="icon" aria-label="Minha Conta">
-              <UserCircle />
-            </Button>
-          </Link>
+          <div className="flex items-center gap-1 mt-1 sm:mt-0">
+            <Info size={14} />
+            Frete grátis acima de R$ 99
+          </div>
+        </div>
+      </div>
+
+      {/* Main Header */}
+      <div className="bg-primary text-primary-foreground shadow-md">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <Logo taglineClassName="text-primary-foreground/70" />
+
+          {/* Desktop Navigation Links (subset) */}
+          <nav className="hidden lg:flex items-center space-x-5 font-medium">
+            {mainNavLinks.slice(0, 5).map((link) => ( // Show first 5 links
+              <Link key={link.label} href={link.href} className="hover:text-secondary transition-colors pb-1 border-b-2 border-transparent hover:border-secondary">
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          
+          <div className="flex-1 flex justify-end items-center space-x-3">
+            <div className="relative w-full max-w-xs hidden md:block">
+              <Input 
+                type="search" 
+                placeholder="Buscar produtos..." 
+                className="bg-card text-card-foreground placeholder:text-card-foreground/60 rounded-full h-10 pl-10 pr-4 w-full" 
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-card-foreground/60" />
+            </div>
+
+            <Link href="/login" passHref className="hidden sm:flex items-center gap-1.5 hover:text-secondary transition-colors">
+              <User size={20} />
+              Entrar
+            </Link>
+            <Link href="/cart" passHref>
+              <Button variant="ghost" size="icon" aria-label="Carrinho de Compras" className="relative hover:bg-primary-foreground/10">
+                <ShoppingCart />
+                {isMounted && cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-accent-foreground bg-accent rounded-full">
+                    {cartItemCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
+          </div>
+
           <div className="lg:hidden">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="hover:bg-primary-foreground/10">
                   <Menu />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px] bg-card">
-                <nav className="flex flex-col space-y-4 mt-8">
-                  {navLinks.map((link) => (
-                    <Link key={link.label} href={link.href} className="text-lg text-foreground hover:text-primary transition-colors p-2 rounded-md hover:bg-muted">
+              <SheetContent side="right" className="w-[300px] sm:w-[320px] bg-card text-card-foreground p-0">
+                <div className="p-4 border-b border-border">
+                  <Logo textClassName="text-primary" taglineClassName="text-muted-foreground" />
+                </div>
+                <nav className="flex flex-col space-y-1 p-4">
+                  {mainNavLinks.map((link) => (
+                    <Link key={link.label} href={link.href} className="text-base hover:text-primary transition-colors p-3 rounded-md hover:bg-muted">
                         {link.label}
                     </Link>
                   ))}
+                  <hr className="my-2 border-border" />
+                  {accountLinks.map((link) => (
+                     <Link key={link.label} href={link.href} className="text-base hover:text-primary transition-colors p-3 rounded-md hover:bg-muted">
+                        {link.label}
+                    </Link>
+                  ))}
+                   <Link href="/login" className="text-base flex items-center gap-2 hover:text-primary transition-colors p-3 rounded-md hover:bg-muted sm:hidden">
+                      <User size={20} />
+                      Entrar / Minha Conta
+                    </Link>
                 </nav>
               </SheetContent>
             </Sheet>
           </div>
+        </div>
+         {/* Search bar for mobile, below main header */}
+        <div className="md:hidden bg-primary px-4 pb-3">
+            <div className="relative w-full">
+              <Input 
+                type="search" 
+                placeholder="Buscar produtos..." 
+                className="bg-card text-card-foreground placeholder:text-card-foreground/60 rounded-full h-10 pl-10 pr-4 w-full" 
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-card-foreground/60" />
+            </div>
         </div>
       </div>
     </header>
