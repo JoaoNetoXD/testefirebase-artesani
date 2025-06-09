@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { 
-  Auth,
+  // Auth, // Auth type is imported from firebase/auth directly where needed
   User,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -12,7 +12,7 @@ import {
   sendPasswordResetEmail,
   updateProfile
 } from 'firebase/auth';
-import { auth as firebaseAuth, db } from '@/lib/firebase'; // Renomeado para evitar conflito
+import { auth as firebaseAuth, db } from '@/lib/firebase'; // firebaseAuth pode ser null
 import { doc, setDoc, serverTimestamp, updateDoc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -42,6 +42,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    if (!firebaseAuth) {
+      console.warn("AuthContext: Firebase Auth service is not available. Auth features are disabled.");
+      setCurrentUser(null);
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
       setCurrentUser(user);
       setLoading(false);
@@ -49,25 +55,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, []);
 
+  const notifyFirebaseDisabled = () => {
+    toast({ 
+      title: "Funcionalidade Desabilitada", 
+      description: "A configuração do Firebase está incompleta. Verifique o console para mais detalhes.", 
+      variant: "destructive",
+      duration: 10000 // Longer duration for important persistent warnings
+    });
+    setLoading(false);
+  };
+
   const register = async (name: string, email: string, pass: string) => {
+    if (!firebaseAuth || !db) {
+      notifyFirebaseDisabled();
+      return;
+    }
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, pass);
       await updateProfile(userCredential.user, { displayName: name });
       
-      // Create user document in Firestore
       const userDocRef = doc(db, "users", userCredential.user.uid);
       await setDoc(userDocRef, {
         uid: userCredential.user.uid,
         name: name,
         email: email,
-        phone: '', // Initialize phone as empty
-        // address: {}, // Initialize address later
+        phone: '',
         criadoEm: serverTimestamp(),
         atualizadoEm: serverTimestamp(),
       });
 
-      setCurrentUser(userCredential.user); // Atualiza o currentUser imediatamente
+      setCurrentUser(userCredential.user);
       toast({ title: "Cadastro realizado!", description: "Bem-vindo(a)!" });
       router.push('/'); 
     } catch (error: any) {
@@ -79,6 +97,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (email: string, pass: string) => {
+    if (!firebaseAuth) {
+      notifyFirebaseDisabled();
+      return;
+    }
     setLoading(true);
     try {
       await signInWithEmailAndPassword(firebaseAuth, email, pass);
@@ -93,6 +115,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
+    if (!firebaseAuth) {
+      notifyFirebaseDisabled();
+      // Simular logout local se o Firebase não estiver disponível
+      setCurrentUser(null);
+      router.push('/login');
+      return;
+    }
     setLoading(true);
     try {
       await firebaseSignOut(firebaseAuth);
@@ -107,6 +136,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetPassword = async (email: string) => {
+    if (!firebaseAuth) {
+      notifyFirebaseDisabled();
+      return;
+    }
     setLoading(true);
     try {
       await sendPasswordResetEmail(firebaseAuth, email);
@@ -120,18 +153,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateUserAccount = async (data: UserProfileData) => {
-    if (!currentUser) {
-      toast({ title: "Erro", description: "Nenhum usuário logado.", variant: "destructive" });
+    if (!currentUser || !firebaseAuth || !db) { // Adicionado !firebaseAuth e !db
+      notifyFirebaseDisabled();
+      if(!currentUser) toast({ title: "Erro", description: "Nenhum usuário logado.", variant: "destructive" });
       return;
     }
     setLoading(true);
     try {
-      // Update Firebase Auth display name
       if (data.name && data.name !== currentUser.displayName) {
         await updateProfile(currentUser, { displayName: data.name });
       }
 
-      // Update Firestore document
       const userDocRef = doc(db, "users", currentUser.uid);
       const updateData: any = {
         name: data.name,
@@ -142,9 +174,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       await updateDoc(userDocRef, updateData);
       
-      // Refresh currentUser state (or parts of it) if needed, or rely on onAuthStateChanged
-      // For immediate UI update of displayName:
-      setCurrentUser(firebaseAuth.currentUser); 
+      // firebaseAuth.currentUser pode não ser o mais atualizado aqui sem um refresh
+      // É melhor confiar no onAuthStateChanged ou buscar o usuário novamente se necessário
+      // Para displayName, podemos atualizar o estado local:
+      const updatedUser = { ...currentUser, displayName: data.name, phoneNumber: data.phone || currentUser.phoneNumber };
+      setCurrentUser(updatedUser as User);
+
 
       toast({ title: "Perfil Atualizado!", description: "Suas informações foram salvas." });
     } catch (error: any) {
@@ -156,6 +191,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const fetchUserProfile = async (userId: string) => {
+    if (!db) {
+      notifyFirebaseDisabled();
+      return null;
+    }
     setLoading(true);
     try {
       const userDocRef = doc(db, "users", userId);
