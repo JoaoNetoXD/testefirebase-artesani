@@ -1,7 +1,9 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { CartProvider } from '@/context/CartContext';
+import { FavoritesProvider } from '@/context/FavoritesContext'; // Import FavoritesProvider
 import { Inter } from 'next/font/google'; // Import next/font
 
 // Configure Inter font
@@ -29,8 +31,10 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <CartProvider>
-          {children}
-          <Toaster />
+          <FavoritesProvider> {/* Wrap with FavoritesProvider */}
+            {children}
+            <Toaster />
+          </FavoritesProvider>
         </CartProvider>
       </body>
     </html>

@@ -5,9 +5,11 @@ import Link from 'next/link';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ShoppingCart, Eye } from 'lucide-react';
+import { ShoppingCart, Eye, Heart } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
+import { useFavorites } from '@/hooks/useFavorites';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -15,6 +17,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+  const { favorites, toggleFavorite, isFavorite } = useFavorites();
   const { toast } = useToast();
 
   const handleAddToCart = () => {
@@ -25,9 +28,17 @@ export function ProductCard({ product }: ProductCardProps) {
     });
   };
 
+  const handleToggleFavorite = () => {
+    toggleFavorite(product);
+    toast({
+      title: isFavorite(product.id) ? "Removido dos Favoritos" : "Adicionado aos Favoritos",
+      description: `${product.name} foi ${isFavorite(product.id) ? 'removido dos' : 'adicionado aos'} seus favoritos.`,
+    });
+  };
+
   return (
     <Card className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 h-full bg-card text-card-foreground">
-      <CardHeader className="p-0">
+      <CardHeader className="p-0 relative">
         <Link href={`/products/${product.slug}`} passHref className="block group">
           <div className="aspect-[4/3] relative w-full overflow-hidden rounded-t-lg">
             <Image
@@ -40,6 +51,15 @@ export function ProductCard({ product }: ProductCardProps) {
             />
           </div>
         </Link>
+        <Button 
+            onClick={handleToggleFavorite} 
+            variant="ghost" 
+            size="icon" 
+            className="absolute top-2 right-2 bg-card/70 hover:bg-card text-destructive rounded-full h-9 w-9"
+            aria-label={isFavorite(product.id) ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+        >
+            <Heart className={cn("h-5 w-5", isFavorite(product.id) ? "fill-destructive" : "text-destructive")} />
+        </Button>
       </CardHeader>
       <CardContent className="p-4 flex-grow flex flex-col">
         <Link href={`/products/${product.slug}`} passHref>

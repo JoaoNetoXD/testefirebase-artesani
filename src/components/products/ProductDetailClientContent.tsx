@@ -7,7 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, Share2, ShoppingCart, Star } from 'lucide-react';
 import { ProductList } from '@/components/products/ProductList';
 import { useCart } from '@/hooks/useCart';
+import { useFavorites } from '@/hooks/useFavorites';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface ProductDetailClientContentProps {
   product: Product;
@@ -16,6 +18,7 @@ interface ProductDetailClientContentProps {
 
 export function ProductDetailClientContent({ product, relatedProducts }: ProductDetailClientContentProps) {
   const { addToCart } = useCart();
+  const { toggleFavorite, isFavorite } = useFavorites();
   const { toast } = useToast();
 
   const handleAddToCart = () => {
@@ -23,6 +26,14 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
     toast({
       title: "Produto adicionado!",
       description: `${product.name} foi adicionado ao seu carrinho.`,
+    });
+  };
+
+  const handleToggleFavorite = () => {
+    toggleFavorite(product);
+    toast({
+      title: isFavorite(product.id) ? "Removido dos Favoritos" : "Adicionado aos Favoritos",
+      description: `${product.name} foi ${isFavorite(product.id) ? 'removido dos' : 'adicionado aos'} seus favoritos.`,
     });
   };
 
@@ -84,8 +95,15 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
               <ShoppingCart className="mr-2 h-5 w-5" />
               {product.stock === 0 ? 'Indisponível' : 'Adicionar ao Carrinho'}
             </Button>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto">
-              <Heart className="mr-2 h-5 w-5" /> Adicionar aos Favoritos
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="w-full sm:w-auto" 
+              onClick={handleToggleFavorite}
+              aria-label={isFavorite(product.id) ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+            >
+              <Heart className={cn("mr-2 h-5 w-5", isFavorite(product.id) ? "fill-destructive text-destructive" : "text-destructive")} />
+              {isFavorite(product.id) ? "Remover Favorito" : "Adicionar Favorito"}
             </Button>
           </div>
           <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
