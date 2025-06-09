@@ -58,11 +58,11 @@ export default function AdminProductsPage() {
                 </TableCell>
                 <TableCell className="text-right space-x-2">
                   <Button variant="outline" size="icon" asChild>
-                    <Link href={`/admin/products/edit/${product.slug}`}> {/* Assuming edit by slug */}
+                    <Link href={`/admin/products/edit/${product.slug}`}>
                       <Edit className="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button variant="destructive" size="icon">
+                  <Button variant="destructive" size="icon"> {/* Ação de deletar ainda não implementada */}
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </TableCell>

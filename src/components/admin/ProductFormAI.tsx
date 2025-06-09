@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Wand2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import type { Product } from '@/lib/types';
 
 const productFormSchema = z.object({
   productName: z.string().min(3, "Nome do produto é obrigatório."),
@@ -21,24 +22,44 @@ const productFormSchema = z.object({
   price: z.coerce.number().min(0.01, "Preço deve ser maior que zero."),
   stock: z.coerce.number().min(0, "Estoque não pode ser negativo.").int("Estoque deve ser um número inteiro."),
   category: z.string().min(1, "Categoria é obrigatória."),
+  // A descrição gerada pela IA não faz parte do schema do form principal, pois é gerenciada separadamente
 });
 
 type ProductFormData = z.infer<typeof productFormSchema>;
 
-export function ProductFormAI() {
+interface ProductFormAIProps {
+  productToEdit?: Product;
+}
+
+export function ProductFormAI({ productToEdit }: ProductFormAIProps) {
   const [generatedDescription, setGeneratedDescription] = useState('');
   const [isGenerating, startTransition] = useTransition();
   const { toast } = useToast();
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<ProductFormData>({
+  const { register, handleSubmit, watch, formState: { errors }, reset } = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
   });
 
-  const ingredients = watch('ingredients');
-  const intendedUses = watch('intendedUses');
+  const ingredientsValue = watch('ingredients');
+  const intendedUsesValue = watch('intendedUses');
+
+  useEffect(() => {
+    if (productToEdit) {
+      reset({
+        productName: productToEdit.name,
+        ingredients: productToEdit.ingredients || '',
+        intendedUses: productToEdit.intendedUses || '',
+        price: productToEdit.price,
+        stock: productToEdit.stock,
+        category: productToEdit.category,
+      });
+      // Se o produto já tiver uma descrição (que pode ter sido gerada pela IA ou manualmente), pré-preenchemos
+      setGeneratedDescription(productToEdit.description || '');
+    }
+  }, [productToEdit, reset]);
 
   const handleGenerateDescription = async () => {
-    if (!ingredients || !intendedUses) {
+    if (!ingredientsValue || !intendedUsesValue) {
       toast({
         title: "Campos Faltando",
         description: "Por favor, preencha os ingredientes e usos pretendidos para gerar a descrição.",
@@ -49,7 +70,7 @@ export function ProductFormAI() {
 
     startTransition(async () => {
       try {
-        const input: GenerateProductDescriptionInput = { ingredients, intendedUses };
+        const input: GenerateProductDescriptionInput = { ingredients: ingredientsValue, intendedUses: intendedUsesValue };
         const result = await generateProductDescription(input);
         setGeneratedDescription(result.description);
         toast({
@@ -69,19 +90,40 @@ export function ProductFormAI() {
   };
 
   const onSubmit: SubmitHandler<ProductFormData> = (data) => {
-    console.log({ ...data, description: generatedDescription });
-    // Here you would typically save the product data to your backend
-    toast({
-      title: "Produto Salvo (Simulado)",
-      description: `${data.productName} foi salvo com sucesso.`,
-    });
+    const finalProductData = { 
+      ...data, 
+      description: generatedDescription, // Inclui a descrição (gerada ou editada)
+      id: productToEdit?.id, // Inclui o ID se estiver editando
+      slug: productToEdit?.slug // Inclui o slug se estiver editando
+    };
+    
+    if (productToEdit) {
+      console.log("Atualizando produto:", finalProductData);
+      // Aqui você chamaria a função para ATUALIZAR o produto no backend
+      toast({
+        title: "Produto Atualizado (Simulado)",
+        description: `${data.productName} foi atualizado com sucesso.`,
+      });
+    } else {
+      console.log("Criando novo produto:", finalProductData);
+      // Aqui você chamaria a função para CRIAR um novo produto no backend
+      toast({
+        title: "Produto Criado (Simulado)",
+        description: `${data.productName} foi criado com sucesso.`,
+      });
+    }
+    // Em um cenário real, você pode querer redirecionar ou limpar o formulário após o sucesso
   };
 
   return (
     <Card className="max-w-2xl mx-auto shadow-xl">
       <CardHeader>
-        <CardTitle className="text-2xl font-headline">Criar Novo Produto com IA</CardTitle>
-        <CardDescription>Preencha os detalhes do produto. Use a IA para gerar uma descrição atraente.</CardDescription>
+        <CardTitle className="text-2xl font-headline">
+          {productToEdit ? 'Editar Produto' : 'Criar Novo Produto com IA'}
+        </CardTitle>
+        <CardDescription>
+          {productToEdit ? 'Modifique os detalhes do produto abaixo.' : 'Preencha os detalhes do produto. Use a IA para gerar uma descrição atraente.'}
+        </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-6">
@@ -122,27 +164,33 @@ export function ProductFormAI() {
             {errors.intendedUses && <p className="text-sm text-destructive">{errors.intendedUses.message}</p>}
           </div>
 
-          <Button type="button" onClick={handleGenerateDescription} disabled={isGenerating || !ingredients || !intendedUses} variant="outline">
+          <Button 
+            type="button" 
+            onClick={handleGenerateDescription} 
+            disabled={isGenerating || !ingredientsValue || !intendedUsesValue} 
+            variant="outline"
+          >
             {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-            Gerar Descrição com IA
+            Gerar/Regenerar Descrição com IA
           </Button>
 
-          {generatedDescription && (
+          {(generatedDescription || productToEdit?.description) && (
             <div className="space-y-2 pt-4">
-              <Label htmlFor="generatedDescription">Descrição Gerada (edite se necessário)</Label>
+              <Label htmlFor="generatedDescription">Descrição (edite se necessário)</Label>
               <Textarea
                 id="generatedDescription"
                 value={generatedDescription}
                 onChange={(e) => setGeneratedDescription(e.target.value)}
                 rows={6}
                 className="border-primary focus:border-primary"
+                placeholder="A descrição do produto aparecerá aqui..."
               />
             </div>
           )}
         </CardContent>
         <CardFooter>
           <Button type="submit" className="w-full bg-primary text-primary-foreground" disabled={isGenerating}>
-            Salvar Produto
+            {productToEdit ? 'Salvar Alterações' : 'Salvar Produto'}
           </Button>
         </CardFooter>
       </form>
