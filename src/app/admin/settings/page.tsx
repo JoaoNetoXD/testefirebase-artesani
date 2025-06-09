@@ -1,10 +1,20 @@
 
+"use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function AdminSettingsPage() {
   return (
@@ -72,7 +82,23 @@ export default function AdminSettingsPage() {
         </Card>
 
         <div className="pt-4">
-           <Button size="lg" className="bg-primary text-primary-foreground">Salvar Todas as Configurações</Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="lg" className="bg-primary text-primary-foreground">Salvar Todas as Configurações</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Funcionalidade Simulada</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Em uma aplicação real, clicar neste botão salvaria todas as configurações no backend. 
+                  Por enquanto, esta é uma ação simulada para fins de demonstração do frontend.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction>Entendi</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>

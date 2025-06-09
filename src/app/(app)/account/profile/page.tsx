@@ -10,6 +10,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+
 
 const profileSchema = z.object({
   name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres."),
@@ -22,6 +34,7 @@ type ProfileFormInputs = z.infer<typeof profileSchema>;
 export default function ProfilePage() {
   const { currentUser, updateUserAccount, loading, fetchUserProfile } = useAuth();
   const [firestoreUser, setFirestoreUser] = useState<any>(null);
+  const { toast } = useToast();
 
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<ProfileFormInputs>({
     resolver: zodResolver(profileSchema),
@@ -29,16 +42,12 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (currentUser) {
-      // Pre-fill with Auth data first
       setValue("name", currentUser.displayName || "");
       setValue("email", currentUser.email || "");
-
-      // Then fetch and pre-fill with Firestore data (e.g., phone)
       fetchUserProfile(currentUser.uid).then(profile => {
         if (profile) {
           setFirestoreUser(profile);
           setValue("phone", profile.phone || "");
-          // If name in Firestore is more up-to-date or preferred
           if (profile.name) setValue("name", profile.name);
         }
       });
@@ -46,10 +55,17 @@ export default function ProfilePage() {
   }, [currentUser, setValue, fetchUserProfile]);
 
   const onSubmit: SubmitHandler<ProfileFormInputs> = async (data) => {
-    // Email is not part of the update data object as it's read-only
     const { email, ...updateData } = data; 
     await updateUserAccount(updateData);
+    // O toast já é exibido dentro do updateUserAccount
   };
+
+  const handleSimulatedPasswordChange = () => {
+    toast({
+        title: "Alteração de Senha Simulada",
+        description: "Em um aplicativo real, você seria solicitado a confirmar sua senha atual e definir uma nova.",
+    })
+  }
 
   if (loading && !currentUser && !firestoreUser) {
     return (
@@ -99,11 +115,27 @@ export default function ProfilePage() {
           <CardDescription>Gerencie seus endereços de entrega.</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Placeholder for address management */}
           <p className="text-muted-foreground">Nenhum endereço cadastrado.</p>
-          <Button variant="outline" className="mt-4">Adicionar Endereço</Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" className="mt-4">Adicionar Endereço</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Funcionalidade Futura</AlertDialogTitle>
+                <AlertDialogDescription>
+                  O gerenciamento de endereços será implementado em breve. 
+                  Por enquanto, esta funcionalidade é apenas visual.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction>Entendi</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
+
        <Card className="mt-8">
         <CardHeader>
           <CardTitle>Alterar Senha</CardTitle>
@@ -122,7 +154,23 @@ export default function ProfilePage() {
             <Label htmlFor="confirm-new-password">Confirmar Nova Senha</Label>
             <Input id="confirm-new-password" type="password" />
           </div>
-          <Button className="bg-primary text-primary-foreground">Alterar Senha</Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button className="bg-primary text-primary-foreground">Alterar Senha</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Funcionalidade Simulada</AlertDialogTitle>
+                <AlertDialogDescription>
+                  A alteração de senha é uma funcionalidade crítica e será implementada com todos os protocolos de segurança necessários. 
+                  Por enquanto, esta ação é apenas visual.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction onClick={handleSimulatedPasswordChange}>Entendi</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
     </div>

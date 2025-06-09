@@ -1,4 +1,5 @@
 
+"use client";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { mockProducts } from '@/lib/data'; // Using mock data for now
@@ -6,9 +7,29 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import Image from 'next/image';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminProductsPage() {
   const products = mockProducts;
+  const { toast } = useToast();
+
+  const handleDeleteProduct = (productName: string) => {
+    toast({
+      title: "Exclusão Simulada",
+      description: `O produto "${productName}" foi "excluído" (simulação).`,
+    });
+  };
 
   return (
     <div>
@@ -62,9 +83,28 @@ export default function AdminProductsPage() {
                       <Edit className="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button variant="destructive" size="icon"> {/* Ação de deletar ainda não implementada */}
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="icon">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja excluir o produto "{product.name}"? 
+                          Esta ação é simulada e não excluirá o produto de verdade neste ambiente de demonstração.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDeleteProduct(product.name)} className="bg-destructive hover:bg-destructive/90">
+                          Excluir (Simulado)
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </TableCell>
               </TableRow>
             ))}
