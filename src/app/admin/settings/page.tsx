@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,17 +29,57 @@ export default function AdminSettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="storeName">Nome da Loja</Label>
-              <Input id="storeName" defaultValue="Artesani Pharmacy" />
+              <Label htmlFor="storeName">Nome da Loja (Fantasia)</Label>
+              <Input id="storeName" defaultValue="Farmácia Artesani" />
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="storeLegalName">Nome Legal da Empresa</Label>
+              <Input id="storeLegalName" defaultValue="PHARMA MANIPULAÇÃO LTDA." />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="storeCnpj">CNPJ</Label>
+              <Input id="storeCnpj" defaultValue="08.306.438/0001-04" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="storeEmail">Email de Contato Principal</Label>
-              <Input id="storeEmail" type="email" defaultValue="contato@artesani.com" />
+              <Input id="storeEmail" type="email" defaultValue="artesani.marketplace@gmail.com" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="storePhone">Telefone Principal</Label>
+              <Input id="storePhone" type="tel" defaultValue="(86) 3221-8576" />
             </div>
              <div className="flex items-center space-x-2">
               <Switch id="maintenance-mode" />
               <Label htmlFor="maintenance-mode">Modo Manutenção</Label>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle>Endereço da Empresa</CardTitle>
+            <CardDescription>Endereço físico da farmácia.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="storeAddressStreet">Rua e Número</Label>
+              <Input id="storeAddressStreet" defaultValue="Rua 7 de Setembro, N° 226" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="storeAddressDistrict">Bairro</Label>
+              <Input id="storeAddressDistrict" defaultValue="Centro Sul" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="storeAddressCity">Cidade</Label>
+                <Input id="storeAddressCity" defaultValue="Teresina" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="storeAddressState">Estado</Label>
+                <Input id="storeAddressState" defaultValue="Piauí" />
+              </div>
+            </div>
+             {/* Poderia adicionar CEP aqui se necessário */}
           </CardContent>
         </Card>
 
@@ -76,7 +117,7 @@ export default function AdminSettingsPage() {
             </div>
              <div className="space-y-2">
               <Label htmlFor="notificationEmail">Email para Notificações Administrativas</Label>
-              <Input id="notificationEmail" type="email" defaultValue="admin@artesani.com" />
+              <Input id="notificationEmail" type="email" defaultValue="artesani.marketplace@gmail.com" />
             </div>
           </CardContent>
         </Card>
@@ -104,3 +145,5 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
+
+    

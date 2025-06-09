@@ -4,7 +4,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { CartProvider } from '@/context/CartContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
-import { AuthProvider } from '@/context/AuthContext'; // Import AuthProvider
+import { AuthProvider } from '@/context/AuthContext';
 import { Inter } from 'next/font/google';
 
 const inter = Inter({
@@ -14,8 +14,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Artesani Pharmacy Online',
-  description: 'Sua farmácia de manipulação online.',
+  title: 'Farmácia Artesani Online | Manipulados em Teresina-PI',
+  description: 'Sua farmácia de manipulação online em Teresina-PI. Qualidade e confiança para sua saúde.',
 };
 
 export default function RootLayout({
@@ -27,7 +27,7 @@ export default function RootLayout({
     <html lang="pt-BR" className={`${inter.variable}`}>
       <head />
       <body className="font-body antialiased bg-background text-foreground">
-        <AuthProvider> {/* Wrap with AuthProvider */}
+        <AuthProvider>
           <CartProvider>
             <FavoritesProvider>
               {children}
@@ -39,3 +39,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+    

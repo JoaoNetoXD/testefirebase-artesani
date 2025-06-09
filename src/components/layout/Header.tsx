@@ -14,14 +14,14 @@ import {
 } from "@/components/ui/sheet";
 import { useCart } from '@/hooks/useCart';
 import { useFavorites } from '@/hooks/useFavorites';
-import { useAuth } from '@/hooks/useAuth'; // Import useAuth
+import { useAuth } from '@/hooks/useAuth';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export function Header() {
   const { cart } = useCart();
   const { favorites } = useFavorites();
-  const { currentUser, logout, loading: authLoading } = useAuth(); // Get currentUser and logout
+  const { currentUser, logout, loading: authLoading } = useAuth();
   const [cartItemCount, setCartItemCount] = useState(0);
   const [favoriteItemCount, setFavoriteItemCount] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
@@ -46,7 +46,7 @@ export function Header() {
 
   const accountLinks = [
     { href: '/account', label: 'Minha Conta' },
-    { href: '/admin', label: 'Admin Panel' }, // Example admin link
+    { href: '/admin', label: 'Admin Panel' },
   ];
 
   const handleLogout = async () => {
@@ -55,21 +55,21 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50">
-      <div className="bg-primary text-primary-foreground/90"> {/* Alterado de bg-primary/80 para bg-primary */}
+      <div className="bg-primary text-primary-foreground/90">
         <div className="container mx-auto px-4 py-1.5 flex flex-col sm:flex-row items-center justify-between text-xs">
           <div className="flex items-center gap-4">
-            <a href="tel:+5511999999999" className="flex items-center gap-1 hover:text-primary-foreground">
+            <a href="tel:+558632218576" className="flex items-center gap-1 hover:text-primary-foreground">
               <Phone size={14} />
-              (11) 9999-9999
+              (86) 3221-8576
             </a>
-            <a href="mailto:contato@artesani.com.br" className="flex items-center gap-1 hover:text-primary-foreground">
+            <a href="mailto:artesani.marketplace@gmail.com" className="flex items-center gap-1 hover:text-primary-foreground">
               <Mail size={14} />
-              contato@artesani.com.br
+              artesani.marketplace@gmail.com
             </a>
           </div>
           <div className="flex items-center gap-1 mt-1 sm:mt-0">
             <Info size={14} />
-            Frete grátis acima de R$ 99
+            Frete grátis até 3km Teresina-PI
           </div>
         </div>
       </div>
@@ -202,3 +202,5 @@ export function Header() {
     </header>
   );
 }
+
+    
