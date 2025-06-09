@@ -1,7 +1,7 @@
 
 "use client";
 import Link from 'next/link';
-import { ShoppingCart, User, Search, Menu, Phone, Mail, Info } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, Phone, Mail, Info, Heart } from 'lucide-react'; // Adicionado Heart
 import { Logo } from '@/components/shared/Logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,12 +12,15 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useCart } from '@/hooks/useCart';
+import { useFavorites } from '@/hooks/useFavorites'; // Adicionado useFavorites
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export function Header() {
   const { cart } = useCart();
+  const { favorites } = useFavorites(); // Usar o hook de favoritos
   const [cartItemCount, setCartItemCount] = useState(0);
+  const [favoriteItemCount, setFavoriteItemCount] = useState(0); // Estado para contagem de favoritos
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -27,8 +30,9 @@ export function Header() {
   useEffect(() => {
     if (isMounted) {
       setCartItemCount(cart.reduce((count, item) => count + item.quantity, 0));
+      setFavoriteItemCount(favorites.length); // Atualizar contagem de favoritos
     }
-  }, [cart, isMounted]);
+  }, [cart, favorites, isMounted]);
 
   const mainNavLinks = [
     { href: '/', label: 'Início' },
@@ -93,6 +97,18 @@ export function Header() {
               <User size={20} />
               Entrar
             </Link>
+
+            <Link href="/account/favorites" passHref>
+              <Button variant="ghost" size="icon" aria-label="Meus Favoritos" className="relative hover:bg-primary-foreground/10">
+                <Heart />
+                {isMounted && favoriteItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-accent-foreground bg-accent rounded-full">
+                    {favoriteItemCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
+
             <Link href="/cart" passHref>
               <Button variant="ghost" size="icon" aria-label="Carrinho de Compras" className="relative hover:bg-primary-foreground/10">
                 <ShoppingCart />
