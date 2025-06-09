@@ -12,10 +12,16 @@ import {
   sendPasswordResetEmail,
   updateProfile
 } from 'firebase/auth';
-import { auth as firebaseAuth } from '@/lib/firebase'; // Renomeado para evitar conflito
+import { auth as firebaseAuth, db } from '@/lib/firebase'; // Renomeado para evitar conflito
+import { doc, setDoc, serverTimestamp, updateDoc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
+interface UserProfileData {
+  name: string;
+  phone?: string;
+  // Add other fields like address later
+}
 interface AuthContextType {
   currentUser: User | null;
   loading: boolean;
@@ -23,6 +29,8 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  updateUserAccount: (data: UserProfileData) => Promise<void>;
+  fetchUserProfile: (userId: string) => Promise<any | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,6 +54,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, pass);
       await updateProfile(userCredential.user, { displayName: name });
+      
+      // Create user document in Firestore
+      const userDocRef = doc(db, "users", userCredential.user.uid);
+      await setDoc(userDocRef, {
+        uid: userCredential.user.uid,
+        name: name,
+        email: email,
+        phone: '', // Initialize phone as empty
+        // address: {}, // Initialize address later
+        criadoEm: serverTimestamp(),
+        atualizadoEm: serverTimestamp(),
+      });
+
       setCurrentUser(userCredential.user); // Atualiza o currentUser imediatamente
       toast({ title: "Cadastro realizado!", description: "Bem-vindo(a)!" });
       router.push('/'); 
@@ -98,6 +119,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateUserAccount = async (data: UserProfileData) => {
+    if (!currentUser) {
+      toast({ title: "Erro", description: "Nenhum usuário logado.", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      // Update Firebase Auth display name
+      if (data.name && data.name !== currentUser.displayName) {
+        await updateProfile(currentUser, { displayName: data.name });
+      }
+
+      // Update Firestore document
+      const userDocRef = doc(db, "users", currentUser.uid);
+      const updateData: any = {
+        name: data.name,
+        atualizadoEm: serverTimestamp(),
+      };
+      if (data.phone !== undefined) {
+        updateData.phone = data.phone;
+      }
+      await updateDoc(userDocRef, updateData);
+      
+      // Refresh currentUser state (or parts of it) if needed, or rely on onAuthStateChanged
+      // For immediate UI update of displayName:
+      setCurrentUser(firebaseAuth.currentUser); 
+
+      toast({ title: "Perfil Atualizado!", description: "Suas informações foram salvas." });
+    } catch (error: any) {
+      console.error("Erro ao atualizar perfil:", error);
+      toast({ title: "Erro ao Atualizar", description: error.message || "Não foi possível salvar as alterações.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserProfile = async (userId: string) => {
+    setLoading(true);
+    try {
+      const userDocRef = doc(db, "users", userId);
+      const docSnap = await getDoc(userDocRef);
+      if (docSnap.exists()) {
+        return docSnap.data();
+      } else {
+        console.log("No such document for user profile!");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value = {
     currentUser,
     loading,
@@ -105,9 +181,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login,
     logout,
     resetPassword,
+    updateUserAccount,
+    fetchUserProfile,
   };
 
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export default AuthContext;
