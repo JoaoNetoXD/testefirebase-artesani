@@ -12,7 +12,7 @@ export function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-3">Links Úteis</h4>
             <ul className="space-y-1.5 text-sm">
-              <li><a href="/#sobre" className="hover:text-secondary transition-colors">Sobre Nós</a></li>
+              <li><a href="/sobre-nos" className="hover:text-secondary transition-colors">Sobre Nós</a></li> 
               <li><a href="/category/manipulados" className="hover:text-secondary transition-colors">Catálogo</a></li>
               <li><a href="/account" className="hover:text-secondary transition-colors">Minha Conta</a></li>
               <li><a href="/#contato" className="hover:text-secondary transition-colors">Contato</a></li>

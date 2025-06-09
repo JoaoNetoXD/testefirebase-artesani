@@ -54,7 +54,7 @@ export default function HomePage() {
                   Ver Catálogo
                 </Button>
               </Link>
-              <Link href="#sobre" passHref>
+              <Link href="/sobre-nos" passHref> 
                 <Button size="lg" variant="outline" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground w-full sm:w-auto rounded-full px-8 py-3 text-base border-secondary hover:border-secondary/90">
                   Sobre Nós
                 </Button>
@@ -129,3 +129,4 @@ export default function HomePage() {
     </div>
   );
 }
+

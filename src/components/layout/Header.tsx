@@ -40,7 +40,7 @@ export function Header() {
   const mainNavLinks = [
     { href: '/', label: 'Início' },
     ...mockCategories.map(cat => ({ href: `/category/${cat.slug}`, label: cat.name })),
-    { href: '/#sobre', label: 'Sobre' },
+    { href: '/sobre-nos', label: 'Sobre Nós' }, // Corrigido aqui
     { href: '/#contato', label: 'Contato' },
   ];
 
