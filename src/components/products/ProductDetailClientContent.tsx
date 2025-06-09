@@ -10,6 +10,7 @@ import { useCart } from '@/hooks/useCart';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 interface ProductDetailClientContentProps {
   product: Product;
@@ -20,6 +21,7 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
   const { addToCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { toast } = useToast();
+  const [selectedImage, setSelectedImage] = useState(product.images[0]);
 
   const handleAddToCart = () => {
     addToCart(product);
@@ -42,21 +44,40 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12 mb-12">
         {/* Image Gallery */}
         <div className="bg-card p-4 rounded-lg shadow-md">
-          <div className="relative aspect-square w-full overflow-hidden rounded-md">
+          <div className="relative aspect-square w-full overflow-hidden rounded-md border border-border">
             <Image
-              src={product.images[0]}
+              src={selectedImage}
               alt={product.name}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-contain"
               data-ai-hint="product photography"
+              priority
             />
           </div>
           {product.images.length > 1 && (
             <div className="mt-4 grid grid-cols-4 gap-2">
               {product.images.map((img, index) => (
-                <div key={index} className="relative aspect-square border rounded-md overflow-hidden cursor-pointer hover:border-primary">
-                  <Image src={img} alt={`${product.name} - thumbnail ${index + 1}`} fill className="object-cover" data-ai-hint="product thumbnail" />
+                <div 
+                  key={index} 
+                  className={cn(
+                    "relative aspect-square border rounded-md overflow-hidden cursor-pointer transition-all",
+                    selectedImage === img ? "border-primary ring-2 ring-primary" : "border-border hover:border-muted-foreground"
+                  )}
+                  onClick={() => setSelectedImage(img)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && setSelectedImage(img)}
+                  aria-label={`Ver imagem ${index + 1} de ${product.name}`}
+                >
+                  <Image 
+                    src={img} 
+                    alt={`${product.name} - thumbnail ${index + 1}`} 
+                    fill 
+                    className="object-cover" 
+                    data-ai-hint="product thumbnail" 
+                    sizes="100px"
+                  />
                 </div>
               ))}
             </div>
@@ -72,7 +93,7 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
             </div>
             <span>(123 avaliações)</span>
             <span>|</span>
-            <span>Categoria: <a href="#" className="text-primary hover:underline">{product.category}</a></span>
+            <span>Categoria: <Link href={`/category/${product.category.toLowerCase().replace(/\s+/g, '-')}`} className="text-primary hover:underline">{product.category}</Link></span>
           </div>
           <p className="text-3xl font-semibold text-primary">
             R$ {product.price.toFixed(2).replace('.', ',')}
@@ -88,7 +109,7 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
           <div className="flex flex-col sm:flex-row gap-4">
             <Button 
               size="lg" 
-              className="w-full sm:w-auto bg-accent hover:bg-opacity-90 text-accent-foreground" 
+              className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground" 
               onClick={handleAddToCart}
               disabled={product.stock === 0}
             >
@@ -146,3 +167,4 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
     </div>
   );
 }
+
