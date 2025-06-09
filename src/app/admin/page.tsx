@@ -7,16 +7,20 @@ export default function AdminDashboardPage() {
     { title: "Receita Total (Simulada)", value: "R$ 12,345.67", icon: DollarSign, iconClass: "text-primary" },
     { title: "Pedidos Pendentes (Simulado)", value: "15", icon: ShoppingBag, iconClass: "text-accent" },
     { title: "Total de Produtos (Simulado)", value: "234", icon: Package, iconClass: "text-secondary" },
-    { title: "Novos Clientes (Mês) (Simulado)", value: "42", icon: Users, iconClass: "text-green-600" }, // Mantendo uma cor específica para variedade se desejado
+    { title: "Novos Clientes (Mês) (Simulado)", value: "42", icon: Users, iconClass: "text-primary" }, 
   ];
 
   return (
-    <div>
-      <h1 className="text-3xl font-headline mb-8">Dashboard Administrativo</h1>
+    <div className="overflow-x-hidden"> {/* Para conter animações */}
+      <h1 className="text-3xl font-headline mb-8 animate-fade-in-up">Dashboard Administrativo</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        {stats.map((stat) => (
-          <Card key={stat.title} className="shadow-xl hover:shadow-2xl transition-shadow duration-300">
+        {stats.map((stat, index) => (
+          <Card 
+            key={stat.title} 
+            className="shadow-xl hover:shadow-2xl transition-shadow duration-300 animate-fade-in-up"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-base font-medium text-card-foreground/80">{stat.title}</CardTitle>
               <stat.icon className={`h-6 w-6 ${stat.iconClass}`} />
@@ -30,7 +34,7 @@ export default function AdminDashboardPage() {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="shadow-xl">
+        <Card className="shadow-xl animate-fade-in-up" style={{ animationDelay: '400ms' }}>
           <CardHeader>
             <CardTitle className="text-xl font-headline flex items-center">
                 <ListOrdered className="mr-3 h-6 w-6 text-primary" />
@@ -43,7 +47,7 @@ export default function AdminDashboardPage() {
             <p className="text-xs text-muted-foreground mt-1">(Funcionalidade a ser implementada)</p>
           </CardContent>
         </Card>
-        <Card className="shadow-xl">
+        <Card className="shadow-xl animate-fade-in-up" style={{ animationDelay: '500ms' }}>
           <CardHeader>
             <CardTitle className="text-xl font-headline flex items-center">
                 <PackageSearch className="mr-3 h-6 w-6 text-primary" />

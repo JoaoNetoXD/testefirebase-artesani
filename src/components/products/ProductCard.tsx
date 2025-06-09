@@ -14,9 +14,10 @@ import { useState, useEffect } from 'react';
 
 interface ProductCardProps {
   product: Product;
+  index?: number; // Opcional para delay de animação
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, index }: ProductCardProps) {
   const { addToCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { toast } = useToast();
@@ -44,10 +45,15 @@ export function ProductCard({ product }: ProductCardProps) {
     });
   };
 
+  const animationDelay = index ? `${index * 100}ms` : '0ms';
+
   return (
-    <Card className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 h-full bg-card text-card-foreground">
+    <Card 
+      className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 h-full bg-card text-card-foreground animate-fade-in-up group"
+      style={{ animationDelay }}
+    >
       <CardHeader className="p-0 relative">
-        <Link href={`/products/${product.slug}`} passHref className="block group">
+        <Link href={`/products/${product.slug}`} passHref className="block">
           <div className="aspect-[4/3] relative w-full overflow-hidden rounded-t-lg">
             <Image
               src={product.images[0]}
@@ -63,7 +69,7 @@ export function ProductCard({ product }: ProductCardProps) {
             onClick={handleToggleFavorite}
             variant="ghost"
             size="icon"
-            className="absolute top-2 right-2 bg-card/70 hover:bg-card text-destructive rounded-full h-9 w-9"
+            className="absolute top-2 right-2 bg-card/70 hover:bg-card text-destructive rounded-full h-9 w-9 transition-all active:scale-90"
             aria-label={currentIsFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
         >
             <Heart className={cn("h-5 w-5", currentIsFavorite ? "fill-destructive" : "text-destructive")} />
