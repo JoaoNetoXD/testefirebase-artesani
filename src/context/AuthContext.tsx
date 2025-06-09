@@ -266,8 +266,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     setLoading(true);
     try {
-      // Não permitir atualização de 'role' por esta função, a menos que seja um admin atualizando outro usuário (lógica mais complexa)
-      const {{ role, ...dataToUpdate }} = updateData; 
+      // Não permitir atualização de 'role' por esta função, a menos que seja um admin atualizando outro usuário  
+      const { role, ...dataToUpdate } = updateData;
 
       const { error } = await supabase
         .from('profiles')
