@@ -11,7 +11,7 @@ import Link from 'next/link';
 export default function HomePage() {
   const products = mockProducts; 
   const categories = mockCategories;
-  const featuredProduct = mockProducts[1]; // Example featured product
+  // featuredProduct is no longer used directly here
 
   const benefits = [
     { icon: Award, title: "Qualidade Garantida", description: "Produtos com certificação." },
@@ -62,34 +62,23 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Right Column: Product Image */}
+          {/* Right Column: New Product Image */}
           <div 
             className="flex justify-center md:justify-end mt-8 md:mt-0 animate-fade-in"
             style={{ animationDelay: '400ms' }}
           >
-            <Link href={`/products/${featuredProduct.slug}`} passHref className="block w-full max-w-sm">
-              <div className="relative bg-card p-4 sm:p-6 rounded-xl shadow-2xl w-full hover:shadow-primary/20 transition-shadow duration-300 group">
-                <Badge className="absolute top-4 right-4 bg-accent text-accent-foreground py-1 px-3 text-sm z-10">Novidade!</Badge>
-                <div className="aspect-square relative w-full rounded-lg overflow-hidden mb-4">
-                  <Image
-                    src={featuredProduct.images[0]}
-                    alt={featuredProduct.name}
-                    fill
-                    sizes="(max-width: 768px) 80vw, 400px"
-                    className="object-contain group-hover:scale-105 transition-transform duration-300"
-                    data-ai-hint="product bottle"
-                  />
-                </div>
-                <h3 className="text-lg font-semibold text-card-foreground group-hover:text-accent transition-colors">{featuredProduct.name}</h3>
-                <p className="text-sm text-card-foreground/80 line-clamp-2 mb-2">{featuredProduct.description}</p>
-                <div className="flex items-center justify-between">
-                  <p className="text-xl font-bold text-accent">R$ {featuredProduct.price.toFixed(2).replace('.',',')}</p>
-                  <div className="flex items-center gap-1 text-sm text-yellow-500">
-                    <Star size={18} className="fill-current" /> 4.8/5
-                  </div>
-                </div>
-              </div>
-            </Link>
+            <div className="relative w-full max-w-lg"> {/* Increased max-width for larger image */}
+              <Image
+                src="https://i.imgur.com/aSXVEUZ.jpeg"
+                alt="Produtos Artesani em destaque"
+                width={1600} // Original width for aspect ratio calculation
+                height={1200} // Original height for aspect ratio calculation
+                sizes="(max-width: 768px) 90vw, (max-width: 1024px) 50vw, 600px"
+                className="object-contain w-full h-auto" // Ensure responsiveness and visibility
+                data-ai-hint="product lineup pharmacy"
+                priority // Consider adding priority if this is a key LCP element
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -129,4 +118,3 @@ export default function HomePage() {
     </div>
   );
 }
-
