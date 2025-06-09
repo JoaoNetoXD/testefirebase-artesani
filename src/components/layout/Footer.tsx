@@ -1,9 +1,8 @@
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
-  // Substitua SUA_API_KEY_AQUI pela sua chave de API do Google Maps
-  const apiKeyPlaceholder = "SUA_API_KEY_AQUI";
-  const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?q=Rua%207%20de%20Setembro%2C%20226%2C%20Centro%20Sul%2C%20Teresina%20-%20PI&zoom=16&key=${apiKeyPlaceholder}`;
+  const apiKey = "AIzaSyB1jXTA50ofpSx2ZVoyluUdrvboAIJYD5Q";
+  const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?q=Rua%207%20de%20Setembro%2C%20226%2C%20Centro%20Sul%2C%20Teresina%20-%20PI&zoom=16&key=${apiKey}`;
 
   return (
     <footer className="bg-primary text-primary-foreground py-10 mt-16 border-t-4 border-secondary">
