@@ -32,7 +32,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: {{ children: ReactNode }}) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentUserProfile, setCurrentUserProfile] = useState<UserProfileData | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }: {{ children: ReactNode }}) => {
     }
 
     const getSessionAndProfile = async () => {
-      const { data: {{ session: currentSession }}, error: sessionError } = await supabase.auth.getSession();
+      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {
         console.error('Error getting session:', sessionError.message);
         setLoading(false);
@@ -160,14 +160,14 @@ export const AuthProvider = ({ children }: {{ children: ReactNode }}) => {
       const { error: profileError } = await supabase
         .from('profiles') // Assumindo que você tem uma tabela 'profiles' ligada por user_id
         .insert([
-          {{
+          {
             id: data.user.id, // Chave estrangeira para auth.users.id
             name: name,
             email: email, // Pode ser redundante se já estiver em auth.users
             phone: '',
             role: 'user', // Define o papel padrão como 'user'
             // criadoEm e atualizadoEm são gerenciados pelo Supabase (created_at, updated_at)
-          }}
+          }
         ]);
       
       if (profileError) {
