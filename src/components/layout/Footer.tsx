@@ -1,7 +1,7 @@
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
-  const apiKey = "AIzaSyB1jXTA50ofpSx2ZVoyluUdrvboAIJYD5Q";
+  const apiKey = "AIzaSyB1jXTA50ofpSx2ZVoyluUdrvboAIJYD5Q"; // Sua chave de API aqui
   const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?q=Rua%207%20de%20Setembro%2C%20226%2C%20Centro%20Sul%2C%20Teresina%20-%20PI&zoom=16&key=${apiKey}`;
 
   return (
@@ -31,14 +31,7 @@ export function Footer() {
           </div>
           <div>
             <h4 className="text-lg font-semibold mb-3">Nossa Localização e Dados</h4>
-            <address className="text-sm text-primary-foreground/80 not-italic space-y-1">
-              <p>Rua 7 de Setembro, N° 226</p>
-              <p>Bairro: Centro Sul</p>
-              <p>Teresina - Piauí</p>
-              <p>CNPJ: 08.306.438/0001-04</p>
-              <p>PHARMA MANIPULAÇÃO LTDA.</p>
-            </address>
-            <div className="mt-4 rounded-lg overflow-hidden shadow-md border border-primary-foreground/20 h-[180px] md:h-[200px]">
+            <div className="mt-1 rounded-lg overflow-hidden shadow-md border border-primary-foreground/20 h-[180px] md:h-[200px]">
               <iframe
                 src={mapEmbedUrl}
                 width="100%"
@@ -49,6 +42,10 @@ export function Footer() {
                 referrerPolicy="no-referrer-when-downgrade"
                 title="Localização Farmácia Artesani Teresina - Rodapé"
               ></iframe>
+            </div>
+            <div className="text-sm text-primary-foreground/80 not-italic space-y-1 mt-3 text-center">
+              <p>CNPJ: 08.306.438/0001-04</p>
+              <p>PHARMA MANIPULAÇÃO LTDA.</p>
             </div>
           </div>
         </div>
