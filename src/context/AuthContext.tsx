@@ -2,91 +2,181 @@
 "use client";
 import type { ReactNode } from 'react';
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { 
-  // Auth, // Auth type is imported from firebase/auth directly where needed
-  User,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut, 
-  onAuthStateChanged,
-  sendPasswordResetEmail,
-  updateProfile
-} from 'firebase/auth';
-import { auth as firebaseAuth, db } from '@/lib/firebase'; // firebaseAuth pode ser null
-import { doc, setDoc, serverTimestamp, updateDoc, getDoc } from 'firebase/firestore';
+import { Session, User } from '@supabase/supabase-js'; // Tipos do Supabase
+import { supabase, supabaseServicesAvailable } from '@/lib/supabase'; // Importa o cliente Supabase
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserProfileData {
   name: string;
   phone?: string;
+  email?: string; // Adicionado para consistência, embora o email principal venha do auth.user
+  role?: string; // Novo campo para o papel do usuário (ex: 'user', 'admin')
   // Add other fields like address later
 }
+
+// Ajuste para refletir a estrutura do Supabase (User pode ser diferente)
 interface AuthContextType {
-  currentUser: User | null;
+  currentUser: User | null; // User do Supabase
+  currentUserProfile: UserProfileData | null; // Perfil do usuário da tabela 'profiles'
+  session: Session | null; // Session do Supabase
   loading: boolean;
+  isAdmin: boolean; // Flag para verificar se é admin
   register: (name: string, email: string, pass: string) => Promise<void>;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  updateUserAccount: (data: UserProfileData) => Promise<void>;
-  fetchUserProfile: (userId: string) => Promise<any | null>;
+  updateUserAccount: (data: Partial<UserProfileData>) => Promise<void>; // Partial para atualizações parciais
+  fetchUserProfile: (userId: string) => Promise<UserProfileData | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: {{ children: ReactNode }}) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<UserProfileData | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!firebaseAuth) {
-      console.warn("AuthContext: Firebase Auth service is not available. Auth features are disabled.");
+    if (!supabase || !supabaseServicesAvailable) {
+      console.warn("AuthContext: Supabase client is not available. Auth features are disabled.");
       setCurrentUser(null);
+      setSession(null);
       setLoading(false);
       return;
     }
-    const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
+
+    const getSessionAndProfile = async () => {
+      const { data: {{ session: currentSession }}, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error('Error getting session:', sessionError.message);
+        setLoading(false);
+        return;
+      }
+      setSession(currentSession);
+      const user = currentSession?.user ?? null;
       setCurrentUser(user);
+
+      if (user) {
+        const profile = await fetchUserProfileInternal(user.id);
+        setCurrentUserProfile(profile);
+        setIsAdmin(profile?.role === 'admin');
+      } else {
+        setCurrentUserProfile(null);
+        setIsAdmin(false);
+      }
+      setLoading(false);
+    };
+
+    getSessionAndProfile();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Supabase auth event:', event, session);
+      setSession(session);
+      const user = session?.user ?? null;
+      setCurrentUser(user);
+
+      if (user) {
+        const profile = await fetchUserProfileInternal(user.id);
+        setCurrentUserProfile(profile);
+        setIsAdmin(profile?.role === 'admin');
+      } else {
+        setCurrentUserProfile(null);
+        setIsAdmin(false);
+      }
       setLoading(false);
     });
-    return () => unsubscribe();
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
-  const notifyFirebaseDisabled = () => {
+  const notifySupabaseDisabled = () => {
     toast({ 
       title: "Funcionalidade Desabilitada", 
-      description: "A configuração do Firebase está incompleta. Verifique o console para mais detalhes.", 
+      description: "A configuração do Supabase está incompleta ou o serviço não está disponível. Verifique o console.", 
       variant: "destructive",
-      duration: 10000 // Longer duration for important persistent warnings
+      duration: 10000
     });
     setLoading(false);
   };
 
+  // Função interna para buscar perfil, usada no setup inicial e no onAuthStateChange
+  const fetchUserProfileInternal = async (userId: string): Promise<UserProfileData | null> => {
+    if (!supabase || !supabaseServicesAvailable) {
+      // Não notifica aqui para não spammar, o contexto já lida com isso
+      return null;
+    }
+    try {
+      const { data, error, status } = await supabase
+        .from('profiles')
+        .select(`name, phone, email, role`)
+        .eq('id', userId)
+        .single();
+
+      if (error && status !== 406) { // 406 significa que não encontrou, o que é ok
+        throw error;
+      }
+
+      if (data) {
+        return data as UserProfileData;
+      }
+      return null;
+    } catch (error: any) {
+      console.error("Erro ao buscar perfil do usuário:", error.message);
+      // Não mostra toast aqui para não poluir em caso de falhas de rede ou RLS não configurada
+      return null;
+    }
+  };
+
   const register = async (name: string, email: string, pass: string) => {
-    if (!firebaseAuth || !db) {
-      notifyFirebaseDisabled();
+    if (!supabase || !supabaseServicesAvailable) {
+      notifySupabaseDisabled();
       return;
     }
     setLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, pass);
-      await updateProfile(userCredential.user, { displayName: name });
-      
-      const userDocRef = doc(db, "users", userCredential.user.uid);
-      await setDoc(userDocRef, {
-        uid: userCredential.user.uid,
-        name: name,
-        email: email,
-        phone: '',
-        criadoEm: serverTimestamp(),
-        atualizadoEm: serverTimestamp(),
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password: pass,
+        options: {
+          data: { 
+            full_name: name, // Supabase usa 'user_metadata' ou 'options.data' para dados adicionais no cadastro
+            phone: '', // Adicionar campos conforme necessário
+          }
+        }
       });
 
-      setCurrentUser(userCredential.user);
-      toast({ title: "Cadastro realizado!", description: "Bem-vindo(a)!" });
+      if (error) throw error;
+      if (!data.user) throw new Error('Cadastro falhou, usuário não retornado.');
+
+      // Inserir dados adicionais na tabela 'users' (ou 'profiles') se necessário
+      // Supabase Auth já cria um registro em auth.users. Você pode ter uma tabela pública 'profiles'.
+      const { error: profileError } = await supabase
+        .from('profiles') // Assumindo que você tem uma tabela 'profiles' ligada por user_id
+        .insert([
+          {{
+            id: data.user.id, // Chave estrangeira para auth.users.id
+            name: name,
+            email: email, // Pode ser redundante se já estiver em auth.users
+            phone: '',
+            role: 'user', // Define o papel padrão como 'user'
+            // criadoEm e atualizadoEm são gerenciados pelo Supabase (created_at, updated_at)
+          }}
+        ]);
+      
+      if (profileError) {
+        console.warn('Erro ao criar perfil do usuário, mas o cadastro foi bem-sucedido:', profileError.message);
+        // Decida como lidar com isso. O usuário está cadastrado, mas o perfil pode não estar completo.
+      }
+
+      // O onAuthStateChange deve atualizar currentUser e session
+      toast({ title: "Cadastro realizado!", description: "Bem-vindo(a)! Verifique seu email para confirmação, se aplicável." });
       router.push('/'); 
     } catch (error: any) {
       console.error("Erro no cadastro:", error);
@@ -97,13 +187,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (email: string, pass: string) => {
-    if (!firebaseAuth) {
-      notifyFirebaseDisabled();
+    if (!supabase || !supabaseServicesAvailable) {
+      notifySupabaseDisabled();
       return;
     }
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(firebaseAuth, email, pass);
+      const { data: loginData, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      if (error) throw error;
+      if (!loginData.user) throw new Error('Login falhou, usuário não retornado.');
+      
+      // Após o login, buscar o perfil para ter o 'role'
+      const profile = await fetchUserProfileInternal(loginData.user.id);
+      setCurrentUserProfile(profile);
+      setIsAdmin(profile?.role === 'admin');
+
       toast({ title: "Login realizado!", description: "Bem-vindo(a) de volta!" });
       router.push('/');
     } catch (error: any) {
@@ -115,16 +213,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    if (!firebaseAuth) {
-      notifyFirebaseDisabled();
-      // Simular logout local se o Firebase não estiver disponível
+    if (!supabase || !supabaseServicesAvailable) {
+      notifySupabaseDisabled();
       setCurrentUser(null);
+      setCurrentUserProfile(null); // Limpa o perfil no logout
+      setIsAdmin(false); // Reseta o status de admin
+      setSession(null);
       router.push('/login');
       return;
     }
     setLoading(true);
     try {
-      await firebaseSignOut(firebaseAuth);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      // O onAuthStateChange deve atualizar currentUser e session para null
       toast({ title: "Logout realizado", description: "Até breve!" });
       router.push('/login');
     } catch (error: any) {
@@ -136,13 +238,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetPassword = async (email: string) => {
-    if (!firebaseAuth) {
-      notifyFirebaseDisabled();
+    if (!supabase || !supabaseServicesAvailable) {
+      notifySupabaseDisabled();
       return;
     }
     setLoading(true);
     try {
-      await sendPasswordResetEmail(firebaseAuth, email);
+      // Certifique-se de configurar o template de email no Supabase
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password` // URL para onde o usuário será redirecionado após clicar no link do email
+      });
+      if (error) throw error;
       toast({ title: "Email enviado", description: "Verifique sua caixa de entrada para redefinir a senha." });
     } catch (error: any) {
       console.error("Erro ao resetar senha:", error);
@@ -152,70 +258,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateUserAccount = async (data: UserProfileData) => {
-    if (!currentUser || !firebaseAuth || !db) { // Adicionado !firebaseAuth e !db
-      notifyFirebaseDisabled();
-      if(!currentUser) toast({ title: "Erro", description: "Nenhum usuário logado.", variant: "destructive" });
+  const updateUserAccount = async (updateData: Partial<UserProfileData>) => {
+    if (!currentUser || !supabase || !supabaseServicesAvailable) {
+      notifySupabaseDisabled();
+      toast({ title: "Erro", description: "Você precisa estar logado para atualizar o perfil.", variant: "destructive" });
       return;
     }
     setLoading(true);
     try {
-      if (data.name && data.name !== currentUser.displayName) {
-        await updateProfile(currentUser, { displayName: data.name });
-      }
+      // Não permitir atualização de 'role' por esta função, a menos que seja um admin atualizando outro usuário (lógica mais complexa)
+      const {{ role, ...dataToUpdate }} = updateData; 
 
-      const userDocRef = doc(db, "users", currentUser.uid);
-      const updateData: any = {
-        name: data.name,
-        atualizadoEm: serverTimestamp(),
-      };
-      if (data.phone !== undefined) {
-        updateData.phone = data.phone;
-      }
-      await updateDoc(userDocRef, updateData);
-      
-      // firebaseAuth.currentUser pode não ser o mais atualizado aqui sem um refresh
-      // É melhor confiar no onAuthStateChanged ou buscar o usuário novamente se necessário
-      // Para displayName, podemos atualizar o estado local:
-      const updatedUser = { ...currentUser, displayName: data.name, phoneNumber: data.phone || currentUser.phoneNumber };
-      setCurrentUser(updatedUser as User);
+      const { error } = await supabase
+        .from('profiles')
+        .update(dataToUpdate)
+        .eq('id', currentUser.id);
 
+      if (error) throw error;
 
-      toast({ title: "Perfil Atualizado!", description: "Suas informações foram salvas." });
+      // Atualizar o estado local do perfil
+      const updatedProfile = await fetchUserProfileInternal(currentUser.id);
+      setCurrentUserProfile(updatedProfile);
+      // Não é necessário atualizar isAdmin aqui, pois o papel não deve ser alterado por esta função.
+
+      toast({ title: "Perfil atualizado!", description: "Suas informações foram salvas." });
     } catch (error: any) {
       console.error("Erro ao atualizar perfil:", error);
-      toast({ title: "Erro ao Atualizar", description: error.message || "Não foi possível salvar as alterações.", variant: "destructive" });
+      toast({ title: "Erro ao Atualizar", description: error.message || "Tente novamente.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchUserProfile = async (userId: string) => {
-    if (!db) {
-      notifyFirebaseDisabled();
-      return null;
-    }
-    setLoading(true);
-    try {
-      const userDocRef = doc(db, "users", userId);
-      const docSnap = await getDoc(userDocRef);
-      if (docSnap.exists()) {
-        return docSnap.data();
-      } else {
-        console.log("No such document for user profile!");
-        return null;
-      }
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      return null;
-    } finally {
-      setLoading(false);
-    }
+  // Função pública para buscar perfil, se necessário em outros componentes
+  const fetchUserProfile = async (userId: string): Promise<UserProfileData | null> => {
+    return fetchUserProfileInternal(userId);
   };
 
   const value = {
     currentUser,
+    currentUserProfile,
+    session,
     loading,
+    isAdmin,
     register,
     login,
     logout,
@@ -227,4 +312,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export default AuthContext;
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+  }
+  return context;
+};
