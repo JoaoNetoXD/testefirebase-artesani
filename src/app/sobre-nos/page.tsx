@@ -3,7 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import Image from 'next/image';
-import { Target, Eye, Gem, BadgeCheck, Users, Building, Award, ShieldCheck } from 'lucide-react';
+import { Target, Eye, Gem, BadgeCheck, ShieldCheck } from 'lucide-react';
 
 export default function SobreNosPage() {
   const pilares = [
@@ -52,7 +52,7 @@ export default function SobreNosPage() {
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center md:text-left animate-fade-in-up" style={{ animationDelay: '200ms' }}>
               <h2 className="text-3xl font-headline font-semibold text-primary mb-6">
-                Tradição e Inovação em Manipulados
+                Tradição e Inovação em Manipulados em Teresina
               </h2>
               <div className="space-y-4 text-foreground/90 text-base md:text-lg leading-relaxed">
                 <p>
@@ -78,12 +78,12 @@ export default function SobreNosPage() {
               >
                 <div className="relative w-full max-w-sm mx-auto md:max-w-none aspect-[4/5] group">
                   <Image
-                    src="https://placehold.co/400x500.png" 
+                    src="https://i.imgur.com/Z9NogEk.png" 
                     alt="Dr. Guilherme Xavier - Farmacêutico Responsável na Farmácia Artesani Teresina"
                     fill
                     sizes="(max-width: 768px) 80vw, (max-width: 1024px) 40vw, 350px"
                     className="object-contain rounded-lg shadow-2xl group-hover:scale-105 transition-transform duration-300"
-                    data-ai-hint="pharmacist portrait"
+                    data-ai-hint="pharmacist portrait professional" 
                   />
                    <div className="absolute -bottom-4 -right-4 bg-accent text-accent-foreground p-3 rounded-full shadow-lg">
                      <ShieldCheck size={32} />
