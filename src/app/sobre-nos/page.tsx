@@ -3,7 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import Image from 'next/image';
-import { Target, Eye, Gem, BadgeCheck, ShieldCheck } from 'lucide-react';
+import { Target, Eye, Gem, BadgeCheck, ShieldCheck, MapPin } from 'lucide-react';
 
 export default function SobreNosPage() {
   const pilares = [
@@ -33,6 +33,9 @@ export default function SobreNosPage() {
     },
   ];
 
+  const mapEmbedUrl = "https://www.google.com/maps/embed/v1/place?q=Rua%207%20de%20Setembro%2C%20226%2C%20Centro%20Sul%2C%20Teresina%20-%20PI&zoom=17";
+
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />
@@ -56,7 +59,7 @@ export default function SobreNosPage() {
               </h2>
               <div className="space-y-4 text-foreground/90 text-base md:text-lg leading-relaxed">
                 <p>
-                  Bem-vindo à Farmácia Artesani! Há mais de 30 anos, a Artesani é sinônimo de excelência e confiança em medicamentos manipulados. Em Teresina, orgulhosamente trazemos essa rica herança, combinando a profunda tradição farmacêutica com as mais modernas tecnologias para cuidar da sua saúde de forma única e personalizada.
+                  Bem-vindo à Farmácia Artesani! Com uma rica herança de excelência e confiança em medicamentos manipulados, estamos orgulhosamente presentes em Teresina, combinando profunda tradição farmacêutica com as mais modernas tecnologias para cuidar da sua saúde de forma única e personalizada.
                 </p>
                 <p>
                   Nossa unidade em Teresina é um espaço dedicado integralmente ao seu bem-estar. Aqui, cada detalhe, desde a rigorosa seleção de ativos até a manipulação precisa em nossos laboratórios de ponta, é pensado para oferecer o máximo em segurança e eficácia.
@@ -71,27 +74,27 @@ export default function SobreNosPage() {
         
         <section className="py-12 md:py-16 bg-muted/20">
           <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-stretch"> {/* items-stretch para igualar altura */}
+            <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-stretch">
               <div 
                 className="relative order-last md:order-first animate-fade-in-left flex flex-col justify-center" 
                 style={{ animationDelay: '300ms' }}
               >
-                <div className="relative w-full h-full min-h-[400px] md:min-h-[500px] group"> {/* Aumentado min-h */}
+                <div className="relative w-full h-full min-h-[400px] md:min-h-[500px] group">
                   <Image
                     src="https://i.imgur.com/Z9NogEk.png" 
                     alt="Dr. Guilherme Xavier - Farmacêutico Responsável na Farmácia Artesani Teresina"
                     fill
                     sizes="(max-width: 768px) 80vw, (max-width: 1024px) 40vw, 500px"
-                    className="object-cover rounded-lg shadow-2xl group-hover:scale-105 transition-transform duration-300" // object-cover para preencher
+                    className="object-cover rounded-lg shadow-2xl group-hover:scale-105 transition-transform duration-300"
                     data-ai-hint="pharmacist portrait professional" 
                   />
-                   <div className="absolute -bottom-4 -right-4 bg-accent text-accent-foreground p-3 rounded-full shadow-lg">
+                   <div className="absolute -bottom-4 -right-4 bg-accent text-accent-foreground p-3 rounded-full shadow-lg group-hover:scale-110 transition-transform">
                      <ShieldCheck size={32} />
                    </div>
                 </div>
               </div>
               <div className="animate-fade-in-right flex flex-col justify-center" style={{ animationDelay: '500ms' }}>
-                <h2 className="text-4xl font-headline font-semibold text-foreground mb-3"> {/* Alterado para text-foreground e text-4xl */}
+                <h2 className="text-4xl font-headline font-semibold text-foreground mb-3"> 
                   Cuidado Farmacêutico de Confiança
                 </h2>
                 <p className="text-xl text-foreground/70 mb-6">
@@ -120,7 +123,7 @@ export default function SobreNosPage() {
               {pilares.map((pilar, index) => (
                 <div
                   key={pilar.title}
-                  className="bg-card text-card-foreground p-6 rounded-xl shadow-lg hover:shadow-primary/20 transition-all duration-300 flex flex-col items-center text-center transform hover:-translate-y-1 animate-fade-in-up h-full" // Adicionado h-full
+                  className="bg-card text-card-foreground p-6 rounded-xl shadow-lg hover:shadow-primary/20 transition-all duration-300 flex flex-col items-center text-center transform hover:-translate-y-1 animate-fade-in-up h-full" 
                   style={{ animationDelay: `${600 + index * 150}ms` }}
                 >
                   <pilar.icon className="h-12 w-12 text-accent mb-5" />
@@ -132,13 +135,27 @@ export default function SobreNosPage() {
           </div>
         </section>
           
-        <section className="py-12 md:py-16 text-center bg-primary/5">
+        <section className="py-12 md:py-16 bg-primary/5">
           <div className="container mx-auto px-4 animate-fade-in-up" style={{ animationDelay: '1000ms' }}>
-            <h3 className="text-2xl font-headline font-semibold text-primary mb-3">Visite-nos em Teresina!</h3>
-            <p className="text-foreground/80 mb-6 max-w-xl mx-auto">
+            <h3 className="text-3xl font-headline font-semibold text-primary mb-6 text-center flex items-center justify-center">
+                <MapPin className="mr-3 h-8 w-8 text-primary" />
+                Visite-nos em Teresina!
+            </h3>
+            <p className="text-foreground/80 mb-8 max-w-xl mx-auto text-center">
                 Estamos localizados na Rua 7 de Setembro, N° 226, Centro Sul. Venha nos conhecer e descubra como podemos cuidar da sua saúde com a qualidade e confiança que só a Artesani oferece!
             </p>
-            {/* Pode adicionar um botão para o mapa ou mais informações de contato aqui */}
+            <div className="aspect-video md:aspect-[16/6] lg:aspect-[16/5] rounded-xl overflow-hidden shadow-2xl border border-border">
+              <iframe
+                src={mapEmbedUrl}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={true}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Localização da Farmácia Artesani em Teresina"
+              ></iframe>
+            </div>
           </div>
         </section>
 

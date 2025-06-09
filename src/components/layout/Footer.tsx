@@ -1,13 +1,15 @@
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const mapEmbedUrl = "https://www.google.com/maps/embed/v1/place?q=Rua%207%20de%20Setembro%2C%20226%2C%20Centro%20Sul%2C%20Teresina%20-%20PI&zoom=16";
+
   return (
     <footer className="bg-primary text-primary-foreground py-10 mt-16 border-t-4 border-secondary">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-center md:text-left">
           <div>
             <h3 className="text-xl font-headline font-semibold mb-3">Farmácia Artesani</h3>
-            <p className="text-sm text-primary-foreground/80">Sua saúde em boas mãos, com qualidade e confiança.</p>
+            <p className="text-sm text-primary-foreground/80">Sua saúde em boas mãos, com qualidade e confiança em Teresina-PI.</p>
           </div>
           <div>
             <h4 className="text-lg font-semibold mb-3">Links Úteis</h4>
@@ -35,6 +37,18 @@ export function Footer() {
               <p>CNPJ: 08.306.438/0001-04</p>
               <p>PHARMA MANIPULAÇÃO LTDA.</p>
             </address>
+            <div className="mt-4 rounded-lg overflow-hidden shadow-md border border-primary-foreground/20 h-[180px] md:h-[200px]">
+              <iframe
+                src={mapEmbedUrl}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={false} // Usually not needed or wanted for small footer maps
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Localização Farmácia Artesani Teresina - Rodapé"
+              ></iframe>
+            </div>
           </div>
         </div>
         <div className="text-center text-xs text-primary-foreground/70 mt-10 pt-6 border-t border-primary-foreground/20">
@@ -48,5 +62,3 @@ export function Footer() {
     </footer>
   );
 }
-
-    
