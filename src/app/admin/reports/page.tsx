@@ -1,5 +1,5 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { BarChart, LineChart, PieChart, Users, Package, DollarSign, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
