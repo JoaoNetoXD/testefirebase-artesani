@@ -10,6 +10,7 @@ import { useCart } from '@/hooks/useCart';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 
 interface ProductCardProps {
   product: Product;
@@ -17,8 +18,13 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
-  const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  const { toggleFavorite, isFavorite } = useFavorites();
   const { toast } = useToast();
+  const [isClientMounted, setIsClientMounted] = useState(false);
+
+  useEffect(() => {
+    setIsClientMounted(true);
+  }, []);
 
   const handleAddToCart = () => {
     addToCart(product);
@@ -28,11 +34,13 @@ export function ProductCard({ product }: ProductCardProps) {
     });
   };
 
+  const currentIsFavorite = isClientMounted && isFavorite(product.id);
+
   const handleToggleFavorite = () => {
     toggleFavorite(product);
     toast({
-      title: isFavorite(product.id) ? "Removido dos Favoritos" : "Adicionado aos Favoritos",
-      description: `${product.name} foi ${isFavorite(product.id) ? 'removido dos' : 'adicionado aos'} seus favoritos.`,
+      title: currentIsFavorite ? "Removido dos Favoritos" : "Adicionado aos Favoritos",
+      description: `${product.name} foi ${currentIsFavorite ? 'removido dos' : 'adicionado aos'} seus favoritos.`,
     });
   };
 
@@ -51,14 +59,14 @@ export function ProductCard({ product }: ProductCardProps) {
             />
           </div>
         </Link>
-        <Button 
-            onClick={handleToggleFavorite} 
-            variant="ghost" 
-            size="icon" 
+        <Button
+            onClick={handleToggleFavorite}
+            variant="ghost"
+            size="icon"
             className="absolute top-2 right-2 bg-card/70 hover:bg-card text-destructive rounded-full h-9 w-9"
-            aria-label={isFavorite(product.id) ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+            aria-label={currentIsFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
         >
-            <Heart className={cn("h-5 w-5", isFavorite(product.id) ? "fill-destructive" : "text-destructive")} />
+            <Heart className={cn("h-5 w-5", currentIsFavorite ? "fill-destructive" : "text-destructive")} />
         </Button>
       </CardHeader>
       <CardContent className="p-4 flex-grow flex flex-col">
@@ -78,8 +86,8 @@ export function ProductCard({ product }: ProductCardProps) {
       </CardContent>
       <CardFooter className="p-4 border-t border-border">
         <div className="flex gap-2 w-full">
-          <Button 
-            onClick={handleAddToCart} 
+          <Button
+            onClick={handleAddToCart}
             className="flex-grow bg-accent hover:bg-accent/90 text-accent-foreground rounded-md"
             disabled={product.stock === 0}
           >

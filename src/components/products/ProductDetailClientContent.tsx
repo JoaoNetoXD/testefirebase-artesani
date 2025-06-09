@@ -10,7 +10,8 @@ import { useCart } from '@/hooks/useCart';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 interface ProductDetailClientContentProps {
   product: Product;
@@ -22,6 +23,11 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
   const { toggleFavorite, isFavorite } = useFavorites();
   const { toast } = useToast();
   const [selectedImage, setSelectedImage] = useState(product.images[0]);
+  const [isClientMounted, setIsClientMounted] = useState(false);
+
+  useEffect(() => {
+    setIsClientMounted(true);
+  }, []);
 
   const handleAddToCart = () => {
     addToCart(product);
@@ -31,11 +37,13 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
     });
   };
 
+  const currentIsFavorite = isClientMounted && isFavorite(product.id);
+
   const handleToggleFavorite = () => {
     toggleFavorite(product);
     toast({
-      title: isFavorite(product.id) ? "Removido dos Favoritos" : "Adicionado aos Favoritos",
-      description: `${product.name} foi ${isFavorite(product.id) ? 'removido dos' : 'adicionado aos'} seus favoritos.`,
+      title: currentIsFavorite ? "Removido dos Favoritos" : "Adicionado aos Favoritos",
+      description: `${product.name} foi ${currentIsFavorite ? 'removido dos' : 'adicionado aos'} seus favoritos.`,
     });
   };
 
@@ -58,8 +66,8 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
           {product.images.length > 1 && (
             <div className="mt-4 grid grid-cols-4 gap-2">
               {product.images.map((img, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className={cn(
                     "relative aspect-square border rounded-md overflow-hidden cursor-pointer transition-all",
                     selectedImage === img ? "border-primary ring-2 ring-primary" : "border-border hover:border-muted-foreground"
@@ -70,12 +78,12 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
                   onKeyDown={(e) => e.key === 'Enter' && setSelectedImage(img)}
                   aria-label={`Ver imagem ${index + 1} de ${product.name}`}
                 >
-                  <Image 
-                    src={img} 
-                    alt={`${product.name} - thumbnail ${index + 1}`} 
-                    fill 
-                    className="object-cover" 
-                    data-ai-hint="product thumbnail" 
+                  <Image
+                    src={img}
+                    alt={`${product.name} - thumbnail ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    data-ai-hint="product thumbnail"
                     sizes="100px"
                   />
                 </div>
@@ -99,7 +107,7 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
             R$ {product.price.toFixed(2).replace('.', ',')}
           </p>
           <p className="text-lg text-foreground/80 leading-relaxed">{product.description}</p>
-          
+
           {product.stock > 0 ? (
              <p className="text-green-600 font-semibold">Em estoque ({product.stock} unidades)</p>
           ) : (
@@ -107,24 +115,24 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
           )}
 
           <div className="flex flex-col sm:flex-row gap-4">
-            <Button 
-              size="lg" 
-              className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground" 
+            <Button
+              size="lg"
+              className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground"
               onClick={handleAddToCart}
               disabled={product.stock === 0}
             >
               <ShoppingCart className="mr-2 h-5 w-5" />
               {product.stock === 0 ? 'Indisponível' : 'Adicionar ao Carrinho'}
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="w-full sm:w-auto" 
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto"
               onClick={handleToggleFavorite}
-              aria-label={isFavorite(product.id) ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+              aria-label={currentIsFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
             >
-              <Heart className={cn("mr-2 h-5 w-5", isFavorite(product.id) ? "fill-destructive text-destructive" : "text-destructive")} />
-              {isFavorite(product.id) ? "Remover Favorito" : "Adicionar Favorito"}
+              <Heart className={cn("mr-2 h-5 w-5", currentIsFavorite ? "fill-destructive text-destructive" : "text-destructive")} />
+              {currentIsFavorite ? "Remover Favorito" : "Adicionar Favorito"}
             </Button>
           </div>
           <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
@@ -167,4 +175,3 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
     </div>
   );
 }
-
