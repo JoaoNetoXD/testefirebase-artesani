@@ -17,13 +17,13 @@ export function Logo({ className, width = DEFAULT_WIDTH, height = DEFAULT_HEIGHT
   return (
     <Link href="/" className={cn('inline-block align-middle', className)}>
       <Image
-        src="/images/artesani-logo.png" // Trying to load from public/images/artesani-logo.png
+        src="/images/artesani-logo.png" // Assuming this path is correct: public/images/artesani-logo.png
         alt="Farmácia Artesani Logo"
         width={width}
         height={height}
         priority={priority}
-        className="object-contain"
-        data-ai-hint="pharmacy logo" // Added a hint, though not directly related to the fix
+        className="object-contain border-4 border-red-500" // Added visible red border for debugging
+        data-ai-hint="pharmacy logo"
       />
     </Link>
   );
