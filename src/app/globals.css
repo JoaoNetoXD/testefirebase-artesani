@@ -5,8 +5,8 @@
 
 @layer base {
   :root {
-    --background: 145 70% 15%; /* Dark Green page background: #113C24 */
-    --foreground: 0 0% 95%; /* Light text for dark background: #F2F2F2 */
+    --background: 157 96% 9%; /* Deep Green page background: #012A1A */
+    --foreground: 0 0% 94%; /* Light Gray/Off-white text for dark background: #F0F0F0 */
 
     --card: 0 0% 100%; /* White for cards, input backgrounds */
     --card-foreground: 145 70% 10%; /* Darker green for text on cards: #0B2918 */
@@ -14,14 +14,14 @@
     --popover: 0 0% 100%; /* White */
     --popover-foreground: 145 70% 10%; /* Darker green */
 
-    --primary: 145 70% 15%; /* Main dark green (e.g., header bg, logo bg): #113C24 */
-    --primary-foreground: 0 0% 95%; /* Light text on primary elements: #F2F2F2 */
+    --primary: 157 96% 9%; /* Main deep green (e.g., header bg, logo bg): #012A1A */
+    --primary-foreground: 0 0% 94%; /* Light text on primary elements: #F0F0F0 */
 
-    --secondary: 120 40% 65%; /* Lighter muted green (e.g., "Sobre Nós" button): #A8C9A8 */
-    --secondary-foreground: 145 70% 10%; /* Dark Green for text on secondary elements: #0B2918 */
+    --secondary: 120 26% 70%; /* Lighter green (e.g., "Sobre Nós" button, highlights): #A1C6A1 */
+    --secondary-foreground: 157 96% 7%; /* Very Dark Green for text on secondary elements: #012115 */
 
-    --muted: 145 50% 25%; /* Muted dark green (e.g., borders on dark BG): #1F5C3A */
-    --muted-foreground: 145 30% 75%; /* Lighter green/gray for less important text: #A4C2B1 */
+    --muted: 157 80% 15%; /* Muted dark green (e.g., borders on dark BG): #083C28 */
+    --muted-foreground: 120 20% 80%; /* Lighter green/gray for less important text on dark BG: #C2D1C2 */
 
     --accent: 30 90% 55%; /* Vibrant Orange (e.g., "Ver Catálogo", "Novidade!"): #F9A027 */
     --accent-foreground: 0 0% 98%; /* White text for accent elements #FAFAFA */
@@ -29,8 +29,8 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 145 50% 22%; /* Border color, slightly different from muted: #1A5233 */
-    --input: 0 0% 100%; /* White for input background */
+    --border: 157 70% 20%; /* Border color, for elements on dark BG: #10583A */
+    --input: 0 0% 100%; /* White for input background (on cards) */
     --input-foreground: 145 70% 10%; /* Darker green for input text */
     --ring: 30 90% 50%; /* Orange for focus rings #F7941D */
     
@@ -42,46 +42,47 @@
     --radius: 0.5rem;
 
     /* Default sidebar variables, can be overridden or used by the sidebar component */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* For admin panel, we might want a different theme for the sidebar itself if it's on a light background */
+    --sidebar-background: 240 5.9% 10%; /* Default dark from shadcn if admin is dark */
+    --sidebar-foreground: 0 0% 94%;
+    --sidebar-primary: 120 26% 70%; /* Light green for primary actions in sidebar */
+    --sidebar-primary-foreground: 157 96% 7%; /* Dark green text on light green button */
+    --sidebar-accent: 157 90% 12%; /* Darker shade for hover/active items */
+    --sidebar-accent-foreground: 0 0% 94%;
+    --sidebar-border: 157 70% 20%;
+    --sidebar-ring: 30 90% 50%;
   }
 
   .dark {
-    /* Keeping dark theme distinct for now, can be aligned later if needed */
-    --background: 157 96% 9%; /* #012A1A - Deep Green */
-    --foreground: 0 0% 94%; /* #F0F0F0 - Light Gray/Greenish */
+    /* Dark theme specific overrides if needed, for now aligns with root but can diverge */
+    --background: 157 96% 9%; /* #012A1A */
+    --foreground: 0 0% 94%; /* #F0F0F0 */
 
-    --card: 157 90% 12%; /* Darker shade of primary */
+    --card: 157 90% 12%; /* Darker shade of primary for cards in dark mode */
     --card-foreground: 0 0% 94%;
 
     --popover: 157 90% 12%;
     --popover-foreground: 0 0% 94%;
 
-    --primary: 120 26% 70%; /* #A1C6A1 - Light Green */
-    --primary-foreground: 157 96% 9%; /* #012A1A - Deep Green */
+    --primary: 120 26% 70%; /* Light Green for primary in dark mode */
+    --primary-foreground: 157 96% 9%; /* Deep Green text on light green */
 
-    --secondary: 120 26% 60%; /* Slightly darker light green */
+    --secondary: 120 26% 60%; /* Slightly darker light green for secondary */
     --secondary-foreground: 0 0% 94%;
 
     --muted: 157 80% 15%;
-    --muted-foreground: 0 0% 63.9%; /* Lighter gray text */
+    --muted-foreground: 0 0% 63.9%; 
 
-    --accent: 120 26% 70%; /* #A1C6A1 */
-    --accent-foreground: 157 96% 9%; /* #012A1A */
+    --accent: 30 90% 55%; /* Orange still works for dark mode */
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 157 70% 20%;
-    --input: 157 70% 20%;
+    --input: 157 70% 20%; /* Dark input background for dark mode */
     --input-foreground: 0 0% 94%;
-    --ring: 120 26% 50%;
+    --ring: 120 26% 50%; /* Ring color adjusted for dark mode */
     
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -90,12 +91,12 @@
     --chart-5: 340 75% 55%;
 
     /* Dark Sidebar variables */
-    --sidebar-background: 240 5.9% 10%; /* Default dark */
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-background: 240 5.9% 10%; 
+    --sidebar-foreground: 0 0% 94%;
+    --sidebar-primary: 120 26% 70%;
+    --sidebar-primary-foreground: 157 96% 9%;
     --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 0 0% 94%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }

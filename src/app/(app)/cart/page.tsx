@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, PlusCircle, MinusCircle } from 'lucide-react';
+import { Trash2, PlusCircle, MinusCircle, ShoppingCart } from 'lucide-react'; // Added ShoppingCart
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function CartPage() {
