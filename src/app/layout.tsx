@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} dark`}>
+    <html lang="pt-BR" className={`${inter.variable}`}>
       <head />
       <body className="font-body antialiased bg-background text-foreground">
         <AuthProvider> {/* Wrap with AuthProvider */}
@@ -39,4 +39,3 @@ export default function RootLayout({
     </html>
   );
 }
-
