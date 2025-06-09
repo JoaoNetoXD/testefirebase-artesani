@@ -3,14 +3,14 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { CartProvider } from '@/context/CartContext';
-import { FavoritesProvider } from '@/context/FavoritesContext'; // Import FavoritesProvider
-import { Inter } from 'next/font/google'; // Import next/font
+import { FavoritesProvider } from '@/context/FavoritesContext';
+import { AuthProvider } from '@/context/AuthContext'; // Import AuthProvider
+import { Inter } from 'next/font/google';
 
-// Configure Inter font
 const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-inter', // Expose as CSS variable
-  display: 'swap',         // Good for performance and avoiding FOUT/FOIT
+  variable: '--font-inter',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -24,18 +24,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // Apply the font variable to the html tag
     <html lang="pt-BR" className={inter.variable}>
-      <head>
-        {/* Google Font <link> tags previously here are now removed */}
-      </head>
+      <head />
       <body className="font-body antialiased">
-        <CartProvider>
-          <FavoritesProvider> {/* Wrap with FavoritesProvider */}
-            {children}
-            <Toaster />
-          </FavoritesProvider>
-        </CartProvider>
+        <AuthProvider> {/* Wrap with AuthProvider */}
+          <CartProvider>
+            <FavoritesProvider>
+              {children}
+              <Toaster />
+            </FavoritesProvider>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

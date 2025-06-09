@@ -1,6 +1,10 @@
 
+"use client";
 import Link from 'next/link';
 import { ListOrdered, User, Heart, LogOut, LayoutDashboard } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth'; // Import useAuth
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 const accountNavLinks = [
   { href: '/account', label: 'Visão Geral', icon: LayoutDashboard },
@@ -14,6 +18,25 @@ export default function AccountLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { logout, currentUser, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !currentUser) {
+      router.push('/login');
+    }
+  }, [currentUser, loading, router]);
+
+
+  if (loading || !currentUser) {
+    return <div className="flex justify-center items-center min-h-[calc(100vh-200px)]"><p>Carregando...</p></div>; // Ou um spinner
+  }
+  
+  const handleLogout = async () => {
+    await logout();
+    // O AuthContext já redireciona para /login após o logout
+  };
+
   return (
     <div className="grid md:grid-cols-4 gap-8 py-8">
       <aside className="md:col-span-1">
@@ -29,13 +52,14 @@ export default function AccountLayout({
               <span>{link.label}</span>
             </Link>
           ))}
-          <Link
-            href="/api/auth/logout" // Placeholder for logout
-            className="flex items-center space-x-3 p-3 rounded-md text-destructive hover:bg-destructive/10 transition-colors"
+          <Button
+            onClick={handleLogout}
+            variant="ghost"
+            className="flex items-center space-x-3 p-3 rounded-md text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors w-full justify-start"
           >
             <LogOut className="h-5 w-5" />
             <span>Sair</span>
-          </Link>
+          </Button>
         </nav>
       </aside>
       <main className="md:col-span-3">
@@ -44,3 +68,6 @@ export default function AccountLayout({
     </div>
   );
 }
+
+// Adicionado useEffect para proteção de rota
+import { useEffect } from 'react';
