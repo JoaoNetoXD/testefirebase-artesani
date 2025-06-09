@@ -66,16 +66,16 @@ export default function HomePage() {
             className="flex justify-center md:justify-end mt-8 md:mt-0 animate-fade-in"
             style={{ animationDelay: '400ms' }}
           >
-            <div className="relative w-full max-w-xl"> {/* Increased max-width for larger image */}
+            <div className="relative w-full max-w-xl">
               <Image
-                src="https://i.ibb.co/L6W0kP7/aSXVEUZ.png" // Updated image URL
+                src="/images/products/3produtosincial.png" // Mudança aqui!
                 alt="Produtos Artesani em destaque"
-                width={1600} // Original width for aspect ratio calculation
-                height={1200} // Original height for aspect ratio calculation
-                sizes="(max-width: 768px) 90vw, (max-width: 1024px) 50vw, 640px" // Adjusted sizes
-                className="object-contain w-full h-auto" // Ensure responsiveness and visibility
+                width={1600}
+                height={1200}
+                sizes="(max-width: 768px) 90vw, (max-width: 1024px) 50vw, 640px"
+                className="object-contain w-full h-auto"
                 data-ai-hint="product lineup pharmacy"
-                priority // Consider adding priority if this is a key LCP element
+                priority
               />
             </div>
           </div>
