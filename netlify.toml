@@ -3,11 +3,11 @@
   publish = ".next"
   
   [build.environment]
-    NEXT_PUBLIC_SUPABASE_ANON_KEY = ""
-    NEXT_PUBLIC_SUPABASE_URL = ""
-    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = ""
-    STRIPE_SECRET_KEY = ""
     NODE_VERSION = "18"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = ""
+  NEXT_PUBLIC_SUPABASE_URL = ""
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = ""
+  STRIPE_SECRET_KEY = ""
