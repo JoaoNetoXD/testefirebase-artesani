@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/services/stripe';
+// Trocar:
+// import { stripe } from '@/lib/services/stripe';
+
+// Por:
 import Stripe from 'stripe';
+
+// E criar a instância localmente:
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2024-12-18.acacia',
+});
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 

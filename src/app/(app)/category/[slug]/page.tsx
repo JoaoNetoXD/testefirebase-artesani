@@ -12,10 +12,13 @@ export async function generateStaticParams() {
   }));
 }
 
-export default async function CategoryPage({ params }: { params: { slug: string } }) {
+export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
+  // Aguardar params antes de usar
+  const { slug } = await params;
+  
   // Buscar todas as categorias
   const categories = await CategoryService.getAllCategories();
-  const currentCategory = categories.find(cat => cat.slug === params.slug);
+  const currentCategory = categories.find(cat => cat.slug === slug);
   
   if (!currentCategory) {
     notFound();
@@ -35,7 +38,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <aside className="lg:col-span-1">
-          <CategoryNavigation categories={categories} currentCategorySlug={params.slug} />
+          <CategoryNavigation categories={categories} currentCategorySlug={slug} />
         </aside>
         
         <main className="lg:col-span-3">
@@ -53,9 +56,9 @@ export default async function CategoryPage({ params }: { params: { slug: string 
               <p className="text-lg text-muted-foreground mb-4">
                 Nenhum produto encontrado nesta categoria.
               </p>
-              <p className="text-muted-foreground">
-                Volte em breve para ver novos produtos!
-              </p>
+              <Link href="/" className="text-primary hover:underline">
+                Voltar à página inicial
+              </Link>
             </div>
           )}
         </main>

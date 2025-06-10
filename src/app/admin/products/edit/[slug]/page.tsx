@@ -6,7 +6,10 @@ import { ProductService } from '@/lib/services/productService';
 import type { Product } from '@/lib/types';
 import { useState, useEffect } from 'react';
 
-export default function EditProductPage({ params }: { params: { slug: string } }) {
+export default async function EditProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const productData = await ProductService.getProductBySlug(slug);
+  
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 

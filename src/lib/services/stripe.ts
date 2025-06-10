@@ -97,5 +97,10 @@ export async function getPaymentIntent(paymentIntentId: string) {
   }
 }
 
-// Exportar instância do Stripe para uso no servidor
-export const stripe = getStripe();
+// REMOVER esta linha que está causando o erro:
+// export const stripe = getStripe();
+
+// Função para obter instância do Stripe (apenas para uso no servidor)
+export function getServerStripe() {
+  return getStripe();
+}
