@@ -1,5 +1,6 @@
+
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   useStripe,
   useElements,
@@ -38,28 +39,37 @@ function PaymentForm({ clientSecret, amount, onSuccess, onError }: PaymentFormPr
     try {
       const { error: submitError } = await elements.submit();
       if (submitError) {
-        setError(submitError.message || 'Erro ao processar pagamento');
+        const errorMessage = submitError.message || 'Erro ao processar dados do pagamento';
+        setError(errorMessage);
+        onError(errorMessage); // Notificar o componente pai sobre o erro
         setIsLoading(false);
         return;
       }
 
-      const { error: confirmError } = await stripe.confirmPayment({
+      const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/success`,
+          return_url: `${window.location.origin}/success?payment_intent_id={payment_intent}`, // Adicionar payment_intent_id para rastreamento
         },
-        redirect: 'if_required',
+        redirect: 'if_required', // Evita redirecionamento automático, lidamos com isso
       });
 
       if (confirmError) {
-        setError(confirmError.message || 'Erro ao confirmar pagamento');
-        onError(confirmError.message || 'Erro ao confirmar pagamento');
-      } else {
+        const errorMessage = confirmError.message || 'Erro ao confirmar pagamento';
+        setError(errorMessage);
+        onError(errorMessage);
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
         onSuccess();
+      } else {
+        // Caso o status não seja 'succeeded' mesmo sem erro direto (ex: requires_action)
+        const errorMessage = paymentIntent?.status ? `Pagamento requer ação adicional: ${paymentIntent.status}` : 'Pagamento não concluído';
+        setError(errorMessage);
+        onError(errorMessage);
       }
-    } catch (err) {
-      setError('Erro inesperado ao processar pagamento');
-      onError('Erro inesperado ao processar pagamento');
+    } catch (err: any) {
+      const errorMessage = err.message || 'Erro inesperado ao processar pagamento';
+      setError(errorMessage);
+      onError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -112,38 +122,52 @@ interface StripePaymentFormProps {
 
 export default function StripePaymentForm({ amount, onSuccess, onError }: StripePaymentFormProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingClientSecret, setIsLoadingClientSecret] = useState(true); // Renomeado para clareza
 
-  // Criar Payment Intent quando o componente monta
-  useState(() => {
-    const createPaymentIntent = async () => {
+  useEffect(() => {
+    // Função para criar o Payment Intent
+    const createPaymentIntentOnMount = async () => {
+      setIsLoadingClientSecret(true); // Inicia carregamento
       try {
         const response = await fetch('/api/stripe/create-payment-intent', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ amount }),
+          body: JSON.stringify({ amount }), // Envia o valor do carrinho
         });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
+        }
 
         const data = await response.json();
         
         if (data.clientSecret) {
           setClientSecret(data.clientSecret);
         } else {
-          onError('Erro ao inicializar pagamento');
+          onError('Erro ao inicializar pagamento: clientSecret não recebido.');
         }
-      } catch (error) {
-        onError('Erro ao conectar com o servidor de pagamento');
+      } catch (error: any) {
+        console.error("Erro ao criar Payment Intent:", error);
+        onError(error.message || 'Erro ao conectar com o servidor de pagamento.');
       } finally {
-        setIsLoading(false);
+        setIsLoadingClientSecret(false); // Finaliza carregamento
       }
     };
 
-    createPaymentIntent();
-  });
+    if (amount > 0) { // Apenas tenta criar se o valor for positivo
+        createPaymentIntentOnMount();
+    } else {
+        onError('Valor do carrinho inválido para iniciar pagamento.');
+        setIsLoadingClientSecret(false);
+    }
+  // A dependência `amount` garante que o PI seja recriado se o valor mudar.
+  // `onError` também como dependência se sua referência puder mudar.
+  }, [amount, onError]); 
 
-  if (isLoading) {
+  if (isLoadingClientSecret) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center p-6">
@@ -160,7 +184,7 @@ export default function StripePaymentForm({ amount, onSuccess, onError }: Stripe
         <CardContent className="p-6">
           <Alert variant="destructive">
             <AlertDescription>
-              Erro ao carregar formulário de pagamento. Tente novamente.
+              Erro ao carregar formulário de pagamento. Verifique o console para mais detalhes ou tente atualizar a página.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -168,29 +192,35 @@ export default function StripePaymentForm({ amount, onSuccess, onError }: Stripe
     );
   }
 
+  // Opções para o componente Elements do Stripe
   const options = {
     clientSecret,
     appearance: {
       theme: 'stripe' as const,
       variables: {
-        colorPrimary: '#0570de',
-        colorBackground: '#ffffff',
-        colorText: '#30313d',
-        colorDanger: '#df1b41',
+        colorPrimary: '#012A1A', // Cor primária do seu tema (Deep Green)
+        colorBackground: '#ffffff', // Fundo branco dos inputs
+        colorText: '#0B2918', // Texto escuro nos inputs
+        colorDanger: '#ef4444', // Vermelho para erros
         fontFamily: 'Inter, system-ui, sans-serif',
         spacingUnit: '4px',
-        borderRadius: '8px',
+        borderRadius: '0.5rem', // Corresponde ao --radius
       },
+      rules: {
+        '.Input': {
+          borderColor: 'hsl(var(--border))', // Cor da borda do input do seu tema
+        }
+      }
     },
     locale: 'pt-BR' as const,
   };
 
   return (
-    <Card>
+    <Card className="shadow-lg"> {/* Adicionando sombra para consistência */}
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <CreditCard className="mr-2 h-5 w-5" />
-          Pagamento Seguro
+        <CardTitle className="flex items-center text-xl font-headline"> {/* Ajuste de estilo */}
+          <CreditCard className="mr-3 h-5 w-5 text-primary" /> {/* Ajuste de tamanho e margem */}
+          Pagamento com Cartão
         </CardTitle>
       </CardHeader>
       <CardContent>
