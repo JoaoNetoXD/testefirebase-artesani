@@ -97,17 +97,18 @@ export default function OrderHistoryPage() {
                     <h4 className="font-semibold">Itens do Pedido:</h4>
                     {order.order_items.map((item) => (
                       <div key={item.id} className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg">
-                        {item.product && (
+                        {item.products && ( // Changed from item.product to item.products to match OrderService structure
                           <>
                             <Image
-                              src={item.product.images[0] || '/placeholder-product.png'}
-                              alt={item.product.name}
+                              src={(item.products.images && item.products.images.length > 0) ? item.products.images[0] : 'https://placehold.co/60x60.png'}
+                              alt={item.products.name}
                               width={60}
                               height={60}
                               className="rounded object-cover"
+                              data-ai-hint="product thumbnail"
                             />
                             <div className="flex-1">
-                              <p className="font-medium">{item.product.name}</p>
+                              <p className="font-medium">{item.products.name}</p>
                               <p className="text-sm text-muted-foreground">
                                 Quantidade: {item.quantity} | Preço: R$ {item.price.toFixed(2)}
                               </p>

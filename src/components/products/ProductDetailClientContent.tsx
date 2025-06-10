@@ -22,12 +22,24 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
   const { addToCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { toast } = useToast();
-  const [selectedImage, setSelectedImage] = useState(product.images[0]);
+  const [selectedImage, setSelectedImage] = useState(
+    (product.images && product.images.length > 0) ? product.images[0] : 'https://placehold.co/600x600.png'
+  );
   const [isClientMounted, setIsClientMounted] = useState(false);
 
   useEffect(() => {
     setIsClientMounted(true);
   }, []);
+
+  useEffect(() => {
+    // Update selectedImage if product changes and has images
+    if (product && product.images && product.images.length > 0) {
+      setSelectedImage(product.images[0]);
+    } else if (product) {
+      setSelectedImage('https://placehold.co/600x600.png');
+    }
+  }, [product]);
+
 
   const handleAddToCart = () => {
     addToCart(product);
@@ -46,6 +58,10 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
       description: `${product.name} foi ${currentIsFavorite ? 'removido dos' : 'adicionado aos'} seus favoritos.`,
     });
   };
+  
+  const categoryName = product.category_name || product.category; // Use category_name first
+  const categorySlug = categoryName?.toLowerCase().replace(/\s+/g, '-') || 'geral';
+
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -63,7 +79,7 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
               priority
             />
           </div>
-          {product.images.length > 1 && (
+          {product.images && product.images.length > 1 && (
             <div className="mt-4 grid grid-cols-4 gap-2">
               {product.images.map((img, index) => (
                 <div
@@ -101,14 +117,14 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
             </div>
             <span>(123 avaliações)</span>
             <span>|</span>
-            {(product.category || product.category_name) && (
+            {categoryName && (
               <span>
                 Categoria: 
                 <Link 
-                  href={`/category/${(product.category || product.category_name)?.toLowerCase().replace(/\s+/g, '-')}`} 
+                  href={`/category/${categorySlug}`} 
                   className="text-accent hover:underline"
                 >
-                  {product.category || product.category_name}
+                  {categoryName}
                 </Link>
               </span>
             )}

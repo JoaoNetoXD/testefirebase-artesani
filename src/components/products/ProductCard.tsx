@@ -46,6 +46,7 @@ export function ProductCard({ product, index }: ProductCardProps) {
   };
 
   const animationDelay = index ? `${index * 100}ms` : '0ms';
+  const imageUrl = (product.images && product.images.length > 0) ? product.images[0] : 'https://placehold.co/600x400.png';
 
   return (
     <Card 
@@ -56,7 +57,7 @@ export function ProductCard({ product, index }: ProductCardProps) {
         <Link href={`/products/${product.slug}`} passHref className="block">
           <div className="aspect-[4/3] relative w-full overflow-hidden rounded-t-lg">
             <Image
-              src={product.images[0]}
+              src={imageUrl}
               alt={product.name}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
