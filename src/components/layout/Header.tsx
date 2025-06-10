@@ -104,13 +104,7 @@ export function Header() {
 
       <div className="bg-primary text-primary-foreground shadow-md">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <Image 
-            src="/images/artesani-logo.png" 
-            alt="Artesani Logo" 
-            width={60} 
-            height={60} 
-            priority 
-          />
+          <Logo width={60} height={60} priority />
 
           <nav className="hidden lg:flex items-center space-x-5 font-medium">
             {mainNavLinks.slice(0, 5).map((link) => (
