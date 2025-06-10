@@ -2,7 +2,7 @@
 "use client";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { mockProducts } from '@/lib/data'; 
+// Remover esta linha: import { mockProducts } from '@/lib/data'; 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -20,27 +20,75 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { ProductService } from '@/lib/services/productService';
+import type { Product } from '@/lib/types';
 
 export default function AdminProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
-  // Simulação de filtragem. Em um app real, isso seria feito no backend ou com um estado mais robusto.
-  const filteredProducts = mockProducts.filter(product => 
+  // Carregar produtos do Supabase
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    setLoading(true);
+    try {
+      const data = await ProductService.getAllProducts();
+      setProducts(data);
+    } catch (error) {
+      console.error('Erro ao carregar produtos:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os produtos.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filtrar produtos
+  const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.category_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDeleteProduct = (productName: string) => {
-    // Simulação de exclusão. Em um app real, você chamaria uma API aqui.
-    toast({
-      title: "Exclusão Simulada",
-      description: `O produto "${productName}" foi "excluído" (simulação).`,
-      variant: "destructive"
-    });
-    // Aqui você também atualizaria o estado local se estivesse gerenciando os produtos no frontend.
+  const handleDeleteProduct = async (productId: string, productName: string) => {
+    try {
+      const success = await ProductService.deleteProduct(productId);
+      if (success) {
+        toast({
+          title: "Produto Excluído",
+          description: `${productName} foi excluído com sucesso.`,
+        });
+        // Recarregar lista
+        loadProducts();
+      } else {
+        throw new Error('Falha ao excluir produto');
+      }
+    } catch (error) {
+      console.error('Erro ao excluir produto:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o produto.",
+        variant: "destructive"
+      });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -137,7 +185,7 @@ export default function AdminProductsPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteProduct(product.name)} className="bg-destructive hover:bg-destructive/90">
+                            <AlertDialogAction onClick={() => handleDeleteProduct(product.id, product.name)} className="bg-destructive hover:bg-destructive/90">
                               Excluir (Simulado)
                             </AlertDialogAction>
                           </AlertDialogFooter>

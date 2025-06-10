@@ -10,9 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 interface UserProfileData {
   name: string;
   phone?: string;
-  email?: string; // Adicionado para consistência, embora o email principal venha do auth.user
-  role?: string; // Novo campo para o papel do usuário (ex: 'user', 'admin')
-  // Add other fields like address later
+  email?: string;
+  role?: string; // ✅ Certifique-se de que está descomentado
 }
 
 // Ajuste para refletir a estrutura do Supabase (User pode ser diferente)
@@ -111,27 +110,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Função interna para buscar perfil, usada no setup inicial e no onAuthStateChange
   const fetchUserProfileInternal = async (userId: string): Promise<UserProfileData | null> => {
     if (!supabase || !supabaseServicesAvailable) {
-      // Não notifica aqui para não spammar, o contexto já lida com isso
+      console.log('🚫 Supabase não disponível');
       return null;
     }
     try {
+      console.log('🔍 Buscando perfil para usuário:', userId);
+      
       const { data, error, status } = await supabase
         .from('profiles')
-        .select(`name, phone, email, role`)
+        .select(`name, phone, email, role`) // ✅ Adicionado 'role' de volta
         .eq('id', userId)
         .single();
-
+  
+      console.log('📊 Resultado da busca:', { data, error, status });
+      
       if (error && status !== 406) { // 406 significa que não encontrou, o que é ok
+        console.error('❌ Erro na busca do perfil:', error);
         throw error;
       }
-
+  
       if (data) {
+        console.log('✅ Perfil encontrado:', data);
+        console.log('👤 Role do usuário:', data.role);
+        console.log('🔐 É admin?', data.role === 'admin');
         return data as UserProfileData;
       }
+      
+      console.log('⚠️ Nenhum perfil encontrado para o usuário');
       return null;
     } catch (error: any) {
-      console.error("Erro ao buscar perfil do usuário:", error.message);
-      // Não mostra toast aqui para não poluir em caso de falhas de rede ou RLS não configurada
+      console.error("❌ Erro ao buscar perfil do usuário:", error.message);
       return null;
     }
   };
@@ -188,27 +196,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const login = async (email: string, pass: string) => {
+  const login = async (email: string, pass: string): Promise<boolean> => {
     if (!supabase || !supabaseServicesAvailable) {
       notifySupabaseDisabled();
-      return;
+      return false;
     }
     setLoading(true);
     try {
+      console.log('🔐 Iniciando login para:', email);
       const { data: loginData, error } = await supabase.auth.signInWithPassword({ email, password: pass });
       if (error) throw error;
       if (!loginData.user) throw new Error('Login falhou, usuário não retornado.');
       
+      console.log('👤 Usuário logado:', loginData.user.email);
+      
       // Após o login, buscar o perfil para ter o 'role'
       const profile = await fetchUserProfileInternal(loginData.user.id);
+      console.log('📋 Perfil do usuário:', profile);
+      
       setCurrentUserProfile(profile);
-      setIsAdmin(profile?.role === 'admin');
+      const userIsAdmin = profile?.role === 'admin';
+      setIsAdmin(userIsAdmin);
+      
+      console.log('🔑 É admin?', userIsAdmin);
 
       toast({ title: "Login realizado!", description: "Bem-vindo(a) de volta!" });
-      router.push('/');
+      
+      // Não redirecionar aqui, deixar a página de login fazer isso
+      return true;
     } catch (error: any) {
       console.error("Erro no login:", error);
       toast({ title: "Erro no Login", description: error.message || "Email ou senha inválidos.", variant: "destructive" });
+      return false;
     } finally {
       setLoading(false);
     }

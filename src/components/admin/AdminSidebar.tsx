@@ -34,9 +34,7 @@ export function AdminSidebar() {
   return (
     <aside className="w-64 min-h-screen bg-card text-card-foreground p-4 flex-col fixed top-0 left-0 shadow-xl border-r border-border hidden md:flex">
       <div className="mb-6 mt-2 flex justify-center">
-        <Link href="/admin" aria-label="Admin Dashboard Home">
-          <Logo width={60} height={60} />
-        </Link>
+        <Logo width={60} height={60} />
       </div>
       <nav className="flex-grow space-y-1.5">
         {adminNavLinks.map((link) => {

@@ -101,7 +101,17 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
             </div>
             <span>(123 avaliações)</span>
             <span>|</span>
-            <span>Categoria: <Link href={`/category/${product.category.toLowerCase().replace(/\s+/g, '-')}`} className="text-accent hover:underline">{product.category}</Link></span>
+            {(product.category || product.category_name) && (
+              <span>
+                Categoria: 
+                <Link 
+                  href={`/category/${(product.category || product.category_name)?.toLowerCase().replace(/\s+/g, '-')}`} 
+                  className="text-accent hover:underline"
+                >
+                  {product.category || product.category_name}
+                </Link>
+              </span>
+            )}
           </div>
           <p className="text-3xl font-semibold text-primary">
             R$ {product.price.toFixed(2).replace('.', ',')}

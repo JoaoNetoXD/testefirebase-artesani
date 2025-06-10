@@ -1,9 +1,11 @@
 
+'use client';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import Image from 'next/image';
 import { Target, Eye, Gem, BadgeCheck, ShieldCheck, MapPin } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export default function SobreNosPage() {
   const pilares = [
@@ -72,6 +74,7 @@ export default function SobreNosPage() {
           </div>
         </section>
         
+        {/* Seção do farmacêutico com as melhorias que você gostou */}
         <section className="py-12 md:py-16 bg-muted/20">
           <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-stretch">
@@ -80,17 +83,21 @@ export default function SobreNosPage() {
                 style={{ animationDelay: '300ms' }}
               >
                 <div className="relative w-full h-full min-h-[400px] md:min-h-[500px] group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl transform rotate-3 group-hover:rotate-6 transition-transform duration-500"></div>
                   <Image
                     src="https://i.imgur.com/Z9NogEk.png" 
                     alt="Dr. Guilherme Xavier - Farmacêutico Responsável na Farmácia Artesani Teresina"
                     fill
-                    sizes="(max-width: 768px) 80vw, (max-width: 1024px) 40vw, 500px"
-                    className="object-cover rounded-lg shadow-2xl group-hover:scale-105 transition-transform duration-300"
+                    sizes="(max-width: 768px) 90vw, (max-width: 1024px) 45vw, 600px"
+                    className="object-cover rounded-2xl shadow-2xl group-hover:scale-105 transition-transform duration-500 relative z-10"
                     data-ai-hint="pharmacist portrait professional" 
                   />
-                   <div className="absolute -bottom-4 -right-4 bg-accent text-accent-foreground p-3 rounded-full shadow-lg group-hover:scale-110 transition-transform">
-                     <ShieldCheck size={32} />
+                   <div className="absolute -bottom-6 -right-6 bg-gradient-to-r from-accent to-secondary text-white p-4 rounded-full shadow-2xl group-hover:scale-110 transition-transform z-20">
+                     <ShieldCheck size={40} />
                    </div>
+                   <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground z-20">
+                     👨‍⚕️ Farmacêutico Responsável
+                   </Badge>
                 </div>
               </div>
               <div className="animate-fade-in-right flex flex-col justify-center" style={{ animationDelay: '500ms' }}>

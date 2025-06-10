@@ -1,57 +1,65 @@
 
 import { ProductList } from '@/components/products/ProductList';
 import { CategoryNavigation } from '@/components/products/CategoryNavigation';
-import { mockProducts, mockCategories } from '@/lib/data';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, Filter } from "lucide-react";
+import { CategoryService } from '@/lib/services/categoryService';
+import { ProductService } from '@/lib/services/productService';
+import { notFound } from 'next/navigation';
 
-// Static generation for category pages
 export async function generateStaticParams() {
-  return mockCategories.map((category) => ({
+  const categories = await CategoryService.getAllCategories();
+  return categories.map((category) => ({
     slug: category.slug,
   }));
 }
 
-export default function CategoryPage({ params }: { params: { slug: string } }) {
-  const currentCategory = mockCategories.find(cat => cat.slug === params.slug);
-  const productsInCategory = currentCategory 
-    ? mockProducts.filter(p => p.category === currentCategory.name)
-    : [];
-
+export default async function CategoryPage({ params }: { params: { slug: string } }) {
+  // Buscar todas as categorias
+  const categories = await CategoryService.getAllCategories();
+  const currentCategory = categories.find(cat => cat.slug === params.slug);
+  
   if (!currentCategory) {
-    return <p className="text-center text-destructive py-8">Categoria não encontrada.</p>;
+    notFound();
   }
 
-  return (
-    <div>
-      <section className="mb-12 text-center py-12 bg-gradient-to-r from-primary to-green-700 rounded-lg shadow-xl">
-        <h1 className="text-4xl font-headline font-bold text-primary-foreground mb-4">
-          {currentCategory.name}
-        </h1>
-        <p className="text-lg text-primary-foreground/90">
-          Explore nossa seleção de {currentCategory.name.toLowerCase()}.
-        </p>
-      </section>
-      
-      <section className="mb-12">
-        <div className="flex flex-col md:flex-row gap-4 mb-6 items-center p-4 bg-card rounded-lg shadow">
-            <div className="relative flex-grow w-full md:w-auto">
-                <Input type="search" placeholder={`Buscar em ${currentCategory.name}...`} className="text-base pl-10 h-12" />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            </div>
-            <Button variant="outline" className="h-12 w-full md:w-auto">
-                <Filter className="mr-2 h-4 w-4" />
-                Filtros
-            </Button>
-        </div>
-        <CategoryNavigation categories={mockCategories} currentCategorySlug={params.slug} />
-      </section>
+  // Buscar produtos reais do Supabase por categoria
+  const products = await ProductService.getProductsByCategory(currentCategory.name);
 
-      <section>
-        <h2 className="text-3xl font-headline font-semibold mb-6">Produtos em {currentCategory.name}</h2>
-        <ProductList products={productsInCategory} />
-      </section>
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-4xl font-headline mb-4">{currentCategory.name}</h1>
+        {currentCategory.description && (
+          <p className="text-lg text-muted-foreground mb-6">{currentCategory.description}</p>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <aside className="lg:col-span-1">
+          <CategoryNavigation categories={categories} currentCategorySlug={params.slug} />
+        </aside>
+        
+        <main className="lg:col-span-3">
+          {products.length > 0 ? (
+            <>
+              <div className="mb-6">
+                <p className="text-muted-foreground">
+                  {products.length} produto{products.length !== 1 ? 's' : ''} encontrado{products.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+              <ProductList products={products} />
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-lg text-muted-foreground mb-4">
+                Nenhum produto encontrado nesta categoria.
+              </p>
+              <p className="text-muted-foreground">
+                Volte em breve para ver novos produtos!
+              </p>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

@@ -1,119 +1,138 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import Image from "next/image";
+"use client";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { OrderService } from '@/lib/services/orderService';
+import type { Order } from '@/lib/types';
+import Image from 'next/image';
+import Link from 'next/link';
 
 export default function OrderHistoryPage() {
-  // Mock data for demonstration
-  const orders = [
-    { 
-      id: "ORD001", 
-      date: "2024-07-15", 
-      total: 125.50, 
-      status: "Entregue",
-      items: [
-        { id: "p1", name: "Analgésico Potente", quantity: 2, price: 25.99, imageUrl: "https://placehold.co/80x80.png" },
-        { id: "p2", name: "Vitamina C Efervescente", quantity: 1, price: 32.50, imageUrl: "https://placehold.co/80x80.png" },
-      ]
-    },
-    { 
-      id: "ORD002", 
-      date: "2024-07-20", 
-      total: 78.90, 
-      status: "Enviado",
-      items: [
-        { id: "p3", name: "Creme Hidratante Facial", quantity: 1, price: 59.90, imageUrl: "https://placehold.co/80x80.png" },
-      ] 
-    },
-    { 
-      id: "ORD003", 
-      date: "2024-07-22", 
-      total: 210.00, 
-      status: "Processando",
-      items: [
-        { id: "p4", name: "Shampoo Antiqueda Manipulado", quantity: 2, price: 75.00, imageUrl: "https://placehold.co/80x80.png" },
-        { id: "p5", name: "Protetor Solar FPS 50", quantity: 1, price: 45.00, imageUrl: "https://placehold.co/80x80.png" },
-      ]
-    },
-     { 
-      id: "ORD004", 
-      date: "2024-07-25", 
-      total: 55.00, 
-      status: "Pendente",
-      items: [
-        { id: "p6", name: "Sabonete Líquido Neutro", quantity: 1, price: 55.00, imageUrl: "https://placehold.co/80x80.png" },
-      ]
-    },
-  ];
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { currentUser } = useAuth();
 
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case "Entregue":
-        return "bg-green-600 hover:bg-green-700 text-primary-foreground";
-      case "Enviado":
-        return "bg-blue-600 hover:bg-blue-700 text-primary-foreground";
-      case "Processando":
-        return "bg-yellow-500 hover:bg-yellow-600 text-yellow-950";
-      case "Pendente":
-        return "bg-slate-500 hover:bg-slate-600 text-primary-foreground";
-      default:
-        return "bg-muted text-muted-foreground";
+  useEffect(() => {
+    if (currentUser) {
+      loadOrders();
+    }
+  }, [currentUser]);
+
+  const loadOrders = async () => {
+    if (!currentUser) return;
+    
+    try {
+      const userOrders = await OrderService.getOrdersByUserId(currentUser.id);
+      setOrders(userOrders);
+    } catch (error) {
+      console.error('Erro ao carregar pedidos:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'delivered': return 'bg-green-100 text-green-800';
+      case 'shipped': return 'bg-blue-100 text-blue-800';
+      case 'processing': return 'bg-yellow-100 text-yellow-800';
+      case 'pending': return 'bg-gray-100 text-gray-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'delivered': return 'Entregue';
+      case 'shipped': return 'Enviado';
+      case 'processing': return 'Processando';
+      case 'pending': return 'Pendente';
+      case 'cancelled': return 'Cancelado';
+      default: return status;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Carregando pedidos...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <h1 className="text-3xl font-headline mb-6">Meus Pedidos</h1>
-      {orders.length === 0 ? (
-        <p className="text-muted-foreground">Você ainda não fez nenhum pedido.</p>
-      ) : (
+      <h1 className="text-3xl font-headline mb-6">Histórico de Pedidos</h1>
+      
+      {orders.length > 0 ? (
         <div className="space-y-6">
           {orders.map((order) => (
             <Card key={order.id} className="shadow-lg">
-              <CardHeader className="pb-4">
-                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-                  <CardTitle className="text-xl">Pedido #{order.id}</CardTitle>
-                  <Badge 
-                    className={getStatusBadgeClass(order.status)}
-                  >
-                    {order.status}
-                  </Badge>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg">Pedido #{order.id}</CardTitle>
+                    <p className="text-muted-foreground">
+                      {new Date(order.created_at).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold">R$ {order.total.toFixed(2)}</p>
+                    <Badge className={getStatusColor(order.status)}>
+                      {getStatusText(order.status)}
+                    </Badge>
+                  </div>
                 </div>
-                <CardDescription>Data: {order.date}</CardDescription>
               </CardHeader>
-              <CardContent className="pt-0 pb-4">
-                <h4 className="font-semibold text-md mb-2 text-card-foreground">Itens do Pedido:</h4>
-                <ul className="space-y-3">
-                  {order.items.map(item => (
-                    <li key={item.id} className="flex items-center gap-4 p-3 bg-card-foreground/5 rounded-md">
-                       <Image 
-                        src={item.imageUrl} 
-                        alt={item.name} 
-                        width={60} 
-                        height={60} 
-                        className="rounded-md object-cover border border-border"
-                        data-ai-hint="product thumbnail" 
-                      />
-                      <div className="flex-grow">
-                        <p className="font-medium text-card-foreground">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">Quantidade: {item.quantity}</p>
+              <CardContent>
+                {order.order_items && order.order_items.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="font-semibold">Itens do Pedido:</h4>
+                    {order.order_items.map((item) => (
+                      <div key={item.id} className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg">
+                        {item.product && (
+                          <>
+                            <Image
+                              src={item.product.images[0] || '/placeholder-product.png'}
+                              alt={item.product.name}
+                              width={60}
+                              height={60}
+                              className="rounded object-cover"
+                            />
+                            <div className="flex-1">
+                              <p className="font-medium">{item.product.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                Quantidade: {item.quantity} | Preço: R$ {item.price.toFixed(2)}
+                              </p>
+                            </div>
+                          </>
+                        )}
                       </div>
-                      <p className="text-md font-semibold text-card-foreground">
-                        R$ {(item.price * item.quantity).toFixed(2).replace('.',',')}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
+                    ))}
+                  </div>
+                )}
               </CardContent>
-              <Separator />
-              <CardFooter className="pt-4 flex justify-end">
-                <p className="text-lg font-bold text-primary">Total do Pedido: R$ {order.total.toFixed(2).replace('.',',')}</p>
-              </CardFooter>
             </Card>
           ))}
         </div>
+      ) : (
+        <Card className="text-center py-12">
+          <CardContent>
+            <p className="text-lg text-muted-foreground mb-4">
+              Você ainda não fez nenhum pedido.
+            </p>
+            <Button asChild>
+              <Link href="/products">Começar a Comprar</Link>
+            </Button>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

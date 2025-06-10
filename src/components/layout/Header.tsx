@@ -1,60 +1,88 @@
 
 "use client";
 import Link from 'next/link';
-import { ShoppingCart, User, Search, Menu, Phone, Mail, Info, Heart, LogOut } from 'lucide-react';
-import { Logo } from '@/components/shared/Logo';
+import Image from 'next/image';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { mockCategories } from '@/lib/data';
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetClose,
-} from "@/components/ui/sheet";
+import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetTrigger, SheetContent, SheetClose } from '@/components/ui/sheet';
+import { CategoryService } from '@/lib/services/categoryService';
+import type { Category } from '@/lib/types';
+import { Search, ShoppingCart, User, Menu, X, Heart, Phone, Mail, Info, LogOut } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/hooks/useAuth';
-import { useEffect, useState } from 'react';
-import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { Logo } from '@/components/shared/Logo';
 
 export function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
   const { cart } = useCart();
   const { favorites } = useFavorites();
-  const { currentUser, logout, loading: authLoading } = useAuth();
-  const [cartItemCount, setCartItemCount] = useState(0);
-  const [favoriteItemCount, setFavoriteItemCount] = useState(0);
-  const [isMounted, setIsMounted] = useState(false);
+  const { currentUser, logout, loading } = useAuth();
+  const router = useRouter();
 
+  // Efeito para marcar como montado
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
+  // Carregar categorias reais
   useEffect(() => {
-    if (isMounted) {
-      setCartItemCount(cart.reduce((count, item) => count + item.quantity, 0));
-      setFavoriteItemCount(favorites.length);
-    }
-  }, [cart, favorites, isMounted]);
+    const loadCategories = async () => {
+      const categoriesData = await CategoryService.getAllCategories();
+      setCategories(categoriesData);
+    };
+    loadCategories();
+  }, []);
 
-  const mainNavLinks = [
+  const totalItems = cart?.reduce((sum, item) => sum + item.quantity, 0) || 0; // Mudança aqui: 'items' para 'cart'
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+      setSearchTerm('');
+    }
+  };
+
+  const navigationItems = [
     { href: '/', label: 'Início' },
-    ...mockCategories.map(cat => ({ href: `/category/${cat.slug}`, label: cat.name })),
-    { href: '/sobre-nos', label: 'Sobre Nós' }, // Corrigido aqui
-    { href: '/#contato', label: 'Contato' },
+    { href: '/products', label: 'Produtos' },
+    ...categories.map(cat => ({ href: `/category/${cat.slug}`, label: cat.name })),
+    { href: '/sobre-nos', label: 'Sobre Nós' },
   ];
 
+  // Definir mainNavLinks baseado em navigationItems
+  const mainNavLinks = navigationItems;
+
+  // Definir accountLinks para o menu mobile
   const accountLinks = [
     { href: '/account', label: 'Minha Conta' },
-    { href: '/admin', label: 'Admin Panel' },
+    { href: '/account/orders', label: 'Meus Pedidos' },
+    { href: '/account/favorites', label: 'Meus Favoritos' },
   ];
 
+  // Calcular contadores
+  const cartItemCount = isMounted ? cart.reduce((sum, item) => sum + item.quantity, 0) : 0;
+  const favoriteItemCount = isMounted ? favorites.length : 0;
+
+  // Função para logout
   const handleLogout = async () => {
-    await logout();
+    try {
+      await logout();
+      router.push('/');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
   };
 
   return (
-    <header className="sticky top-0 z-50">
+    <header className="bg-white shadow-sm border-b sticky top-0 z-50">
       <div className="bg-primary text-primary-foreground/90">
         <div className="container mx-auto px-4 py-1.5 flex flex-col sm:flex-row items-center justify-between text-xs">
           <div className="flex items-center gap-4">
@@ -76,7 +104,13 @@ export function Header() {
 
       <div className="bg-primary text-primary-foreground shadow-md">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <Logo width={70} height={70} priority />
+          <Image 
+            src="/images/artesani-logo.png" 
+            alt="Artesani Logo" 
+            width={60} 
+            height={60} 
+            priority 
+          />
 
           <nav className="hidden lg:flex items-center space-x-5 font-medium">
             {mainNavLinks.slice(0, 5).map((link) => (
@@ -96,7 +130,7 @@ export function Header() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-card-foreground/60" />
             </div>
 
-            {!authLoading && (
+            {!loading && currentUser && (
               currentUser ? (
                 <>
                   <Link href="/account" passHref className="hidden sm:flex items-center gap-1.5 hover:text-secondary transition-colors">
@@ -159,7 +193,7 @@ export function Header() {
                     </SheetClose>
                   ))}
                   <hr className="my-2 border-border" />
-                  {!authLoading && currentUser && (
+                  {!loading && currentUser && (
                     <>
                       {accountLinks.map((link) => (
                         <SheetClose asChild key={link.label}>
@@ -175,7 +209,7 @@ export function Header() {
                       </SheetClose>
                     </>
                   )}
-                  {!authLoading && !currentUser && (
+                  {!loading && !currentUser && (
                      <SheetClose asChild>
                         <Link href="/login" className="text-base flex items-center gap-2 hover:text-primary transition-colors p-3 rounded-md hover:bg-muted">
                             <User size={20} />

@@ -1,24 +1,26 @@
 
-import { getProductBySlug, mockProducts } from '@/lib/data';
+import { ProductService } from '@/lib/services/productService';
 import { ProductDetailClientContent } from '@/components/products/ProductDetailClientContent';
-import type { Product } from '@/lib/types';
+import { notFound } from 'next/navigation';
 
-// Static generation for product pages
-export async function generateStaticParams() {
-  return mockProducts.map((product) => ({
-    slug: product.slug,
-  }));
-}
-
-export default function ProductDetailPage({ params }: { params: { slug: string } }) {
-  const product = getProductBySlug(params.slug);
+export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
+  const product = await ProductService.getProductBySlug(params.slug);
 
   if (!product) {
-    return <p className="text-center text-destructive py-8">Produto não encontrado.</p>;
+    notFound();
   }
 
-  const relatedProducts = mockProducts.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
+  const relatedProducts = await ProductService.getProductsByCategory(product.category_name || product.category);
+  const filteredRelatedProducts = relatedProducts.filter(p => p.id !== product.id).slice(0, 4);
 
-  return <ProductDetailClientContent product={product} relatedProducts={relatedProducts} />;
+  return <ProductDetailClientContent product={product} relatedProducts={filteredRelatedProducts} />;
+}
+
+// Para geração estática, você pode manter ou remover dependendo da necessidade
+export async function generateStaticParams() {
+  const products = await ProductService.getAllProducts();
+  return products.map((product) => ({
+    slug: product.slug,
+  }));
 }
 

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 
 export default function HomePage() {
-  const products = mockProducts; 
+  const products = mockProducts;
   const categories = mockCategories;
 
   const benefits = [
@@ -33,8 +33,8 @@ export default function HomePage() {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
               {benefits.map((benefit, index) => (
-                <div 
-                  key={benefit.title} 
+                <div
+                  key={benefit.title}
                   className="flex flex-col items-center md:items-start text-center md:text-left p-3 rounded-lg hover:bg-primary-foreground/5 transition-colors animate-fade-in-up"
                   style={{ animationDelay: `${200 + index * 150}ms` }}
                 >
@@ -44,7 +44,7 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-            <div 
+            <div
               className="flex flex-col sm:flex-row gap-3 pt-6 justify-center md:justify-start animate-fade-in-up"
               style={{ animationDelay: '700ms' }}
             >
@@ -53,7 +53,7 @@ export default function HomePage() {
                   Ver Catálogo
                 </Button>
               </Link>
-              <Link href="/sobre-nos" passHref> 
+              <Link href="/sobre-nos" passHref>
                 <Button size="lg" variant="outline" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground w-full sm:w-auto rounded-full px-8 py-3 text-base border-secondary hover:border-secondary/90">
                   Sobre Nós
                 </Button>
@@ -62,7 +62,7 @@ export default function HomePage() {
           </div>
 
           {/* Right Column: New Product Image */}
-          <div 
+          <div
             className="flex justify-center md:justify-end mt-8 md:mt-0 animate-fade-in"
             style={{ animationDelay: '400ms' }}
           >
@@ -110,8 +110,12 @@ export default function HomePage() {
       <section className="py-16 container mx-auto px-4 animate-fade-in-up" style={{ animationDelay: '600ms' }} id="contato">
         <div className="text-center">
             <h2 className="text-3xl md:text-4xl font-headline font-semibold mb-3">Entre em Contato</h2>
-            <p className="text-lg text-foreground/70 mb-8">Dúvidas? Fale conosco pelos nossos canais de atendimento.</p>
-            {/* Placeholder for contact form or details */}
+            <p className="text-lg text-foreground/70 mb-8">Dúvidas sobre nossos produtos? Nossa equipe está pronta para ajudar.</p>
+            <Link href="/contato" passHref>
+              <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-10 py-3 text-base">
+                Falar Conosco
+              </Button>
+            </Link>
         </div>
       </section>
     </div>

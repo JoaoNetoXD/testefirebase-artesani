@@ -5,7 +5,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Eye, Search, Filter, Download } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { OrderService } from '@/lib/services/orderService';
+import type { Order } from '@/lib/types';
 import {
   Select,
   SelectContent,
@@ -25,15 +27,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-// Mock data for demonstration
-const mockOrders = [
-  { id: "ORD001", customer: "João Silva", date: "2024-07-15", total: 125.50, status: "Entregue", payment: "Cartão" },
-  { id: "ORD002", customer: "Maria Oliveira", date: "2024-07-20", total: 78.90, status: "Enviado", payment: "PIX" },
-  { id: "ORD003", customer: "Carlos Pereira", date: "2024-07-22", total: 210.00, status: "Processando", payment: "Cartão" },
-  { id: "ORD004", customer: "Ana Costa", date: "2024-07-23", total: 55.00, status: "Pendente", payment: "PIX" },
-  { id: "ORD005", customer: "Pedro Almeida", date: "2024-07-24", total: 350.00, status: "Cancelado", payment: "Cartão" },
-];
-
 const getStatusBadgeDetails = (status: string) => {
     switch (status) {
       case "Entregue":
@@ -51,17 +44,44 @@ const getStatusBadgeDetails = (status: string) => {
     }
 };
 
-
 export default function AdminOrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredOrders = mockOrders.filter(order => {
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const ordersData = await OrderService.getAllOrders();
+        setOrders(ordersData);
+      } catch (error) {
+        console.error('Erro ao carregar pedidos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+  const filteredOrders = orders.filter(order => {
     const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          order.customer.toLowerCase().includes(searchTerm.toLowerCase());
+                          (order.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'todos' || order.status.toLowerCase() === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <h1 className="text-3xl font-headline">Gerenciamento de Pedidos</h1>
+        <div className="bg-card p-6 rounded-lg shadow-md border border-border">
+          <p>Carregando pedidos...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -78,7 +98,7 @@ export default function AdminOrdersPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input 
               type="search" 
-              placeholder="Buscar por ID do pedido ou cliente..." 
+              placeholder="Buscar por ID do pedido ou nome do cliente..." 
               className="pl-10 h-11"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -86,7 +106,8 @@ export default function AdminOrdersPage() {
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="h-11">
-              <SelectValue placeholder="Filtrar por status..." />
+              <Filter className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos os Status</SelectItem>
@@ -99,75 +120,95 @@ export default function AdminOrdersPage() {
           </Select>
         </div>
 
-        {filteredOrders.length > 0 ? (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID Pedido</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead className="hidden md:table-cell">Data</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-center hidden sm:table-cell">Pagamento</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.map((order) => {
-                  const badgeDetails = getStatusBadgeDetails(order.status);
-                  return (
-                    <TableRow key={order.id} className="hover:bg-muted/50">
-                      <TableCell className="font-medium">{order.id}</TableCell>
-                      <TableCell>{order.customer}</TableCell>
-                      <TableCell className="hidden md:table-cell">{order.date}</TableCell>
-                      <TableCell className="text-right">R$ {order.total.toFixed(2).replace('.',',')}</TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={badgeDetails.variant} className={badgeDetails.className}>
-                          {order.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center hidden sm:table-cell">
-                        <Badge variant="outline">{order.payment}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                             <Button variant="outline" size="icon" title="Ver Detalhes do Pedido">
-                                <Eye className="h-4 w-4" />
-                             </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Detalhes do Pedido #{order.id}</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Esta é uma visualização simulada dos detalhes do pedido.
-                                    Cliente: {order.customer} <br />
-                                    Total: R$ {order.total.toFixed(2).replace('.',',')} <br />
-                                    Status: {order.status}
-                                    {/* Adicionar mais detalhes do pedido aqui */}
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Fechar</AlertDialogCancel>
-                                {/* <AlertDialogAction>Marcar como Enviado</AlertDialogAction> */}
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-           <div className="text-center py-12 text-muted-foreground">
-            <Search className="mx-auto h-12 w-12 mb-4" />
-            <p className="text-lg">Nenhum pedido encontrado com os critérios atuais.</p>
-            <p className="text-sm">Tente ajustar sua busca ou filtros.</p>
-          </div>
-        )}
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID do Pedido</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Pagamento</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredOrders.map((order) => {
+                const statusDetails = getStatusBadgeDetails(order.status);
+                return (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell>{order.customer_name || 'Cliente não informado'}</TableCell>
+                    <TableCell>{new Date(order.created_at).toLocaleDateString('pt-BR')}</TableCell>
+                    <TableCell>R$ {order.total.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={statusDetails.variant as any} 
+                        className={statusDetails.className}
+                      >
+                        {order.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{order.payment_method || 'Não informado'}</TableCell>
+                    <TableCell className="text-right">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Eye className="h-4 w-4 mr-1" />
+                            Ver Detalhes
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="max-w-2xl">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Detalhes do Pedido #{order.id}</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Informações completas sobre o pedido.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <p><strong>Cliente:</strong> {order.customer_name}</p>
+                                <p><strong>Data:</strong> {new Date(order.created_at).toLocaleDateString('pt-BR')}</p>
+                                <p><strong>Status:</strong> {order.status}</p>
+                              </div>
+                              <div>
+                                <p><strong>Total:</strong> R$ {order.total.toFixed(2)}</p>
+                                <p><strong>Pagamento:</strong> {order.payment_method}</p>
+                              </div>
+                            </div>
+                            {order.order_items && order.order_items.length > 0 && (
+                              <div>
+                                <h4 className="font-semibold mb-2">Itens do Pedido:</h4>
+                                <div className="space-y-2">
+                                  {order.order_items.map((item, index) => (
+                                    <div key={index} className="flex justify-between items-center p-2 bg-muted rounded">
+                                      <span>{item.products?.name || 'Produto'} (x{item.quantity})</span>
+                                      <span>R$ {(item.price * item.quantity).toFixed(2)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Fechar</AlertDialogCancel>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+          {filteredOrders.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhum pedido encontrado.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

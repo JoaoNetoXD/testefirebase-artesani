@@ -10,6 +10,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido."),
@@ -19,20 +21,53 @@ const loginSchema = z.object({
 type LoginFormInputs = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const { login, loading } = useAuth();
+  const { login, loading, currentUser, isAdmin } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const redirectTo = searchParams.get('redirect') || '/';
+  
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>({
     resolver: zodResolver(loginSchema),
   });
 
+  // Redirecionar se já estiver logado
+  useEffect(() => {
+    if (currentUser && !loading) {
+      // Se tem redirect para admin, verificar se é admin
+      if (redirectTo === '/admin' && isAdmin) {
+        router.push('/admin');
+      } else if (redirectTo !== '/admin') {
+        router.push(redirectTo);
+      } else if (redirectTo === '/admin' && !isAdmin) {
+        router.push('/'); // Redirecionar para home se não for admin
+      }
+    }
+  }, [currentUser, isAdmin, loading, redirectTo, router]);
+
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
-    await login(data.email, data.password);
+    console.log('🔐 Tentando fazer login...');
+    console.log('📍 Redirect para:', redirectTo);
+    
+    const success = await login(data.email, data.password);
+    
+    if (success) {
+      console.log('✅ Login bem-sucedido, redirecionando para:', redirectTo);
+      // O redirecionamento será feito pelo useEffect acima
+    }
   };
 
   return (
     <Card className="shadow-xl">
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-3xl font-headline">Bem-vindo de volta!</CardTitle>
-        <CardDescription>Entre com seus dados para acessar sua conta.</CardDescription>
+        <CardDescription>
+          Entre com seus dados para acessar sua conta.
+          {redirectTo === '/admin' && (
+            <span className="block mt-2 text-sm text-blue-600 font-medium">
+              🔒 Acesso ao Painel Administrativo
+            </span>
+          )}
+        </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">

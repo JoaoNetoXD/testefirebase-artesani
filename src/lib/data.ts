@@ -1,4 +1,6 @@
 
+// Este arquivo foi removido - todos os dados agora vêm do Supabase
+// Use os serviços em /lib/services/ para acessar dados reais
 import type { Product, Category } from './types';
 
 export const mockCategories: Category[] = [
