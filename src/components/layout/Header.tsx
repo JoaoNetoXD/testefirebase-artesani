@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetTrigger, SheetContent, SheetClose } from '@/components/ui/sheet';
 import { CategoryService } from '@/lib/services/categoryService';
 import type { Category } from '@/lib/types';
-import { Search, ShoppingCart, User, Menu, X, Heart, Phone, Mail, Info, LogOut } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, Heart, Phone, Mail, Info, LogOut, Loader2 } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/hooks/useAuth';
@@ -26,12 +26,10 @@ export function Header() {
   const { currentUser, logout, loading } = useAuth();
   const router = useRouter();
 
-  // Efeito para marcar como montado
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Carregar categorias reais
   useEffect(() => {
     const loadCategories = async () => {
       const categoriesData = await CategoryService.getAllCategories();
@@ -39,8 +37,6 @@ export function Header() {
     };
     loadCategories();
   }, []);
-
-  const totalItems = cart?.reduce((sum, item) => sum + item.quantity, 0) || 0; // Mudança aqui: 'items' para 'cart'
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,21 +53,17 @@ export function Header() {
     { href: '/sobre-nos', label: 'Sobre Nós' },
   ];
 
-  // Definir mainNavLinks baseado em navigationItems
   const mainNavLinks = navigationItems;
 
-  // Definir accountLinks para o menu mobile
   const accountLinks = [
     { href: '/account', label: 'Minha Conta' },
     { href: '/account/orders', label: 'Meus Pedidos' },
     { href: '/account/favorites', label: 'Meus Favoritos' },
   ];
 
-  // Calcular contadores
   const cartItemCount = isMounted ? cart.reduce((sum, item) => sum + item.quantity, 0) : 0;
   const favoriteItemCount = isMounted ? favorites.length : 0;
 
-  // Função para logout
   const handleLogout = async () => {
     try {
       await logout();
@@ -124,25 +116,33 @@ export function Header() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-card-foreground/60" />
             </div>
 
-            {!loading && currentUser && (
-              currentUser ? (
+            {/* User Auth Section Wrapper - Always present on sm+ screens */}
+            <div className="hidden sm:flex items-center space-x-1.5">
+              {loading && (
+                <div className="flex items-center space-x-1.5 text-sm">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span className="hidden lg:inline">Carregando...</span>
+                </div>
+              )}
+              {!loading && currentUser && (
                 <>
-                  <Link href="/account" passHref className="hidden sm:flex items-center gap-1.5 hover:text-secondary transition-colors">
+                  <Link href="/account" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors">
                     <User size={20} />
-                    {currentUser.displayName || "Minha Conta"}
+                    <span className="hidden lg:inline">{currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || "Minha Conta"}</span>
                   </Link>
-                  <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Sair" className="hidden sm:inline-flex hover:bg-primary-foreground/10">
+                  <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Sair" className="hover:bg-primary-foreground/10">
                     <LogOut />
                   </Button>
                 </>
-              ) : (
-                <Link href="/login" passHref className="hidden sm:flex items-center gap-1.5 hover:text-secondary transition-colors">
+              )}
+              {!loading && !currentUser && (
+                <Link href="/login" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors text-sm">
                   <User size={20} />
-                  Entrar
+                  <span className="hidden lg:inline">Entrar</span>
                 </Link>
-              )
-            )}
-
+              )}
+            </div>
+            {/* End User Auth Section Wrapper */}
 
             <Link href="/account/favorites" passHref>
               <Button variant="ghost" size="icon" aria-label="Meus Favoritos" className="relative hover:bg-primary-foreground/10">
@@ -187,6 +187,12 @@ export function Header() {
                     </SheetClose>
                   ))}
                   <hr className="my-2 border-border" />
+                  {loading && (
+                    <div className="flex items-center gap-2 p-3 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Carregando...</span>
+                    </div>
+                  )}
                   {!loading && currentUser && (
                     <>
                       {accountLinks.map((link) => (
@@ -230,5 +236,3 @@ export function Header() {
     </header>
   );
 }
-
-    
