@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Importar Card
 
 interface ProductDetailClientContentProps {
   product: Product;
@@ -32,7 +33,6 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
   }, []);
 
   useEffect(() => {
-    // Update selectedImage if product changes and has images
     if (product && product.images && product.images.length > 0) {
       setSelectedImage(product.images[0]);
     } else if (product) {
@@ -59,16 +59,16 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
     });
   };
   
-  const categoryName = product.category_name || product.category; // Use category_name first
+  const categoryName = product.category_name || product.category;
   const categorySlug = categoryName?.toLowerCase().replace(/\s+/g, '-') || 'geral';
 
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto py-6 md:py-8">
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12 mb-12">
         {/* Image Gallery */}
-        <div className="bg-card p-4 rounded-lg shadow-md">
-          <div className="relative aspect-square w-full overflow-hidden rounded-md border border-border">
+        <div className="space-y-4">
+          <div className="relative aspect-square w-full overflow-hidden rounded-lg shadow-lg border border-border">
             <Image
               src={selectedImage}
               alt={product.name}
@@ -80,18 +80,15 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
             />
           </div>
           {product.images && product.images.length > 1 && (
-            <div className="mt-4 grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {product.images.map((img, index) => (
-                <div
+                <button
                   key={index}
                   className={cn(
-                    "relative aspect-square border rounded-md overflow-hidden cursor-pointer transition-all",
-                    selectedImage === img ? "border-primary ring-2 ring-primary" : "border-border hover:border-muted-foreground"
+                    "relative aspect-square rounded-md overflow-hidden cursor-pointer transition-all border-2",
+                    selectedImage === img ? "border-primary ring-2 ring-primary" : "border-border hover:border-primary/50"
                   )}
                   onClick={() => setSelectedImage(img)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && setSelectedImage(img)}
                   aria-label={`Ver imagem ${index + 1} de ${product.name}`}
                 >
                   <Image
@@ -102,95 +99,125 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
                     data-ai-hint="product thumbnail"
                     sizes="100px"
                   />
-                </div>
+                </button>
               ))}
             </div>
           )}
         </div>
 
         {/* Product Info */}
-        <div className="space-y-6">
-          <h1 className="text-4xl font-headline font-bold text-foreground">{product.name}</h1>
-          <div className="flex items-center space-x-2 text-muted-foreground">
-            <div className="flex text-yellow-400">
-              {[...Array(5)].map((_, i) => <Star key={i} className={cn("h-5 w-5", i < 4 ? "fill-current" : "")} />)}
-            </div>
-            <span>(123 avaliações)</span>
-            <span>|</span>
-            {categoryName && (
-              <span>
-                Categoria: 
-                <Link 
-                  href={`/category/${categorySlug}`} 
-                  className="text-accent hover:underline"
-                >
-                  {categoryName}
-                </Link>
-              </span>
-            )}
-          </div>
-          <p className="text-3xl font-semibold text-primary">
-            R$ {product.price.toFixed(2).replace('.', ',')}
-          </p>
-          <p className="text-lg text-foreground/80 leading-relaxed">{product.description}</p>
-
-          {product.stock > 0 ? (
-             <p className="text-green-600 font-semibold">Em estoque ({product.stock} unidades)</p>
-          ) : (
-            <p className="text-destructive font-semibold">Fora de estoque</p>
-          )}
-
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button
-              size="lg"
-              className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground"
-              onClick={handleAddToCart}
-              disabled={product.stock === 0}
-            >
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              {product.stock === 0 ? 'Indisponível' : 'Adicionar ao Carrinho'}
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className={cn(
-                "w-full sm:w-auto border-primary text-primary hover:bg-primary/10",
-                currentIsFavorite && "bg-destructive/10 border-destructive text-destructive hover:bg-destructive/20 hover:text-destructive"
+        <Card className="shadow-xl">
+          <CardContent className="p-6 space-y-5">
+            <h1 className="text-3xl md:text-4xl font-headline font-bold text-foreground">{product.name}</h1>
+            
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+              <div className="flex text-yellow-400">
+                {[...Array(5)].map((_, i) => <Star key={i} className={cn("h-5 w-5", i < 4 ? "fill-current" : "")} />)}
+              </div>
+              <span className="whitespace-nowrap">(123 avaliações)</span>
+              {categoryName && (
+                <>
+                  <span className="hidden sm:inline">|</span>
+                  <span className="whitespace-nowrap">
+                    Categoria: 
+                    <Link 
+                      href={`/category/${categorySlug}`} 
+                      className="text-accent hover:underline ml-1"
+                    >
+                      {categoryName}
+                    </Link>
+                  </span>
+                </>
               )}
-              onClick={handleToggleFavorite}
-              aria-label={currentIsFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-            >
-              <Heart className={cn("mr-2 h-5 w-5", currentIsFavorite ? "fill-destructive text-destructive" : "text-destructive")} />
-              {currentIsFavorite ? "Remover Favorito" : "Adicionar Favorito"}
+            </div>
+
+            <p className="text-3xl font-semibold text-primary">
+              R$ {product.price.toFixed(2).replace('.', ',')}
+            </p>
+            
+            <p className="text-base text-foreground/80 leading-relaxed">{product.description}</p>
+
+            {product.stock > 0 ? (
+              <p className="text-sm text-green-600 font-semibold">Em estoque ({product.stock} unidades disponíveis)</p>
+            ) : (
+              <p className="text-sm text-destructive font-semibold">Fora de estoque</p>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Button
+                size="lg"
+                className="w-full sm:flex-1 bg-accent hover:bg-accent/90 text-accent-foreground rounded-md"
+                onClick={handleAddToCart}
+                disabled={product.stock === 0}
+              >
+                <ShoppingCart className="mr-2 h-5 w-5" />
+                {product.stock === 0 ? 'Indisponível' : 'Adicionar ao Carrinho'}
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className={cn(
+                  "w-full sm:flex-1 rounded-md", // base styles
+                  currentIsFavorite 
+                    ? "bg-destructive/10 border-destructive text-destructive hover:bg-destructive/20 hover:text-destructive" // if favorite
+                    : "border-primary text-primary hover:bg-primary/10" // if not favorite
+                )}
+                onClick={handleToggleFavorite}
+                aria-label={currentIsFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+              >
+                <Heart className={cn("mr-2 h-5 w-5", currentIsFavorite ? "fill-destructive" : "")} /> 
+                {currentIsFavorite ? "Remover Favorito" : "Adicionar Favorito"}
+              </Button>
+            </div>
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary px-0">
+              <Share2 className="mr-2 h-4 w-4" /> Compartilhar este produto
             </Button>
-          </div>
-          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
-            <Share2 className="mr-2 h-4 w-4" /> Compartilhar
-          </Button>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Tabs for more details */}
       <Tabs defaultValue="description" className="mb-12">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 mb-4 bg-muted">
-          <TabsTrigger value="description" className="data-[state=active]:bg-card data-[state=active]:text-card-foreground">Descrição Completa</TabsTrigger>
-          <TabsTrigger value="ingredients" className="data-[state=active]:bg-card data-[state=active]:text-card-foreground">Ingredientes</TabsTrigger>
-          <TabsTrigger value="reviews" className="data-[state=active]:bg-card data-[state=active]:text-card-foreground">Avaliações</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 mb-4 bg-muted p-1 rounded-lg">
+          <TabsTrigger value="description" className="data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm rounded-md">Descrição Completa</TabsTrigger>
+          <TabsTrigger value="ingredients" className="data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm rounded-md">Ingredientes</TabsTrigger>
+          <TabsTrigger value="reviews" className="data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm rounded-md">Avaliações</TabsTrigger>
         </TabsList>
-        <TabsContent value="description" className="p-6 bg-muted rounded-md shadow-lg text-muted-foreground">
-          <h3 className="text-xl font-headline mb-2 text-foreground">Detalhes do Produto</h3>
-          <p className="whitespace-pre-line">{product.description}\n\nMais informações sobre o uso e benefícios do produto aqui. Consulte sempre um profissional de saúde.</p>
+        
+        <TabsContent value="description" className="bg-card text-card-foreground p-6 rounded-lg shadow-lg">
+          <h3 className="text-xl font-headline mb-3 text-foreground">Detalhes do Produto</h3>
+          <div className="space-y-3 text-card-foreground/80">
+            <p className="whitespace-pre-line">{product.description}</p>
+            {product.intendedUses && (
+                <>
+                    <h4 className="text-lg font-semibold mt-4 mb-1 text-foreground">Usos Pretendidos:</h4>
+                    <p>{product.intendedUses}</p>
+                </>
+            )}
+            <p className="mt-4 text-sm">Consulte sempre um profissional de saúde para orientações específicas.</p>
+          </div>
         </TabsContent>
-        <TabsContent value="ingredients" className="p-6 bg-muted rounded-md shadow-lg text-muted-foreground">
-          <h3 className="text-xl font-headline mb-2 text-foreground">Composição</h3>
-          <ul className="list-disc list-inside">
-            {product.ingredients?.split(',').map(ing => <li key={ing.trim()}>{ing.trim()}</li>) || <li>Informação não disponível.</li>}
-          </ul>
+        
+        <TabsContent value="ingredients" className="bg-card text-card-foreground p-6 rounded-lg shadow-lg">
+          <h3 className="text-xl font-headline mb-3 text-foreground">Composição e Ingredientes</h3>
+          {product.ingredients ? (
+            <ul className="list-disc list-inside space-y-1 text-card-foreground/80">
+              {product.ingredients.split(',').map((ing, idx) => <li key={idx}>{ing.trim()}</li>)}
+            </ul>
+          ) : (
+            <p className="text-card-foreground/80">Informação de ingredientes não disponível.</p>
+          )}
         </TabsContent>
-        <TabsContent value="reviews" className="p-6 bg-muted rounded-md shadow-lg text-muted-foreground">
-          <h3 className="text-xl font-headline mb-2 text-foreground">Avaliações de Clientes</h3>
-          <p>Funcionalidade de avaliações a ser implementada.</p>
-          {/* Placeholder for reviews */}
+        
+        <TabsContent value="reviews" className="bg-card text-card-foreground p-6 rounded-lg shadow-lg">
+          <h3 className="text-xl font-headline mb-3 text-foreground">Avaliações de Clientes</h3>
+          <div className="text-center py-8 text-card-foreground/60">
+            <Star className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+            <p className="text-lg">Nenhuma avaliação ainda.</p>
+            <p className="text-sm">Seja o primeiro a avaliar este produto!</p>
+             {/* Placeholder para funcionalidade futura de adicionar avaliação */}
+            <Button variant="outline" className="mt-6">Escrever uma avaliação</Button>
+          </div>
         </TabsContent>
       </Tabs>
 
