@@ -1,33 +1,64 @@
 
 'use client';
 import { Suspense, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation'; // Adicionado useRouter
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
-import { Loader2 } from 'lucide-react'; // Importar Loader2
+import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth'; // Importar useAuth
+import { useToast } from '@/hooks/use-toast'; // Importar useToast
 
 function LoginContent() {
   const searchParams = useSearchParams();
+  const router = useRouter(); // Usar useRouter de next/navigation
+  const { login, loading: authLoading } = useAuth(); // Usar login do AuthContext
+  const { toast } = useToast();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  // Usar authLoading do AuthContext em vez de um isLoading local para o estado de submissão
+  // const [isLoading, setIsLoading] = useState(false); // Remover isLoading local se authLoading for suficiente
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    // setIsLoading(true); // Se estiver usando authLoading, esta linha pode não ser necessária
     
-    // Simulação de autenticação
-    console.log('Login attempt:', { email, password });
+    const intendedRedirectPath = searchParams.get('redirect');
+    console.log("Login page: Intended redirect path from URL:", intendedRedirectPath);
+
+    const { success, isAdminUser } = await login(email, password);
     
-    setTimeout(() => {
-      setIsLoading(false);
-      // Redirecionar após login bem-sucedido
-      // Idealmente, o AuthContext faria o redirecionamento após o login bem-sucedido
-      window.location.href = '/'; 
-    }, 1000);
+    if (success) {
+      console.log("Login page: Login successful. isAdminUser:", isAdminUser);
+      if (intendedRedirectPath) {
+        if (intendedRedirectPath === '/admin' && isAdminUser) {
+          console.log("Login page: Redirecting to /admin (intended and admin).");
+          router.push('/admin');
+        } else if (intendedRedirectPath === '/admin' && !isAdminUser) {
+          console.log("Login page: Attempted /admin redirect by non-admin. Redirecting to /.");
+          toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar o painel de administração.", variant: "destructive" });
+          router.push('/');
+        } else if (intendedRedirectPath !== '/admin') {
+          console.log("Login page: Redirecting to intended path:", intendedRedirectPath);
+          router.push(intendedRedirectPath);
+        } else {
+          // Fallback: deveria ser coberto pelos casos acima, mas por segurança
+          console.log("Login page: Fallback redirect logic. isAdminUser:", isAdminUser, "Redirecting to", isAdminUser ? '/admin' : '/');
+          router.push(isAdminUser ? '/admin' : '/');
+        }
+      } else {
+        // No specific redirect in URL, default behavior
+        console.log("Login page: No intended redirect path. isAdminUser:", isAdminUser, "Redirecting to", isAdminUser ? '/admin' : '/');
+        router.push(isAdminUser ? '/admin' : '/');
+      }
+    } else {
+      console.log("Login page: Login failed.");
+      // Toast de erro já é tratado dentro da função login do AuthContext
+    }
+    // setIsLoading(false); // Se estiver usando authLoading, esta linha pode não ser necessária
   };
 
   return (
@@ -67,9 +98,9 @@ function LoginContent() {
             <Button 
               type="submit" 
               className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-11 text-base" 
-              disabled={isLoading}
+              disabled={authLoading} // Usar authLoading do context
             >
-              {isLoading ? <Loader2 className="animate-spin" /> : 'Entrar'}
+              {authLoading ? <Loader2 className="animate-spin" /> : 'Entrar'}
             </Button>
           </form>
           

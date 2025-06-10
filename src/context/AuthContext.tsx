@@ -11,27 +11,26 @@ interface UserProfileData {
   name: string;
   phone?: string;
   email?: string;
-  role?: string; // ✅ Certifique-se de que está descomentado
+  role?: string;
 }
 
-// Ajuste para refletir a estrutura do Supabase (User pode ser diferente)
 interface AuthContextType {
-  currentUser: User | null; // User do Supabase
-  currentUserProfile: UserProfileData | null; // Perfil do usuário da tabela 'profiles'
-  session: Session | null; // Session do Supabase
+  currentUser: User | null;
+  currentUserProfile: UserProfileData | null;
+  session: Session | null;
   loading: boolean;
-  isAdmin: boolean; // Flag para verificar se é admin
+  isAdmin: boolean;
   register: (name: string, email: string, pass: string) => Promise<void>;
-  login: (email: string, pass: string) => Promise<void>;
+  login: (email: string, pass: string) => Promise<{ success: boolean; isAdminUser: boolean }>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  updateUserAccount: (data: Partial<UserProfileData>) => Promise<void>; // Partial para atualizações parciais
+  updateUserAccount: (data: Partial<UserProfileData>) => Promise<void>;
   fetchUserProfile: (userId: string) => Promise<UserProfileData | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export { AuthContext }; // Adicione esta linha para exportar AuthContext
+export { AuthContext };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -89,7 +88,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setCurrentUserProfile(null);
         setIsAdmin(false);
       }
-      setLoading(false);
+      // Não defina setLoading(false) aqui toda vez, apenas no setup inicial e após operações de login/logout explícitas.
+      // Isso evita que o estado de loading seja resetado prematuramente durante a navegação.
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        setLoading(false);
+      }
     });
 
     return () => {
@@ -107,39 +110,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   };
 
-  // Função interna para buscar perfil, usada no setup inicial e no onAuthStateChange
   const fetchUserProfileInternal = async (userId: string): Promise<UserProfileData | null> => {
     if (!supabase || !supabaseServicesAvailable) {
-      console.log('🚫 Supabase não disponível');
       return null;
     }
     try {
-      console.log('🔍 Buscando perfil para usuário:', userId);
-      
       const { data, error, status } = await supabase
         .from('profiles')
-        .select(`name, phone, email, role`) // ✅ Adicionado 'role' de volta
+        .select(`name, phone, email, role`)
         .eq('id', userId)
         .single();
-  
-      console.log('📊 Resultado da busca:', { data, error, status });
       
-      if (error && status !== 406) { // 406 significa que não encontrou, o que é ok
-        console.error('❌ Erro na busca do perfil:', error);
+      if (error && status !== 406) {
+        console.error('Erro na busca do perfil:', error);
         throw error;
       }
-  
-      if (data) {
-        console.log('✅ Perfil encontrado:', data);
-        console.log('👤 Role do usuário:', data.role);
-        console.log('🔐 É admin?', data.role === 'admin');
-        return data as UserProfileData;
-      }
-      
-      console.log('⚠️ Nenhum perfil encontrado para o usuário');
-      return null;
+      return data as UserProfileData | null;
     } catch (error: any) {
-      console.error("❌ Erro ao buscar perfil do usuário:", error.message);
+      console.error("Erro ao buscar perfil do usuário:", error.message);
       return null;
     }
   };
@@ -156,8 +144,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password: pass,
         options: {
           data: { 
-            full_name: name, // Supabase usa 'user_metadata' ou 'options.data' para dados adicionais no cadastro
-            phone: '', // Adicionar campos conforme necessário
+            full_name: name,
+            phone: '', 
           }
         }
       });
@@ -165,27 +153,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       if (!data.user) throw new Error('Cadastro falhou, usuário não retornado.');
 
-      // Inserir dados adicionais na tabela 'users' (ou 'profiles') se necessário
-      // Supabase Auth já cria um registro em auth.users. Você pode ter uma tabela pública 'profiles'.
       const { error: profileError } = await supabase
-        .from('profiles') // Assumindo que você tem uma tabela 'profiles' ligada por user_id
+        .from('profiles')
         .insert([
           {
-            id: data.user.id, // Chave estrangeira para auth.users.id
+            id: data.user.id,
             name: name,
-            email: email, // Pode ser redundante se já estiver em auth.users
+            email: email,
             phone: '',
-            role: 'user', // Define o papel padrão como 'user'
-            // criadoEm e atualizadoEm são gerenciados pelo Supabase (created_at, updated_at)
+            role: 'user',
           }
         ]);
       
       if (profileError) {
         console.warn('Erro ao criar perfil do usuário, mas o cadastro foi bem-sucedido:', profileError.message);
-        // Decida como lidar com isso. O usuário está cadastrado, mas o perfil pode não estar completo.
       }
 
-      // O onAuthStateChange deve atualizar currentUser e session
       toast({ title: "Cadastro realizado!", description: "Bem-vindo(a)! Verifique seu email para confirmação, se aplicável." });
       router.push('/'); 
     } catch (error: any) {
@@ -196,38 +179,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const login = async (email: string, pass: string): Promise<boolean> => {
+  const login = async (email: string, pass: string): Promise<{ success: boolean; isAdminUser: boolean }> => {
     if (!supabase || !supabaseServicesAvailable) {
       notifySupabaseDisabled();
-      return false;
+      return { success: false, isAdminUser: false };
     }
     setLoading(true);
     try {
-      console.log('🔐 Iniciando login para:', email);
       const { data: loginData, error } = await supabase.auth.signInWithPassword({ email, password: pass });
       if (error) throw error;
-      if (!loginData.user) throw new Error('Login falhou, usuário não retornado.');
+      if (!loginData.user || !loginData.session) throw new Error('Login falhou, usuário ou sessão não retornados.');
       
-      console.log('👤 Usuário logado:', loginData.user.email);
-      
-      // Após o login, buscar o perfil para ter o 'role'
       const profile = await fetchUserProfileInternal(loginData.user.id);
-      console.log('📋 Perfil do usuário:', profile);
-      
-      setCurrentUserProfile(profile);
       const userIsAdmin = profile?.role === 'admin';
+
+      // Atualizar estados do contexto explicitamente aqui
+      // onAuthStateChange também será disparado, mas garantir a atualização imediata aqui é bom.
+      setCurrentUser(loginData.user);
+      setSession(loginData.session);
+      setCurrentUserProfile(profile);
       setIsAdmin(userIsAdmin);
       
-      console.log('🔑 É admin?', userIsAdmin);
-
       toast({ title: "Login realizado!", description: "Bem-vindo(a) de volta!" });
-      
-      // Não redirecionar aqui, deixar a página de login fazer isso
-      return true;
+      return { success: true, isAdminUser: userIsAdmin };
     } catch (error: any) {
       console.error("Erro no login:", error);
       toast({ title: "Erro no Login", description: error.message || "Email ou senha inválidos.", variant: "destructive" });
-      return false;
+      return { success: false, isAdminUser: false };
     } finally {
       setLoading(false);
     }
@@ -237,8 +215,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!supabase || !supabaseServicesAvailable) {
       notifySupabaseDisabled();
       setCurrentUser(null);
-      setCurrentUserProfile(null); // Limpa o perfil no logout
-      setIsAdmin(false); // Reseta o status de admin
+      setCurrentUserProfile(null);
+      setIsAdmin(false);
       setSession(null);
       router.push('/login');
       return;
@@ -247,7 +225,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      // O onAuthStateChange deve atualizar currentUser e session para null
+      // onAuthStateChange cuidará de limpar os estados
       toast({ title: "Logout realizado", description: "Até breve!" });
       router.push('/login');
     } catch (error: any) {
@@ -265,9 +243,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     setLoading(true);
     try {
-      // Certifique-se de configurar o template de email no Supabase
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password` // URL para onde o usuário será redirecionado após clicar no link do email
+        redirectTo: `${window.location.origin}/reset-password`
       });
       if (error) throw error;
       toast({ title: "Email enviado", description: "Verifique sua caixa de entrada para redefinir a senha." });
@@ -287,7 +264,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     setLoading(true);
     try {
-      // Não permitir atualização de 'role' por esta função, a menos que seja um admin atualizando outro usuário  
       const { role, ...dataToUpdate } = updateData;
 
       const { error } = await supabase
@@ -297,10 +273,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
 
-      // Atualizar o estado local do perfil
       const updatedProfile = await fetchUserProfileInternal(currentUser.id);
       setCurrentUserProfile(updatedProfile);
-      // Não é necessário atualizar isAdmin aqui, pois o papel não deve ser alterado por esta função.
 
       toast({ title: "Perfil atualizado!", description: "Suas informações foram salvas." });
     } catch (error: any) {
@@ -311,7 +285,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Função pública para buscar perfil, se necessário em outros componentes
   const fetchUserProfile = async (userId: string): Promise<UserProfileData | null> => {
     return fetchUserProfileInternal(userId);
   };
