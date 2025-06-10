@@ -2,9 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/services/stripe';
 import Stripe from 'stripe';
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(request: NextRequest) {
+  // Se não há webhook secret configurado, retorna erro
+  if (!webhookSecret) {
+    return NextResponse.json(
+      { error: 'Webhook não configurado' },
+      { status: 400 }
+    );
+  }
+
   try {
     const body = await request.text();
     const signature = request.headers.get('stripe-signature')!;
@@ -21,36 +29,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Processar diferentes tipos de eventos
-    switch (event.type) {
-      case 'payment_intent.succeeded':
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log('Pagamento bem-sucedido:', paymentIntent.id);
-        // Aqui você pode atualizar o status do pedido no banco de dados
-        break;
+  // Processar diferentes tipos de eventos
+  switch (event.type) {
+    case 'payment_intent.succeeded':
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      console.log('Pagamento bem-sucedido:', paymentIntent.id);
+      // Aqui você pode atualizar o status do pedido no banco de dados
+      break;
 
-      case 'payment_intent.payment_failed':
-        const failedPayment = event.data.object as Stripe.PaymentIntent;
-        console.log('Pagamento falhou:', failedPayment.id);
-        // Aqui você pode marcar o pedido como falhou
-        break;
+    case 'payment_intent.payment_failed':
+      const failedPayment = event.data.object as Stripe.PaymentIntent;
+      console.log('Pagamento falhou:', failedPayment.id);
+      // Aqui você pode marcar o pedido como falhou
+      break;
 
-      case 'checkout.session.completed':
-        const session = event.data.object as Stripe.Checkout.Session;
-        console.log('Checkout session completed:', session.id);
-        // Processar pedido completo
-        break;
+    case 'checkout.session.completed':
+      const session = event.data.object as Stripe.Checkout.Session;
+      console.log('Checkout session completed:', session.id);
+      // Processar pedido completo
+      break;
 
-      default:
-        console.log(`Evento não tratado: ${event.type}`);
-    }
-
-    return NextResponse.json({ received: true });
-  } catch (error) {
-    console.error('Erro no webhook:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    default:
+      console.log(`Evento não tratado: ${event.type}`);
   }
+
+  return NextResponse.json({ received: true });
+} catch (error) {
+  console.error('Erro no webhook:', error);
+  return NextResponse.json(
+    { error: 'Internal server error' },
+    { status: 500 }
+  );
 }
