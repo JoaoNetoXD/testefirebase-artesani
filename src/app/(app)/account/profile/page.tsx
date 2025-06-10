@@ -33,7 +33,7 @@ type ProfileFormInputs = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
   const { currentUser, updateUserAccount, loading, fetchUserProfile } = useAuth();
-  const [firestoreUser, setFirestoreUser] = useState<any>(null);
+  const [firestoreUser, setFirestoreUser] = useState<any>(null); // Consider renaming if not using Firestore directly
   const { toast } = useToast();
 
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<ProfileFormInputs>({
@@ -42,22 +42,23 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (currentUser) {
-      setValue("name", currentUser.displayName || "");
+      setValue("name", currentUser.displayName || ""); // Supabase uses displayName on User object directly
       setValue("email", currentUser.email || "");
-      fetchUserProfile(currentUser.uid).then(profile => {
+      
+      // If you store additional profile info (like phone, custom name) separately (e.g., in a 'profiles' table)
+      fetchUserProfile(currentUser.uid).then(profile => { // Supabase User object has 'uid' (or 'id')
         if (profile) {
-          setFirestoreUser(profile);
+          setFirestoreUser(profile); // Keep this if 'profiles' table data is what you mean by firestoreUser
           setValue("phone", profile.phone || "");
-          if (profile.name) setValue("name", profile.name);
+          if (profile.name) setValue("name", profile.name); // Prefer name from profiles table if available
         }
       });
     }
-  }, [currentUser, setValue, fetchUserProfile]);
+  }, [currentUser, setValue, fetchUserProfile, firestoreUser]); // Added firestoreUser
 
   const onSubmit: SubmitHandler<ProfileFormInputs> = async (data) => {
-    const { email, ...updateData } = data; 
+    const { email, ...updateData } = data; // email is readonly and part of auth, not profiles table directly
     await updateUserAccount(updateData);
-    // O toast já é exibido dentro do updateUserAccount
   };
 
   const handleSimulatedPasswordChange = () => {
@@ -67,7 +68,7 @@ export default function ProfilePage() {
     })
   }
 
-  if (loading && !currentUser && !firestoreUser) {
+  if (loading && !currentUser && !firestoreUser) { // Adjusted loading condition
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-400px)]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -176,3 +177,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

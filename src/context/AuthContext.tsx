@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js'; // Tipos do Supabase
 import { supabase, supabaseServicesAvailable } from '@/lib/supabase'; // Importa o cliente Supabase
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation'; // Adicionado useSearchParams
 import { useToast } from '@/hooks/use-toast';
 
 interface UserProfileData {
@@ -40,6 +40,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  // Note: useSearchParams can only be used in Client Components.
+  // If AuthProvider might be used in a context where this is an issue, consider an alternative way to get searchParams.
+  // For now, assuming AuthProvider is used within a client-side tree.
 
   useEffect(() => {
     if (!supabase || !supabaseServicesAvailable) {
@@ -75,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     getSessionAndProfile();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Supabase auth event:', event, session);
+      // Removed console.log('Supabase auth event:', event, session);
       setSession(session);
       const user = session?.user ?? null;
       setCurrentUser(user);
@@ -88,8 +91,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setCurrentUserProfile(null);
         setIsAdmin(false);
       }
-      // Não defina setLoading(false) aqui toda vez, apenas no setup inicial e após operações de login/logout explícitas.
-      // Isso evita que o estado de loading seja resetado prematuramente durante a navegação.
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
         setLoading(false);
       }
@@ -117,7 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { data, error, status } = await supabase
         .from('profiles')
-        .select(`name, phone, email, role`)
+        .select('name, phone, email, role')
         .eq('id', userId)
         .single();
       
@@ -193,8 +194,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const profile = await fetchUserProfileInternal(loginData.user.id);
       const userIsAdmin = profile?.role === 'admin';
 
-      // Atualizar estados do contexto explicitamente aqui
-      // onAuthStateChange também será disparado, mas garantir a atualização imediata aqui é bom.
       setCurrentUser(loginData.user);
       setSession(loginData.session);
       setCurrentUserProfile(profile);
@@ -225,7 +224,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      // onAuthStateChange cuidará de limpar os estados
       toast({ title: "Logout realizado", description: "Até breve!" });
       router.push('/login');
     } catch (error: any) {
@@ -244,7 +242,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: `${window.location.origin}/reset-password` // Ensure this path exists for password reset flow
       });
       if (error) throw error;
       toast({ title: "Email enviado", description: "Verifique sua caixa de entrada para redefinir a senha." });
@@ -264,7 +262,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     setLoading(true);
     try {
-      const { role, ...dataToUpdate } = updateData;
+      const { role, ...dataToUpdate } = updateData; // Role should not be updated by user directly
 
       const { error } = await supabase
         .from('profiles')
@@ -313,3 +311,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
