@@ -96,15 +96,21 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(20px)' }, // Aumentado o translateY para mais impacto
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        'hero-image-float': {
+          '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+          '25%': { transform: 'translateY(-12px) rotate(0.3deg)' },
+          '50%': { transform: 'translateY(-6px) rotate(-0.2deg)' },
+          '75%': { transform: 'translateY(-18px) rotate(0.1deg)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.3s ease-out', // Aumentei a duração para 0.3s
         'accordion-up': 'accordion-up 0.3s ease-out', // Aumentei a duração para 0.3s
         'fade-in': 'fade-in 0.5s ease-out forwards',
         'fade-in-up': 'fade-in-up 0.6s ease-out forwards', // Aumentado a duração
+        'hero-image-float': 'hero-image-float 6s ease-in-out infinite',
       },
     },
   },
   plugins: [require('tailwindcss-animate')],
 } satisfies Config;
-
