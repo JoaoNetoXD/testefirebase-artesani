@@ -1,16 +1,17 @@
 
 import { ProductList } from '@/components/products/ProductList';
 import { CategoryNavigation } from '@/components/products/CategoryNavigation';
-import { mockProducts, mockCategories } from '@/lib/data';
 import { Button } from "@/components/ui/button";
 import { Star, Truck, ClipboardList, Award } from "lucide-react";
 import Image from 'next/image';
-import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { ProductService } from '@/lib/services/productService';
+import { CategoryService } from '@/lib/services/categoryService';
+import type { Product, Category } from '@/lib/types';
 
-export default function HomePage() {
-  const products = mockProducts;
-  const categories = mockCategories;
+export default async function HomePage() {
+  const products: Product[] = await ProductService.getAllProducts();
+  const categories: Category[] = await CategoryService.getAllCategories();
 
   const benefits = [
     { icon: Award, title: "Qualidade Garantida", description: "Produtos com certificação." },
@@ -107,7 +108,7 @@ export default function HomePage() {
           </div>
           <ProductList products={products.slice(0,4)} /> {/* Animation applied via ProductCard's index prop */}
           <div className="text-center mt-10 animate-fade-in-up" style={{ animationDelay: '500ms' }}>
-            <Link href="/category/medicamentos" passHref> {/* Link to all products or a main category */}
+            <Link href="/products" passHref> {/* Link to all products page */}
                  <Button size="lg" variant="outline" className="border-accent text-accent hover:bg-accent hover:text-accent-foreground rounded-full px-10 py-3 text-base">
                     Ver todos os produtos
                 </Button>
