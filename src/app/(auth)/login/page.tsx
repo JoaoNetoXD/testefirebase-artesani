@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import { Loader2 } from 'lucide-react'; // Importar Loader2
 
 function LoginContent() {
   const searchParams = useSearchParams();
@@ -18,29 +19,29 @@ function LoginContent() {
     e.preventDefault();
     setIsLoading(true);
     
-    // Aqui você pode adicionar a lógica de autenticação
+    // Simulação de autenticação
     console.log('Login attempt:', { email, password });
     
-    // Simular delay de autenticação
     setTimeout(() => {
       setIsLoading(false);
       // Redirecionar após login bem-sucedido
-      window.location.href = '/';
+      // Idealmente, o AuthContext faria o redirecionamento após o login bem-sucedido
+      window.location.href = '/'; 
     }, 1000);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-headline text-center">
+    <div className="flex items-center justify-center">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="p-6 sm:p-8 text-center">
+          <CardTitle className="text-3xl font-headline text-card-foreground">
             Entrar na sua conta
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="p-6 sm:p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-card-foreground">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -48,10 +49,11 @@ function LoginContent() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-11 text-base"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password" className="text-card-foreground">Senha</Label>
               <Input
                 id="password"
                 type="password"
@@ -59,26 +61,27 @@ function LoginContent() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="h-11 text-base"
               />
             </div>
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-11 text-base" 
               disabled={isLoading}
             >
-              {isLoading ? 'Entrando...' : 'Entrar'}
+              {isLoading ? <Loader2 className="animate-spin" /> : 'Entrar'}
             </Button>
           </form>
           
-          <div className="mt-4 text-center text-sm">
-            <span className="text-muted-foreground">Não tem uma conta? </span>
-            <Link href="/register" className="text-primary hover:underline">
+          <div className="mt-6 text-center text-sm">
+            <span className="text-card-foreground/80">Não tem uma conta? </span>
+            <Link href="/register" className="font-semibold text-accent hover:text-accent/90 hover:underline">
               Criar conta
             </Link>
           </div>
           
-          <div className="mt-2 text-center text-sm">
-            <Link href="/forgot-password" className="text-muted-foreground hover:underline">
+          <div className="mt-3 text-center text-sm">
+            <Link href="/forgot-password" className="font-medium text-card-foreground/80 hover:text-accent hover:underline">
               Esqueceu sua senha?
             </Link>
           </div>
@@ -91,8 +94,8 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     }>
       <LoginContent />
