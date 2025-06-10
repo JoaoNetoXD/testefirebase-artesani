@@ -109,72 +109,64 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
     loadCategories();
   }, []);
 
-  const onSubmit: SubmitHandler<ProductFormData> = async (data) => {
+  const onSubmit = async (data: ProductFormData) => {
+    console.log('🚀 Iniciando onSubmit');
+    console.log('📝 Categoria selecionada:', data.category); // ← ADICIONE ESTA LINHA
     setIsSubmitting(true);
     
     try {
+      console.log('📝 Dados do produto a serem enviados:', data);
+      
       const imagesArray = uploadedImages.length > 0 ? uploadedImages : (data.imageUrls?.split(',').map(url => url.trim()).filter(url => url) || []);
       
-      const productData: Partial<Product> = { // Use Partial<Product> para flexibilidade
+      const productData: Partial<Product> = {
         name: data.productName,
         slug: data.slug,
         description: data.description,
         price: data.price,
         stock: data.stock,
-        category_name: data.category, // Salvar como category_name
+        category_name: data.category,
         ingredients: data.ingredients,
         intended_uses: data.intendedUses,
         images: imagesArray,
+        is_active: true
       };
+      
+      console.log('📦 ProductData preparado:', productData);
       
       let result;
       if (productToEdit) {
+        console.log('🔄 Atualizando produto existente...');
         result = await ProductService.updateProduct(productToEdit.id, productData);
-        if (result) {
-          toast({
-            title: "Produto Atualizado!",
-            description: `${data.productName} foi atualizado com sucesso.`,
-          });
-        } else {
-          throw new Error('Falha ao atualizar produto');
-        }
       } else {
-        // For new products, ensure all required fields for DB insertion are present
-        const newProductData: Omit<Product, 'id' | 'created_at' | 'updated_at' | 'is_active'> & { is_active?: boolean } = {
-          name: data.productName,
-          slug: data.slug,
-          description: data.description,
-          price: data.price,
-          stock: data.stock,
-          category_name: data.category,
-          ingredients: data.ingredients,
-          intended_uses: data.intendedUses,
-          images: imagesArray,
-          is_active: true, // Default to active for new products
-        };
-        result = await ProductService.createProduct(newProductData as any); // any for now due to omit mismatch
-        
-        if (result) {
-          toast({
-            title: "Produto Criado!",
-            description: `${data.productName} foi criado com sucesso.`,
-          });
-          reset(); 
-          setUploadedImages([]);
-        } else {
-          throw new Error('Falha ao criar produto');
-        }
+        console.log('➕ Criando novo produto...');
+        result = await ProductService.createProduct(productData);
       }
-    } catch (error: any) {
+      
+      if (!result) {
+        throw new Error('Falha ao salvar produto - resultado nulo');
+      }
+      
       toast({
-        title: "Erro!",
-        description: error.message || "Ocorreu um erro ao salvar o produto. Tente novamente.",
-        variant: "destructive"
+        title: "Sucesso!",
+        description: productToEdit ? "Produto atualizado com sucesso." : "Produto criado com sucesso.",
+      });
+      
+      // Limpar o formulário após sucesso
+      reset();
+      setUploadedImages([]);
+      
+    } catch (error) {
+      console.error('💥 Erro no onSubmit:', error);
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro ao salvar produto. Tente novamente.",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
-  };
+};
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -297,7 +289,7 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
                 name="category"
                 control={control}
                 render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value || productToEdit?.category_name}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <SelectTrigger id="category">
                       <SelectValue placeholder="Selecione uma categoria" />
                     </SelectTrigger>

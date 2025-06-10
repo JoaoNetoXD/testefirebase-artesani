@@ -4,6 +4,8 @@ import { CategoryNavigation } from '@/components/products/CategoryNavigation';
 import { CategoryService } from '@/lib/services/categoryService';
 import { ProductService } from '@/lib/services/productService';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { ProductList } from '@/components/products/ProductList';
 
 export async function generateStaticParams() {
   const categories = await CategoryService.getAllCategories();
@@ -66,3 +68,5 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
     </div>
   );
 }
+import Link from 'next/link';
+import { ProductList } from '@/components/products/ProductList';

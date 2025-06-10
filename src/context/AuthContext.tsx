@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { data, error, status } = await supabase
         .from('profiles')
-        .select('name, phone, email, role')
+        .select('name, email, role')  // Removido 'phone' da seleção
         .eq('id', userId)
         .single();
       

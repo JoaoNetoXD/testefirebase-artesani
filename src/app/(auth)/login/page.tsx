@@ -24,8 +24,8 @@ function LoginContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // setIsLoading(true); // Se estiver usando authLoading, esta linha pode não ser necessária
-    
+    // Remover as linhas comentadas e definições duplicadas
+    // Manter apenas uma definição da variável
     const intendedRedirectPath = searchParams.get('redirect');
     console.log("Login page: Intended redirect path from URL:", intendedRedirectPath);
 

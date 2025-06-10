@@ -68,24 +68,47 @@ export class ProductService {
   }
 
   // Criar novo produto
-  static async createProduct(productData: Omit<Product, 'id'>): Promise<Product | null> {
+  static async createProduct(productData: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product | null> {
+    console.log('🔧 ProductService.createProduct iniciado');
+    console.log('📥 Dados recebidos:', productData);
+    
     if (!supabase) {
-      console.error('Supabase não está configurado');
+      console.error('💥 Supabase não está configurado');
       return null;
     }
-
-    const { data, error } = await supabase
-      .from('products')
-      .insert([productData])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Erro ao criar produto:', error);
+    
+    console.log('⚡ Supabase configurado, executando insert...');
+    
+    try {
+      console.log('🔄 Iniciando query no Supabase...');
+      
+      const { data, error } = await supabase
+        .from('products')
+        .insert([productData])
+        .select()
+        .single();
+      
+      console.log('📤 Resposta do Supabase recebida!');
+      console.log('  - data:', data);
+      console.log('  - error:', error);
+      
+      if (error) {
+        console.error('💥 Erro ao criar produto:', error);
+        console.error('📋 Detalhes do erro:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        return null;
+      }
+      
+      console.log('✅ Produto criado com sucesso:', data);
+      return data;
+    } catch (catchError) {
+      console.error('🚨 Erro capturado no try/catch:', catchError);
       return null;
     }
-
-    return data;
   }
 
   // Atualizar produto

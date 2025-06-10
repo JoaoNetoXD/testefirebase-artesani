@@ -1,22 +1,21 @@
 
 "use client";
 import { ProductForm } from '@/components/admin/ProductForm';
-// Remover: import { mockProducts, getProductBySlug } from '@/lib/data';
 import { ProductService } from '@/lib/services/productService';
 import type { Product } from '@/lib/types';
 import { useState, useEffect } from 'react';
+import { use } from 'react';
 
-export default async function EditProductPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const productData = await ProductService.getProductBySlug(slug);
-  
+export default function EditProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  // Use React.use() para unwrap a Promise em client component
+  const { slug } = use(params);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const productData = await ProductService.getProductBySlug(params.slug);
+        const productData = await ProductService.getProductBySlug(slug);
         setProduct(productData);
       } catch (error) {
         console.error('Erro ao carregar produto:', error);
@@ -26,7 +25,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ sl
     };
 
     fetchProduct();
-  }, [params.slug]);
+  }, [slug]);
 
   if (loading) {
     return (
@@ -48,7 +47,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ sl
   return (
     <div>
       <h1 className="text-3xl font-headline mb-8">Editar Produto</h1>
-      <ProductForm productToEdit={product} />
+      <ProductForm product={product} />
     </div>
   );
 }
