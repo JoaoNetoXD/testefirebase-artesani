@@ -1,12 +1,12 @@
-"use client";
-import { useEffect, useState } from 'react';
+'use client';
+import { useEffect, useState, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Package, Home } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const [orderDetails, setOrderDetails] = useState<any>(null);
 
@@ -77,5 +77,13 @@ export default function SuccessPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500"></div></div>}>
+      <SuccessContent />
+    </Suspense>
   );
 }

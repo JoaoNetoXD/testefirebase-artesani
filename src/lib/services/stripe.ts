@@ -96,3 +96,6 @@ export async function getPaymentIntent(paymentIntentId: string) {
     throw error;
   }
 }
+
+// Exportar instância do Stripe para uso no servidor
+export const stripe = getStripe();
