@@ -2,9 +2,10 @@
 "use client";
 import Link from 'next/link';
 import { ListOrdered, User, Heart, LogOut, LayoutDashboard } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth'; // Import useAuth
+import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { useEffect } from 'react';
 
 const accountNavLinks = [
   { href: '/account', label: 'Visão Geral', icon: LayoutDashboard },
@@ -29,7 +30,7 @@ export default function AccountLayout({
 
 
   if (loading || !currentUser) {
-    return <div className="flex justify-center items-center min-h-[calc(100vh-200px)]"><p>Carregando...</p></div>; // Ou um spinner
+    return <div className="flex justify-center items-center min-h-[calc(100vh-200px)]"><p>Carregando...</p></div>;
   }
   
   const handleLogout = async () => {
@@ -68,6 +69,3 @@ export default function AccountLayout({
     </div>
   );
 }
-
-// Adicionado useEffect para proteção de rota
-import { useEffect } from 'react';
