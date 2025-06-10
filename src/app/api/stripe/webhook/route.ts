@@ -29,35 +29,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-  // Processar diferentes tipos de eventos
-  switch (event.type) {
-    case 'payment_intent.succeeded':
-      const paymentIntent = event.data.object as Stripe.PaymentIntent;
-      console.log('Pagamento bem-sucedido:', paymentIntent.id);
-      // Aqui você pode atualizar o status do pedido no banco de dados
-      break;
+    // Processar diferentes tipos de eventos
+    switch (event.type) {
+      case 'payment_intent.succeeded':
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        console.log('Pagamento bem-sucedido:', paymentIntent.id);
+        // Aqui você pode atualizar o status do pedido no banco de dados
+        break;
 
-    case 'payment_intent.payment_failed':
-      const failedPayment = event.data.object as Stripe.PaymentIntent;
-      console.log('Pagamento falhou:', failedPayment.id);
-      // Aqui você pode marcar o pedido como falhou
-      break;
+      case 'payment_intent.payment_failed':
+        const failedPayment = event.data.object as Stripe.PaymentIntent;
+        console.log('Pagamento falhou:', failedPayment.id);
+        // Aqui você pode marcar o pedido como falhou
+        break;
 
-    case 'checkout.session.completed':
-      const session = event.data.object as Stripe.Checkout.Session;
-      console.log('Checkout session completed:', session.id);
-      // Processar pedido completo
-      break;
+      case 'checkout.session.completed':
+        const session = event.data.object as Stripe.Checkout.Session;
+        console.log('Checkout session completed:', session.id);
+        // Processar pedido completo
+        break;
 
-    default:
-      console.log(`Evento não tratado: ${event.type}`);
+      default:
+        console.log(`Evento não tratado: ${event.type}`);
+    }
+
+    return NextResponse.json({ received: true });
+  } catch (error) {
+    console.error('Erro no webhook:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({ received: true });
-} catch (error) {
-  console.error('Erro no webhook:', error);
-  return NextResponse.json(
-    { error: 'Internal server error' },
-    { status: 500 }
-  );
 }
