@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Importar Card
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ProductDetailClientContentProps {
   product: Product;
@@ -108,7 +108,7 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
         {/* Product Info */}
         <Card className="shadow-xl">
           <CardContent className="p-6 space-y-5">
-            <h1 className="text-3xl md:text-4xl font-headline font-bold text-foreground">{product.name}</h1>
+            <h1 className="text-3xl md:text-4xl font-headline font-bold text-card-foreground">{product.name}</h1>
             
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
               <div className="flex text-yellow-400">
@@ -135,7 +135,7 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
               R$ {product.price.toFixed(2).replace('.', ',')}
             </p>
             
-            <p className="text-base text-foreground/80 leading-relaxed">{product.description}</p>
+            <p className="text-base text-card-foreground/80 leading-relaxed">{product.description}</p>
 
             {product.stock > 0 ? (
               <p className="text-sm text-green-600 font-semibold">Em estoque ({product.stock} unidades disponíveis)</p>
@@ -155,12 +155,10 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
               </Button>
               <Button
                 size="lg"
-                variant="outline"
+                variant={currentIsFavorite ? "destructive" : "default"}
                 className={cn(
-                  "w-full sm:flex-1 rounded-md", // base styles
-                  currentIsFavorite 
-                    ? "bg-destructive/10 border-destructive text-destructive hover:bg-destructive/20 hover:text-destructive" // if favorite
-                    : "border-primary text-primary hover:bg-primary/10" // if not favorite
+                  "w-full sm:flex-1 rounded-md",
+                  !currentIsFavorite && "bg-primary text-primary-foreground hover:bg-primary/90"
                 )}
                 onClick={handleToggleFavorite}
                 aria-label={currentIsFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
@@ -178,19 +176,19 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
 
       {/* Tabs for more details */}
       <Tabs defaultValue="description" className="mb-12">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 mb-4 bg-muted p-1 rounded-lg">
-          <TabsTrigger value="description" className="data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm rounded-md">Descrição Completa</TabsTrigger>
-          <TabsTrigger value="ingredients" className="data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm rounded-md">Ingredientes</TabsTrigger>
-          <TabsTrigger value="reviews" className="data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm rounded-md">Avaliações</TabsTrigger>
+        <TabsList className="flex flex-wrap justify-center gap-1 sm:gap-2 mb-4 bg-muted p-1 rounded-lg">
+          <TabsTrigger value="description" className="data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm rounded-md px-2 py-1.5 text-xs sm:text-sm sm:px-3">Descrição Completa</TabsTrigger>
+          <TabsTrigger value="ingredients" className="data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm rounded-md px-2 py-1.5 text-xs sm:text-sm sm:px-3">Ingredientes</TabsTrigger>
+          <TabsTrigger value="reviews" className="data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm rounded-md px-2 py-1.5 text-xs sm:text-sm sm:px-3">Avaliações</TabsTrigger>
         </TabsList>
         
         <TabsContent value="description" className="bg-card text-card-foreground p-6 rounded-lg shadow-lg">
-          <h3 className="text-xl font-headline mb-3 text-foreground">Detalhes do Produto</h3>
+          <h3 className="text-xl font-headline mb-3 text-card-foreground">Detalhes do Produto</h3>
           <div className="space-y-3 text-card-foreground/80">
             <p className="whitespace-pre-line">{product.description}</p>
             {product.intendedUses && (
                 <>
-                    <h4 className="text-lg font-semibold mt-4 mb-1 text-foreground">Usos Pretendidos:</h4>
+                    <h4 className="text-lg font-semibold mt-4 mb-1 text-card-foreground">Usos Pretendidos:</h4>
                     <p>{product.intendedUses}</p>
                 </>
             )}
@@ -199,7 +197,7 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
         </TabsContent>
         
         <TabsContent value="ingredients" className="bg-card text-card-foreground p-6 rounded-lg shadow-lg">
-          <h3 className="text-xl font-headline mb-3 text-foreground">Composição e Ingredientes</h3>
+          <h3 className="text-xl font-headline mb-3 text-card-foreground">Composição e Ingredientes</h3>
           {product.ingredients ? (
             <ul className="list-disc list-inside space-y-1 text-card-foreground/80">
               {product.ingredients.split(',').map((ing, idx) => <li key={idx}>{ing.trim()}</li>)}
@@ -210,12 +208,11 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
         </TabsContent>
         
         <TabsContent value="reviews" className="bg-card text-card-foreground p-6 rounded-lg shadow-lg">
-          <h3 className="text-xl font-headline mb-3 text-foreground">Avaliações de Clientes</h3>
+          <h3 className="text-xl font-headline mb-3 text-card-foreground">Avaliações de Clientes</h3>
           <div className="text-center py-8 text-card-foreground/60">
             <Star className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
             <p className="text-lg">Nenhuma avaliação ainda.</p>
             <p className="text-sm">Seja o primeiro a avaliar este produto!</p>
-             {/* Placeholder para funcionalidade futura de adicionar avaliação */}
             <Button variant="outline" className="mt-6">Escrever uma avaliação</Button>
           </div>
         </TabsContent>
@@ -231,3 +228,4 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
     </div>
   );
 }
+
