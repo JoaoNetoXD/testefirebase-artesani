@@ -14,7 +14,7 @@ import { Loader2, CreditCard } from 'lucide-react';
 import { stripePromise } from '@/lib/services/stripe';
 
 interface PaymentFormProps {
-  clientSecret: string;
+  clientSecret: string | null; // Allow null for initial state or error
   amount: number;
   onSuccess: () => void;
   onError: (error: string) => void;
@@ -26,10 +26,20 @@ function PaymentForm({ clientSecret, amount, onSuccess, onError }: PaymentFormPr
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!stripe) {
+      const stripeErrorMsg = "Stripe.js não pôde ser carregado. Verifique a configuração da chave publicável do Stripe.";
+      setError(stripeErrorMsg);
+      onError(stripeErrorMsg); // Notificar o componente pai sobre o erro
+    }
+  }, [stripe, onError]);
+
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!stripe || !elements) {
+    if (!stripe || !elements || !clientSecret) { // Adicionado !clientSecret aqui também
+      setError("Formulário de pagamento não está pronto ou o Stripe não foi carregado.");
       return;
     }
 
@@ -41,17 +51,18 @@ function PaymentForm({ clientSecret, amount, onSuccess, onError }: PaymentFormPr
       if (submitError) {
         const errorMessage = submitError.message || 'Erro ao processar dados do pagamento';
         setError(errorMessage);
-        onError(errorMessage); // Notificar o componente pai sobre o erro
+        onError(errorMessage); 
         setIsLoading(false);
         return;
       }
 
       const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
+        clientSecret: clientSecret, // Passar clientSecret explicitamente
         confirmParams: {
-          return_url: `${window.location.origin}/success?payment_intent_id={payment_intent}`, // Adicionar payment_intent_id para rastreamento
+          return_url: `${window.location.origin}/success?payment_intent_id={payment_intent}`, 
         },
-        redirect: 'if_required', // Evita redirecionamento automático, lidamos com isso
+        redirect: 'if_required', 
       });
 
       if (confirmError) {
@@ -61,7 +72,6 @@ function PaymentForm({ clientSecret, amount, onSuccess, onError }: PaymentFormPr
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
         onSuccess();
       } else {
-        // Caso o status não seja 'succeeded' mesmo sem erro direto (ex: requires_action)
         const errorMessage = paymentIntent?.status ? `Pagamento requer ação adicional: ${paymentIntent.status}` : 'Pagamento não concluído';
         setError(errorMessage);
         onError(errorMessage);
@@ -74,6 +84,14 @@ function PaymentForm({ clientSecret, amount, onSuccess, onError }: PaymentFormPr
       setIsLoading(false);
     }
   };
+  
+  if (error && !stripe) { // Se o erro for específico do Stripe não carregado
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -87,14 +105,14 @@ function PaymentForm({ clientSecret, amount, onSuccess, onError }: PaymentFormPr
       />
       
       {error && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="mt-4">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
       
       <Button
         type="submit"
-        disabled={!stripe || isLoading}
+        disabled={!stripe || isLoading || !elements || !clientSecret} // Adicionado !elements e !clientSecret
         className="w-full"
         size="lg"
       >
@@ -122,19 +140,18 @@ interface StripePaymentFormProps {
 
 export default function StripePaymentForm({ amount, onSuccess, onError }: StripePaymentFormProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [isLoadingClientSecret, setIsLoadingClientSecret] = useState(true); // Renomeado para clareza
+  const [isLoadingClientSecret, setIsLoadingClientSecret] = useState(true); 
 
   useEffect(() => {
-    // Função para criar o Payment Intent
     const createPaymentIntentOnMount = async () => {
-      setIsLoadingClientSecret(true); // Inicia carregamento
+      setIsLoadingClientSecret(true); 
       try {
         const response = await fetch('/api/stripe/create-payment-intent', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ amount }), // Envia o valor do carrinho
+          body: JSON.stringify({ amount }), 
         });
 
         if (!response.ok) {
@@ -153,18 +170,25 @@ export default function StripePaymentForm({ amount, onSuccess, onError }: Stripe
         console.error("Erro ao criar Payment Intent:", error);
         onError(error.message || 'Erro ao conectar com o servidor de pagamento.');
       } finally {
-        setIsLoadingClientSecret(false); // Finaliza carregamento
+        setIsLoadingClientSecret(false); 
       }
     };
 
-    if (amount > 0) { // Apenas tenta criar se o valor for positivo
+    if (amount > 0) { 
         createPaymentIntentOnMount();
-    } else {
+    } else if (amount === 0 && cart.length > 0) { // Check if cart has items even if total is 0 (e.g. free items)
+        // Handle free orders or scenarios where payment is not needed, or show specific message
+        // For now, assuming payment intent is always needed if cart is not empty.
+        // If amount is 0 for non-empty cart, could be error or special case.
+        onError('O valor do carrinho é zero. Não é possível iniciar pagamento com valor zero via Stripe.');
+        setIsLoadingClientSecret(false);
+    } else if (cart.length === 0) { // Cart is actually empty
+        onError('Carrinho vazio. Adicione itens para prosseguir.');
+        setIsLoadingClientSecret(false);
+    } else { // Amount is invalid (e.g. negative)
         onError('Valor do carrinho inválido para iniciar pagamento.');
         setIsLoadingClientSecret(false);
     }
-  // A dependência `amount` garante que o PI seja recriado se o valor mudar.
-  // `onError` também como dependência se sua referência puder mudar.
   }, [amount, onError]); 
 
   if (isLoadingClientSecret) {
@@ -178,37 +202,43 @@ export default function StripePaymentForm({ amount, onSuccess, onError }: Stripe
     );
   }
 
-  if (!clientSecret) {
+  if (!clientSecret && !isLoadingClientSecret) { // Exibir erro se clientSecret não foi obtido E não está mais carregando
     return (
       <Card>
         <CardContent className="p-6">
           <Alert variant="destructive">
             <AlertDescription>
-              Erro ao carregar formulário de pagamento. Verifique o console para mais detalhes ou tente atualizar a página.
+              Não foi possível carregar o formulário de pagamento. 
+              Verifique se o valor do pedido é válido e se há conexão com o servidor de pagamento. 
+              Se o problema persistir, contate o suporte.
             </AlertDescription>
           </Alert>
         </CardContent>
       </Card>
     );
   }
+  
+  // Se clientSecret for null aqui, o Elements não deve ser renderizado ou configurado corretamente
+  // Mas o bloco acima já deve ter retornado o erro.
+  // Por segurança, podemos garantir que o options.clientSecret não seja null.
+  // No entanto, o Stripe Elements espera uma string não vazia.
 
-  // Opções para o componente Elements do Stripe
   const options = {
-    clientSecret,
+    clientSecret: clientSecret || '', // Use empty string if null, though Stripe might still complain. Better handled by not rendering Elements.
     appearance: {
       theme: 'stripe' as const,
       variables: {
-        colorPrimary: '#012A1A', // Cor primária do seu tema (Deep Green)
-        colorBackground: '#ffffff', // Fundo branco dos inputs
-        colorText: '#0B2918', // Texto escuro nos inputs
-        colorDanger: '#ef4444', // Vermelho para erros
+        colorPrimary: '#012A1A', 
+        colorBackground: '#ffffff', 
+        colorText: '#0B2918', 
+        colorDanger: '#ef4444', 
         fontFamily: 'Inter, system-ui, sans-serif',
         spacingUnit: '4px',
-        borderRadius: '0.5rem', // Corresponde ao --radius
+        borderRadius: '0.5rem', 
       },
       rules: {
         '.Input': {
-          borderColor: 'hsl(var(--border))', // Cor da borda do input do seu tema
+          borderColor: 'hsl(var(--border))', 
         }
       }
     },
@@ -216,23 +246,33 @@ export default function StripePaymentForm({ amount, onSuccess, onError }: Stripe
   };
 
   return (
-    <Card className="shadow-lg"> {/* Adicionando sombra para consistência */}
+    <Card className="shadow-lg"> 
       <CardHeader>
-        <CardTitle className="flex items-center text-xl font-headline"> {/* Ajuste de estilo */}
-          <CreditCard className="mr-3 h-5 w-5 text-primary" /> {/* Ajuste de tamanho e margem */}
+        <CardTitle className="flex items-center text-xl font-headline"> 
+          <CreditCard className="mr-3 h-5 w-5 text-primary" /> 
           Pagamento com Cartão
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Elements stripe={stripePromise} options={options}>
-          <PaymentForm
-            clientSecret={clientSecret}
-            amount={amount}
-            onSuccess={onSuccess}
-            onError={onError}
-          />
-        </Elements>
+        {clientSecret ? ( // Apenas renderizar Elements se clientSecret existir
+          <Elements stripe={stripePromise} options={{...options, clientSecret: clientSecret}}>
+            <PaymentForm
+              clientSecret={clientSecret}
+              amount={amount}
+              onSuccess={onSuccess}
+              onError={onError}
+            />
+          </Elements>
+        ) : (
+          // Este bloco é um fallback, o erro principal deve ser mostrado pelo `if (!clientSecret && !isLoadingClientSecret)`
+          <Alert variant="destructive">
+            <AlertDescription>
+              Configuração de pagamento incompleta. O clientSecret é necessário.
+            </AlertDescription>
+          </Alert>
+        )}
       </CardContent>
     </Card>
   );
 }
+
