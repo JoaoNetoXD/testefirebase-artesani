@@ -69,43 +69,26 @@ export function Header() {
   };
 
   return (
-    <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-50">
+    <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-50 rounded-b-xl">
       {/* Cabeçalho Principal */}
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4 md:hidden"> {/* Ocultar em desktop */}
         <Logo width={72} height={72} priority />
-
-        <nav className="hidden lg:flex items-center space-x-5 font-medium">
-          {mainNavLinks.slice(0, 5).map((link) => (
-            <Link key={link.label} href={link.href} className="hover:text-secondary transition-colors pb-1 border-b-2 border-transparent hover:border-secondary">
-              {link.label}
+        <div className="flex items-center space-x-1.5">
+          {loading && (
+            <div className="flex items-center space-x-1.5 text-sm p-2">
+              <Loader2 className="h-5 w-5 animate-spin" />
+            </div>
+          )}
+          {!loading && currentUser && (
+            <Link href="/account" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors p-2 rounded-md hover:bg-primary-foreground/10">
+              <User size={20} />
             </Link>
-          ))}
-        </nav>
-        
-        <div className="flex items-center space-x-1.5 md:space-x-3">
-          <div className="flex items-center space-x-1.5">
-            {loading && (
-              <div className="flex items-center space-x-1.5 text-sm p-2">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span className="hidden lg:inline">Carregando...</span>
-              </div>
-            )}
-            {!loading && currentUser && (
-              <>
-                <Link href="/account" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors p-2 rounded-md hover:bg-primary-foreground/10">
-                  <User size={20} />
-                  <span className="hidden lg:inline">{currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || "Minha Conta"}</span>
-                </Link>
-              </>
-            )}
-            {!loading && !currentUser && (
-              <Link href="/login" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors text-sm p-2 rounded-md hover:bg-primary-foreground/10">
-                <User size={20} />
-                <span className="hidden lg:inline">Entrar</span>
-              </Link>
-            )}
-          </div>
-
+          )}
+          {!loading && !currentUser && (
+            <Link href="/login" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors text-sm p-2 rounded-md hover:bg-primary-foreground/10">
+              <User size={20} />
+            </Link>
+          )}
           <Link href="/account/favorites" passHref>
             <Button variant="ghost" size="icon" aria-label="Meus Favoritos" className="relative hover:bg-primary-foreground/10">
               <Heart />
@@ -116,7 +99,65 @@ export function Header() {
               )}
             </Button>
           </Link>
-
+          <Sheet open={isCartSheetOpen} onOpenChange={setIsCartSheetOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="Carrinho de Compras" className="relative hover:bg-primary-foreground/10">
+                <ShoppingCart />
+                {isMounted && cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-accent-foreground bg-accent rounded-full">
+                    {cartItemCount}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[320px] sm:w-[380px] bg-card text-card-foreground p-0 flex flex-col">
+              <SideCart closeSheet={() => setIsCartSheetOpen(false)} />
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
+      
+      {/* Cabeçalho Principal Desktop */}
+      <div className="container mx-auto px-4 py-3 hidden md:flex items-center justify-between gap-4">
+        <Logo width={72} height={72} priority />
+        <nav className="flex items-center space-x-5 font-medium">
+          {mainNavLinks.slice(0, 5).map((link) => (
+            <Link key={link.label} href={link.href} className="hover:text-secondary transition-colors pb-1 border-b-2 border-transparent hover:border-secondary">
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="flex items-center space-x-1.5 md:space-x-3">
+          <div className="flex items-center space-x-1.5">
+            {loading && (
+              <div className="flex items-center space-x-1.5 text-sm p-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="hidden lg:inline">Carregando...</span>
+              </div>
+            )}
+            {!loading && currentUser && (
+              <Link href="/account" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors p-2 rounded-md hover:bg-primary-foreground/10">
+                <User size={20} />
+                <span className="hidden lg:inline">{currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || "Minha Conta"}</span>
+              </Link>
+            )}
+            {!loading && !currentUser && (
+              <Link href="/login" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors text-sm p-2 rounded-md hover:bg-primary-foreground/10">
+                <User size={20} />
+                <span className="hidden lg:inline">Entrar</span>
+              </Link>
+            )}
+          </div>
+          <Link href="/account/favorites" passHref>
+            <Button variant="ghost" size="icon" aria-label="Meus Favoritos" className="relative hover:bg-primary-foreground/10">
+              <Heart />
+              {isMounted && favoriteItemCount > 0 && (
+                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-accent-foreground bg-accent rounded-full">
+                  {favoriteItemCount}
+                </span>
+              )}
+            </Button>
+          </Link>
           <Sheet open={isCartSheetOpen} onOpenChange={setIsCartSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" aria-label="Carrinho de Compras" className="relative hover:bg-primary-foreground/10">
@@ -135,48 +176,44 @@ export function Header() {
         </div>
       </div>
 
-      {/* Seção de Botões de Categoria para Mobile */}
-      <div className="md:hidden bg-primary px-4 pt-1 pb-3">
-        <div className="flex items-center justify-center gap-2">
-          <Link href="/category/manipulados" passHref>
-            <Button
-              variant="ghost"
-              size="sm" 
-              className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
-            >
-              Manipulados
-            </Button>
-          </Link>
-          <Link href="/category/cosmeticos" passHref>
-            <Button
-              variant="ghost"
-              size="sm" 
-              className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
-            >
-              Cosméticos
-            </Button>
-          </Link>
-          <Link href="/category/suplementos" passHref>
-            <Button
-              variant="ghost"
-              size="sm" 
-              className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
-            >
-              Suplementos
-            </Button>
-          </Link>
+      {/* Seção de Categorias e Busca Mobile (abaixo do header principal no mobile) */}
+      <div className="md:hidden bg-primary text-primary-foreground"> {/* Mantém o fundo primary para esta seção inteira */}
+        {/* Seção Superior Mobile (Logo, Ícones já estão acima) - Botões de Categoria */}
+        <div className="px-4 pb-6 pt-1 rounded-b-2xl shadow-lg"> {/* Fundo primário já vem do pai, padding-bottom aumentado */}
+          <div className="flex items-center justify-center gap-2">
+            <Link href="/category/manipulados" passHref>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
+              >
+                Manipulados
+              </Button>
+            </Link>
+            <Link href="/category/cosmeticos" passHref>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
+              >
+                Cosméticos
+              </Button>
+            </Link>
+            <Link href="/category/suplementos" passHref>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
+              >
+                Suplementos
+              </Button>
+            </Link>
+          </div>
         </div>
-      </div>
 
-      {/* Nova Seção da Barra de Busca para Mobile */}
-      <div className="md:hidden bg-primary px-4 py-4"> {/* Ajustado padding e removida borda */}
-        <div className="relative w-full group"> {/* Adicionado group aqui para focus-within no ícone da lupa */}
-          <div className="
-            relative w-full bg-card rounded-full shadow-md 
-            transition-all duration-300 ease-in-out 
-            transform hover:scale-[1.015] hover:shadow-lg 
-            focus-within:scale-[1.015] focus-within:shadow-lg
-          ">
+        {/* Seção da Barra de Busca - Posicionada para parecer 'suspensa' abaixo */}
+        <div className="px-4 -mt-4 mb-4 relative z-10"> {/* -mt-4 para puxar para cima, mb-4 para espaço abaixo */}
+          <div className="relative w-full bg-card rounded-full shadow-lg transition-all duration-300 ease-in-out group transform hover:scale-[1.015] hover:shadow-xl focus-within:scale-[1.015] focus-within:shadow-xl">
             <Search 
               className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-card-foreground/60 transition-colors duration-300 group-focus-within:text-accent" 
             />
