@@ -21,7 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-
+import type { UserProfile } from "@/lib/types";
 
 const profileSchema = z.object({
   name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres."),
@@ -33,10 +33,10 @@ type ProfileFormInputs = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
   const { currentUser, updateUserAccount, loading, fetchUserProfile } = useAuth();
-  const [firestoreUser, setFirestoreUser] = useState<any>(null); // Consider renaming if not using Firestore directly
+  const [firestoreUser, setFirestoreUser] = useState<UserProfile | null>(null); // Consider renaming if not using Firestore directly
   const { toast } = useToast();
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<ProfileFormInputs>({
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm<ProfileFormInputs>({
     resolver: zodResolver(profileSchema),
   });
 
@@ -57,7 +57,7 @@ export default function ProfilePage() {
   }, [currentUser, setValue, fetchUserProfile, firestoreUser]); // Added firestoreUser
 
   const onSubmit: SubmitHandler<ProfileFormInputs> = async (data) => {
-    const { email, ...updateData } = data; // email is readonly and part of auth, not profiles table directly
+    const { ...updateData } = data; // email is readonly and part of auth, not profiles table directly
     await updateUserAccount(updateData);
   };
 
@@ -177,4 +177,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

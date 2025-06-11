@@ -2,7 +2,6 @@
 "use client";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-// Remover esta linha: import { mockProducts } from '@/lib/data'; 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -20,7 +19,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ProductService } from '@/lib/services/productService';
 import type { Product } from '@/lib/types';
 
@@ -30,12 +29,7 @@ export default function AdminProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
-  // Carregar produtos do Supabase
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     setLoading(true);
     try {
       const data = await ProductService.getAllProducts();
@@ -50,9 +44,12 @@ export default function AdminProductsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  // Filtrar produtos
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
+
   const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.category_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -67,7 +64,6 @@ export default function AdminProductsPage() {
           title: "Produto Excluído",
           description: `${productName} foi excluído com sucesso.`,
         });
-        // Recarregar lista
         loadProducts();
       } else {
         throw new Error('Falha ao excluir produto');
@@ -179,7 +175,7 @@ export default function AdminProductsPage() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Tem certeza que deseja excluir o produto "{product.name}"? 
+                              Tem certeza que deseja excluir o produto &quot;{product.name}&quot;? 
                               Esta ação é simulada e não excluirá o produto de verdade neste ambiente de demonstração. Em um ambiente real, esta ação seria irreversível.
                             </AlertDialogDescription>
                           </AlertDialogHeader>

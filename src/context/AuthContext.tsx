@@ -2,9 +2,9 @@
 "use client";
 import type { ReactNode } from 'react';
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { Session, User } from '@supabase/supabase-js'; // Tipos do Supabase
-import { supabase, supabaseServicesAvailable } from '@/lib/supabase'; // Importa o cliente Supabase
-import { useRouter, useSearchParams } from 'next/navigation'; // Adicionado useSearchParams
+import { Session, User } from '@supabase/supabase-js';
+import { supabase, supabaseServicesAvailable } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserProfileData {
@@ -40,9 +40,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  // Note: useSearchParams can only be used in Client Components.
-  // If AuthProvider might be used in a context where this is an issue, consider an alternative way to get searchParams.
-  // For now, assuming AuthProvider is used within a client-side tree.
 
   useEffect(() => {
     if (!supabase || !supabaseServicesAvailable) {
@@ -78,7 +75,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     getSessionAndProfile();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Removed console.log('Supabase auth event:', event, session);
       setSession(session);
       const user = session?.user ?? null;
       setCurrentUser(user);
@@ -118,7 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { data, error, status } = await supabase
         .from('profiles')
-        .select('name, email, role')  // Removido 'phone' da seleção
+        .select('name, email, role')
         .eq('id', userId)
         .single();
       
@@ -127,8 +123,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw error;
       }
       return data as UserProfileData | null;
-    } catch (error: any) {
-      console.error("Erro ao buscar perfil do usuário:", error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Erro desconhecido ao buscar perfil";
+      console.error("Erro ao buscar perfil do usuário:", message);
       return null;
     }
   };
@@ -172,9 +169,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       toast({ title: "Cadastro realizado!", description: "Bem-vindo(a)! Verifique seu email para confirmação, se aplicável." });
       router.push('/'); 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Tente novamente.";
       console.error("Erro no cadastro:", error);
-      toast({ title: "Erro no Cadastro", description: error.message || "Tente novamente.", variant: "destructive" });
+      toast({ title: "Erro no Cadastro", description: message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -201,9 +199,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       toast({ title: "Login realizado!", description: "Bem-vindo(a) de volta!" });
       return { success: true, isAdminUser: userIsAdmin };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Email ou senha inválidos.";
       console.error("Erro no login:", error);
-      toast({ title: "Erro no Login", description: error.message || "Email ou senha inválidos.", variant: "destructive" });
+      toast({ title: "Erro no Login", description: message, variant: "destructive" });
       return { success: false, isAdminUser: false };
     } finally {
       setLoading(false);
@@ -226,9 +225,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       toast({ title: "Logout realizado", description: "Até breve!" });
       router.push('/login');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Tente novamente.";
       console.error("Erro no logout:", error);
-      toast({ title: "Erro no Logout", description: error.message || "Tente novamente.", variant: "destructive" });
+      toast({ title: "Erro no Logout", description: message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -242,13 +242,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password` // Ensure this path exists for password reset flow
+        redirectTo: `${window.location.origin}/reset-password`
       });
       if (error) throw error;
       toast({ title: "Email enviado", description: "Verifique sua caixa de entrada para redefinir a senha." });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Tente novamente.";
       console.error("Erro ao resetar senha:", error);
-      toast({ title: "Erro ao Enviar Email", description: error.message || "Tente novamente.", variant: "destructive" });
+      toast({ title: "Erro ao Enviar Email", description: message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -262,7 +263,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     setLoading(true);
     try {
-      const { role, ...dataToUpdate } = updateData; // Role should not be updated by user directly
+      const { ...dataToUpdate } = updateData;
 
       const { error } = await supabase
         .from('profiles')
@@ -275,9 +276,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setCurrentUserProfile(updatedProfile);
 
       toast({ title: "Perfil atualizado!", description: "Suas informações foram salvas." });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Tente novamente.";
       console.error("Erro ao atualizar perfil:", error);
-      toast({ title: "Erro ao Atualizar", description: error.message || "Tente novamente.", variant: "destructive" });
+      toast({ title: "Erro ao Atualizar", description: message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -311,4 +313,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

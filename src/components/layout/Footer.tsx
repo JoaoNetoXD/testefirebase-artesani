@@ -1,4 +1,6 @@
 
+import Link from 'next/link';
+
 export function Footer() {
   const currentYear = new Date().getFullYear();
   const apiKey = "AIzaSyB1jXTA50ofpSx2ZVoyluUdrvboAIJYD5Q"; // Sua chave de API aqui
@@ -15,10 +17,10 @@ export function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-3">Links Úteis</h4>
             <ul className="space-y-1.5 text-sm">
-              <li><a href="/sobre-nos" className="hover:text-secondary transition-colors">Sobre Nós</a></li> 
-              <li><a href="/category/manipulados" className="hover:text-secondary transition-colors">Catálogo</a></li>
-              <li><a href="/account" className="hover:text-secondary transition-colors">Minha Conta</a></li>
-              <li><a href="/#contato" className="hover:text-secondary transition-colors">Contato</a></li>
+              <li><Link href="/sobre-nos" className="hover:text-secondary transition-colors">Sobre Nós</Link></li>
+              <li><Link href="/category/manipulados/" className="hover:text-secondary transition-colors">Catálogo</Link></li>
+              <li><Link href="/account" className="hover:text-secondary transition-colors">Minha Conta</Link></li>
+              <li><Link href="/#contato" className="hover:text-secondary transition-colors">Contato</Link></li>
             </ul>
           </div>
           <div>
@@ -53,8 +55,8 @@ export function Footer() {
         <div className="text-center text-xs text-primary-foreground/70 mt-10 pt-6 border-t border-primary-foreground/20">
           <p>&copy; {currentYear} Artesani | Farmácia de Manipulação (PHARMA MANIPULAÇÃO LTDA.). Todos os direitos reservados.</p>
           <div className="mt-2 space-x-3">
-            <a href="#" className="hover:underline">Política de Privacidade</a>
-            <a href="#" className="hover:underline">Termos de Serviço</a>
+            <Link href="#" className="hover:underline">Política de Privacidade</Link>
+            <Link href="#" className="hover:underline">Termos de Serviço</Link>
           </div>
         </div>
       </div>

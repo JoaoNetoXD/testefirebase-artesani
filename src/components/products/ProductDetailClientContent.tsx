@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface ProductDetailClientContentProps {
   product: Product;
@@ -228,4 +228,3 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
     </div>
   );
 }
-

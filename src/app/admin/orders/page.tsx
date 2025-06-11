@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/select";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -144,7 +143,7 @@ export default function AdminOrdersPage() {
                     <TableCell>R$ {order.total.toFixed(2)}</TableCell>
                     <TableCell>
                       <Badge 
-                        variant={statusDetails.variant as any} 
+                        variant={statusDetails.variant as "default" | "secondary" | "destructive" | "outline" | null | undefined} 
                         className={statusDetails.className}
                       >
                         {order.status}

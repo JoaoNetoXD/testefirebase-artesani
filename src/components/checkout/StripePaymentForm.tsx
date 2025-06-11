@@ -14,7 +14,7 @@ import { Loader2, CreditCard } from 'lucide-react';
 import { stripePromise } from '@/lib/services/stripe';
 
 interface PaymentFormProps {
-  clientSecret: string | null; // Allow null for initial state or error
+  clientSecret: string | null;
   amount: number;
   onSuccess: () => void;
   onError: (error: string) => void;
@@ -30,7 +30,7 @@ function PaymentForm({ clientSecret, amount, onSuccess, onError }: PaymentFormPr
     if (!stripe) {
       const stripeErrorMsg = "Stripe.js não pôde ser carregado. Verifique a configuração da chave publicável do Stripe.";
       setError(stripeErrorMsg);
-      onError(stripeErrorMsg); // Notificar o componente pai sobre o erro
+      onError(stripeErrorMsg);
     }
   }, [stripe, onError]);
 
@@ -38,7 +38,7 @@ function PaymentForm({ clientSecret, amount, onSuccess, onError }: PaymentFormPr
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!stripe || !elements || !clientSecret) { // Adicionado !clientSecret aqui também
+    if (!stripe || !elements || !clientSecret) {
       setError("Formulário de pagamento não está pronto ou o Stripe não foi carregado.");
       return;
     }
@@ -58,7 +58,7 @@ function PaymentForm({ clientSecret, amount, onSuccess, onError }: PaymentFormPr
 
       const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
-        clientSecret: clientSecret, // Passar clientSecret explicitamente
+        clientSecret: clientSecret,
         confirmParams: {
           return_url: `${window.location.origin}/success?payment_intent_id={payment_intent}`, 
         },
@@ -76,8 +76,8 @@ function PaymentForm({ clientSecret, amount, onSuccess, onError }: PaymentFormPr
         setError(errorMessage);
         onError(errorMessage);
       }
-    } catch (err: any) {
-      const errorMessage = err.message || 'Erro inesperado ao processar pagamento';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro inesperado ao processar pagamento';
       setError(errorMessage);
       onError(errorMessage);
     } finally {
@@ -85,7 +85,7 @@ function PaymentForm({ clientSecret, amount, onSuccess, onError }: PaymentFormPr
     }
   };
   
-  if (error && !stripe) { // Se o erro for específico do Stripe não carregado
+  if (error && !stripe) {
     return (
       <Alert variant="destructive">
         <AlertDescription>{error}</AlertDescription>
@@ -112,7 +112,7 @@ function PaymentForm({ clientSecret, amount, onSuccess, onError }: PaymentFormPr
       
       <Button
         type="submit"
-        disabled={!stripe || isLoading || !elements || !clientSecret} // Adicionado !elements e !clientSecret
+        disabled={!stripe || isLoading || !elements || !clientSecret}
         className="w-full"
         size="lg"
       >
@@ -166,9 +166,10 @@ export default function StripePaymentForm({ amount, onSuccess, onError }: Stripe
         } else {
           onError('Erro ao inicializar pagamento: clientSecret não recebido.');
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Erro ao criar Payment Intent:", error);
-        onError(error.message || 'Erro ao conectar com o servidor de pagamento.');
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao conectar com o servidor de pagamento.';
+        onError(errorMessage);
       } finally {
         setIsLoadingClientSecret(false); 
       }
@@ -176,16 +177,7 @@ export default function StripePaymentForm({ amount, onSuccess, onError }: Stripe
 
     if (amount > 0) { 
         createPaymentIntentOnMount();
-    } else if (amount === 0 && cart.length > 0) { // Check if cart has items even if total is 0 (e.g. free items)
-        // Handle free orders or scenarios where payment is not needed, or show specific message
-        // For now, assuming payment intent is always needed if cart is not empty.
-        // If amount is 0 for non-empty cart, could be error or special case.
-        onError('O valor do carrinho é zero. Não é possível iniciar pagamento com valor zero via Stripe.');
-        setIsLoadingClientSecret(false);
-    } else if (cart.length === 0) { // Cart is actually empty
-        onError('Carrinho vazio. Adicione itens para prosseguir.');
-        setIsLoadingClientSecret(false);
-    } else { // Amount is invalid (e.g. negative)
+    } else {
         onError('Valor do carrinho inválido para iniciar pagamento.');
         setIsLoadingClientSecret(false);
     }
@@ -202,7 +194,7 @@ export default function StripePaymentForm({ amount, onSuccess, onError }: Stripe
     );
   }
 
-  if (!clientSecret && !isLoadingClientSecret) { // Exibir erro se clientSecret não foi obtido E não está mais carregando
+  if (!clientSecret && !isLoadingClientSecret) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -217,14 +209,9 @@ export default function StripePaymentForm({ amount, onSuccess, onError }: Stripe
       </Card>
     );
   }
-  
-  // Se clientSecret for null aqui, o Elements não deve ser renderizado ou configurado corretamente
-  // Mas o bloco acima já deve ter retornado o erro.
-  // Por segurança, podemos garantir que o options.clientSecret não seja null.
-  // No entanto, o Stripe Elements espera uma string não vazia.
 
   const options = {
-    clientSecret: clientSecret || '', // Use empty string if null, though Stripe might still complain. Better handled by not rendering Elements.
+    clientSecret: clientSecret || '',
     appearance: {
       theme: 'stripe' as const,
       variables: {
@@ -254,7 +241,7 @@ export default function StripePaymentForm({ amount, onSuccess, onError }: Stripe
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {clientSecret ? ( // Apenas renderizar Elements se clientSecret existir
+        {clientSecret ? (
           <Elements stripe={stripePromise} options={{...options, clientSecret: clientSecret}}>
             <PaymentForm
               clientSecret={clientSecret}
@@ -264,7 +251,6 @@ export default function StripePaymentForm({ amount, onSuccess, onError }: Stripe
             />
           </Elements>
         ) : (
-          // Este bloco é um fallback, o erro principal deve ser mostrado pelo `if (!clientSecret && !isLoadingClientSecret)`
           <Alert variant="destructive">
             <AlertDescription>
               Configuração de pagamento incompleta. O clientSecret é necessário.
@@ -275,4 +261,3 @@ export default function StripePaymentForm({ amount, onSuccess, onError }: Stripe
     </Card>
   );
 }
-

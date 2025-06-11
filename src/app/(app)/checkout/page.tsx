@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation';
 import StripePaymentForm from '@/components/checkout/StripePaymentForm';
 
 export default function CheckoutPage() {
-  const { cart, totalPrice, totalItems, clearCart } = useCart();
+  const { cart, totalPrice, clearCart } = useCart();
   const router = useRouter();
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'checkout'>('card');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -84,7 +84,7 @@ export default function CheckoutPage() {
       } else {
         setError('Erro ao criar sessão de checkout');
       }
-    } catch (error) {
+    } catch {
       setError('Erro ao processar checkout');
     } finally {
       setIsProcessing(false);

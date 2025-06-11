@@ -1,15 +1,13 @@
 
 "use client";
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetTrigger, SheetContent, SheetClose, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
+import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
 import { CategoryService } from '@/lib/services/categoryService';
 import type { Category } from '@/lib/types';
-import { Search, ShoppingCart, User, Heart, Phone, Mail, Info, LogOut, Loader2, X, Menu } from 'lucide-react';
+import { Search, ShoppingCart, User, Heart, Loader2 } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,7 +22,7 @@ export function Header() {
   const [isMounted, setIsMounted] = useState(false);
   const { cart } = useCart();
   const { favorites } = useFavorites();
-  const { currentUser, logout, loading } = useAuth();
+  const { currentUser, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -59,19 +57,9 @@ export function Header() {
   const cartItemCount = isMounted ? cart.reduce((sum, item) => sum + item.quantity, 0) : 0;
   const favoriteItemCount = isMounted ? favorites.length : 0;
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.push('/');
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-    }
-  };
-
   return (
     <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-50 rounded-b-xl">
-      {/* Cabeçalho Principal */}
-      <div className="container mx-auto px-4 py-2 flex items-center justify-between gap-4 md:hidden"> {/* Ocultar em desktop */}
+      <div className="container mx-auto px-4 py-2 flex items-center justify-between gap-4 md:hidden">
         <Logo width={69} height={69} priority />
         <div className="flex items-center space-x-1.5">
           {loading && (
@@ -117,7 +105,6 @@ export function Header() {
         </div>
       </div>
       
-      {/* Cabeçalho Principal Desktop */}
       <div className="container mx-auto px-4 py-3 hidden md:flex items-center justify-between gap-4">
         <Logo width={83} height={83} priority />
         <nav className="flex items-center space-x-5 font-medium">
@@ -176,9 +163,7 @@ export function Header() {
         </div>
       </div>
 
-      {/* Seção de Busca e Categorias Mobile (abaixo do header principal no mobile) */}
-      <div className="md:hidden bg-primary pb-3"> {/* Mantém o fundo e adiciona padding-bottom */}
-        {/* Seção da Barra de Busca */}
+      <div className="md:hidden bg-primary pb-3">
         <div className="px-4 pt-2 pb-3">
           <div className="relative w-full bg-card rounded-full shadow-md transition-all duration-300 ease-in-out group transform hover:scale-[1.01] hover:shadow-lg focus-within:scale-[1.01] focus-within:shadow-lg">
             <Search
@@ -195,7 +180,6 @@ export function Header() {
           </div>
         </div>
 
-        {/* Botões de Categoria */}
         <div className="px-4">
           <div className="flex items-center justify-center gap-2">
             <Link href="/category/manipulados" passHref className="flex-grow">

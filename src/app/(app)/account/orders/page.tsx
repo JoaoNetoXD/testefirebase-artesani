@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { OrderService } from '@/lib/services/orderService';
 import type { Order } from '@/lib/types';
@@ -15,13 +15,7 @@ export default function OrderHistoryPage() {
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAuth();
 
-  useEffect(() => {
-    if (currentUser) {
-      loadOrders();
-    }
-  }, [currentUser]);
-
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     if (!currentUser) return;
     
     try {
@@ -32,7 +26,13 @@ export default function OrderHistoryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      loadOrders();
+    }
+  }, [currentUser, loadOrders]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

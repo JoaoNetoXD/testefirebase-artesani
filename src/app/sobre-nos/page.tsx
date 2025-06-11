@@ -1,4 +1,3 @@
-
 'use client';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -115,7 +114,7 @@ export default function SobreNosPage() {
                     Dr. Guilherme acredita no atendimento humanizado e na importância de ouvir cada cliente para oferecer soluções verdadeiramente personalizadas. Ele supervisiona de perto todos os processos, desde a seleção rigorosa de matérias-primas até a entrega do seu medicamento, assegurando que você receba o melhor cuidado possível em cada etapa.
                   </p>
                   <blockquote className="border-l-4 border-accent pl-4 italic text-foreground/80 my-4">
-                    "Minha missão é combinar o conhecimento técnico com a atenção individualizada, proporcionando tratamentos eficazes e seguros para a comunidade de Teresina, sempre com o padrão de qualidade Artesani."
+                    &quot;Minha missão é combinar o conhecimento técnico com a atenção individualizada, proporcionando tratamentos eficazes e seguros para a comunidade de Teresina, sempre com o padrão de qualidade Artesani.&quot;
                   </blockquote>
                 </div>
               </div>

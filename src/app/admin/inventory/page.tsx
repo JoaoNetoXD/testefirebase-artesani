@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Edit, AlertCircle, PackagePlus, Search, Filter, ArrowUpDown } from 'lucide-react';
+import { Edit, AlertCircle, PackagePlus, Search } from 'lucide-react';
 import { ProductService } from '@/lib/services/productService';
 import type { Product } from '@/lib/types';
 import Image from 'next/image';

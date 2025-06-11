@@ -11,6 +11,7 @@ export class CategoryService {
     const { data, error } = await supabase
       .from('categories')
       .select('*')
+      .in('name', ['Manipulados', 'Cosméticos', 'Suplementos'])
       .order('name');
 
     if (error) {

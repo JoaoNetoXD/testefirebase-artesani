@@ -4,25 +4,12 @@
 import type { Product, Category } from './types';
 
 export const mockCategories: Category[] = [
-  { id: '1', name: 'Medicamentos', slug: 'medicamentos' },
   { id: '2', name: 'Cosméticos', slug: 'cosmeticos' },
   { id: '3', name: 'Suplementos', slug: 'suplementos' },
   { id: '4', name: 'Manipulados', slug: 'manipulados' },
 ];
 
 export const mockProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Analgésico Potente',
-    description: 'Alívio rápido para dores intensas. Fórmula especializada para conforto imediato. Consulte seu médico.',
-    price: 25.99,
-    stock: 100,
-    images: ['https://placehold.co/600x400.png', 'https://placehold.co/600x400.png'],
-    category_name: 'Medicamentos', // Alterado de category para category_name
-    slug: 'analgesico-potente',
-    ingredients: 'Paracetamol, Cafeína',
-    intendedUses: 'Alívio de dores de cabeça, dores musculares',
-  },
   {
     id: '2',
     name: 'Creme Hidratante Facial',
@@ -77,4 +64,3 @@ export const mockProducts: Product[] = [
 // export const getProductBySlug = (slug: string): Product | undefined => {
 //   return mockProducts.find(p => p.slug === slug);
 // };
-

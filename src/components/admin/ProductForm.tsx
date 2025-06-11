@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useForm, SubmitHandler, Controller } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import { ProductService } from '@/lib/services/productService';
 import { CategoryService } from '@/lib/services/categoryService';
 import { UploadService } from '@/lib/services/uploadService';
 import { Upload, X } from 'lucide-react';
+import Image from 'next/image';
 
 const productFormSchema = z.object({
   productName: z.string().min(3, "Nome do produto é obrigatório (mínimo 3 caracteres)."),
@@ -51,7 +52,7 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
   
   const { toast } = useToast();
 
-  const { register, handleSubmit, watch, formState: { errors }, reset, setValue, control, getValues } = useForm<ProductFormData>({
+  const { register, handleSubmit, watch, formState: { errors }, reset, setValue, control } = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
       productName: productToEdit?.name || '',
@@ -78,7 +79,7 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
         intendedUses: productToEdit.intendedUses || '',
         price: productToEdit.price,
         stock: productToEdit.stock,
-        category: productToEdit.category_name, // Usar category_name
+        category: productToEdit.category_name,
         imageUrls: productToEdit.images?.join(', ') || '',
       });
       if (productToEdit.images) {
@@ -88,15 +89,13 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
   }, [productToEdit, reset]);
 
   useEffect(() => {
-    // Only auto-generate slug if productNameValue exists AND
-    // (it's a new product (no productToEdit) OR the existing productToEdit.slug is empty)
     if (productNameValue && (!productToEdit || !productToEdit.slug)) {
       const autoSlug = productNameValue
         .toLowerCase()
         .trim()
-        .replace(/\s+/g, '-') // Replace spaces with hyphens
-        .replace(/[^\w-]+/g, '') // Remove non-alphanumeric characters except hyphens
-        .replace(/--+/g, '-'); // Replace multiple hyphens with a single one
+        .replace(/\s+/g, '-')
+        .replace(/[^\w-]+/g, '')
+        .replace(/--+/g, '-');
       setValue('slug', autoSlug, { shouldValidate: true });
     }
   }, [productNameValue, setValue, productToEdit]);
@@ -110,13 +109,9 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
   }, []);
 
   const onSubmit = async (data: ProductFormData) => {
-    console.log('🚀 Iniciando onSubmit');
-    console.log('📝 Categoria selecionada:', data.category); // ← ADICIONE ESTA LINHA
     setIsSubmitting(true);
     
     try {
-      console.log('📝 Dados do produto a serem enviados:', data);
-      
       const imagesArray = uploadedImages.length > 0 ? uploadedImages : (data.imageUrls?.split(',').map(url => url.trim()).filter(url => url) || []);
       
       const productData: Partial<Product> = {
@@ -132,14 +127,10 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
         is_active: true
       };
       
-      console.log('📦 ProductData preparado:', productData);
-      
       let result;
       if (productToEdit) {
-        console.log('🔄 Atualizando produto existente...');
         result = await ProductService.updateProduct(productToEdit.id, productData);
       } else {
-        console.log('➕ Criando novo produto...');
         result = await ProductService.createProduct(productData);
       }
       
@@ -152,12 +143,10 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
         description: productToEdit ? "Produto atualizado com sucesso." : "Produto criado com sucesso.",
       });
       
-      // Limpar o formulário após sucesso
       reset();
       setUploadedImages([]);
       
     } catch (error) {
-      console.error('💥 Erro no onSubmit:', error);
       toast({
         title: "Erro",
         description: error instanceof Error ? error.message : "Erro ao salvar produto. Tente novamente.",
@@ -166,7 +155,7 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
     } finally {
       setIsSubmitting(false);
     }
-};
+  };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -180,7 +169,7 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
       
       setUploadedImages(prev => {
         const newImages = [...prev, ...uploadedUrls];
-        setValue('imageUrls', newImages.join(', ')); // Update the form field as well
+        setValue('imageUrls', newImages.join(', '));
         return newImages;
       });
       
@@ -188,7 +177,7 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
         title: "Upload concluído!",
         description: `${uploadedUrls.length} imagem(ns) enviada(s) com sucesso.`,
       });
-    } catch (error) {
+    } catch (err) {
       toast({
         title: "Erro no upload",
         description: "Não foi possível enviar as imagens.",
@@ -196,7 +185,6 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
       });
     } finally {
       setIsUploading(false);
-       // Reset the file input so the same file can be selected again if needed
       if (event.target) {
         event.target.value = '';
       }
@@ -210,7 +198,6 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
       return newImages;
     });
   };
-
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -333,7 +320,7 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                 {uploadedImages.map((url, index) => (
                   <div key={index} className="relative group">
-                    <img src={url} alt={`Preview ${index + 1}`} className="w-full h-24 object-cover rounded border border-border" />
+                    <Image src={url} alt={`Preview ${index + 1}`} width={96} height={96} className="w-full h-24 object-cover rounded border border-border" />
                     <button
                       type="button"
                       onClick={() => removeUploadedImage(index)}
@@ -354,10 +341,9 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
                 {...register('imageUrls')} 
                 placeholder="https://exemplo.com/imagem1.png, https://exemplo.com/imagem2.png" 
                 rows={2}
-                value={uploadedImages.join(', ')} // Sincronizar com o estado das imagens enviadas
+                value={uploadedImages.join(', ')}
                 onChange={(e) => {
-                  setValue('imageUrls', e.target.value); // Atualizar o valor do formulário
-                  // Atualizar também o estado local 'uploadedImages' se desejar que a remoção manual de URL reflita no preview
+                  setValue('imageUrls', e.target.value);
                   setUploadedImages(e.target.value.split(',').map(url => url.trim()).filter(url => url));
                 }}
               />
@@ -378,4 +364,3 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
     </Card>
   );
 }
-          

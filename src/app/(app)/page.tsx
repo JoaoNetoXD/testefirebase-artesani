@@ -2,7 +2,7 @@
 import { ProductList } from '@/components/products/ProductList';
 import { CategoryNavigation } from '@/components/products/CategoryNavigation';
 import { Button } from "@/components/ui/button";
-import { Star, Truck, ClipboardList, Award } from "lucide-react";
+import { Truck, ClipboardList, Award, ChevronDown } from "lucide-react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { ProductService } from '@/lib/services/productService';
@@ -24,14 +24,45 @@ export default async function HomePage() {
       {/* Hero Section */}
       <section className="py-4 md:py-20 overflow-hidden"> {/* Reduced vertical padding for mobile */}
         <div className="container mx-auto px-4 grid md:grid-cols-2 items-center gap-8 md:gap-12">
-          {/* Left Column: Text Content */}
-          <div className="space-y-6 text-center md:text-left animate-fade-in-up">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-headline font-bold">
+          {/* Text and Image Content */}
+          <div className="flex flex-col items-center md:items-start space-y-6 text-center md:text-left animate-fade-in-up">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-headline font-bold tracking-wide -mt-2 sm:-mt-4">
               Sua Saúde em <span className="text-secondary">Boas Mãos</span>
             </h1>
-            <p className="text-lg md:text-xl text-foreground/80">
-              Medicamentos manipulados com qualidade farmacêutica, desenvolvidos especialmente para suas necessidades.
+
+            {/* Product Image - Positioned here for mobile */}
+            <div
+              className="w-full flex justify-center md:hidden mt-4 animate-fade-in"
+              style={{ animationDelay: '400ms' }}
+            >
+              <div className="relative w-full max-w-md">
+                <Image
+                  src="/images/products/3produtosincial.png"
+                  alt="Produtos Artesani em destaque"
+                  width={1600}
+                  height={1200}
+                  sizes="(max-width: 768px) 110vw, 850px"
+                  className="object-contain w-full h-auto drop-shadow-none transform transition-all duration-700 hover:scale-105 scale-110"
+                  data-ai-hint="product lineup pharmacy"
+                  priority
+                  style={{
+                    filter: 'drop-shadow(0 0 0 transparent)',
+                    background: 'transparent',
+                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.8) 85%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,1) 8%, rgba(0,0,0,1) 92%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.8) 85%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,1) 8%, rgba(0,0,0,1) 92%, transparent 100%)',
+                    maskComposite: 'intersect',
+                    WebkitMaskComposite: 'source-in',
+                    animation: 'float 6s ease-in-out infinite',
+                    willChange: 'transform',
+                  }}
+                />
+              </div>
+            </div>
+
+            <p className="text-lg md:text-xl text-foreground/80 text-center max-w-prose">
+              Produtos manipulados, cosméticos e suplementos de alta qualidade, desenvolvidos especialmente para suas necessidades.
             </p>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
               {benefits.map((benefit, index) => (
                 <div
@@ -60,11 +91,14 @@ export default async function HomePage() {
                 </Button>
               </Link>
             </div>
+             <div className="w-full text-center pt-8 md:hidden animate-bounce">
+                <ChevronDown className="h-8 w-8 text-secondary mx-auto" />
+            </div>
           </div>
 
-          {/* Right Column: New Product Image */}
+          {/* Right Column: New Product Image - Hidden on mobile */}
           <div
-            className="flex justify-center md:justify-end mt-8 md:mt-0 animate-fade-in -mx-6 md:mx-0"
+            className="hidden md:flex justify-end mt-0 animate-fade-in"
             style={{ animationDelay: '400ms' }}
           >
             <div className="relative w-full max-w-4xl overflow-hidden rounded-3xl md:rounded-2xl">
@@ -74,7 +108,7 @@ export default async function HomePage() {
                 width={1600}
                 height={1200}
                 sizes="(max-width: 768px) 130vw, (max-width: 1024px) 65vw, 850px"
-                className="object-contain w-full h-auto drop-shadow-none transform transition-all duration-700 hover:scale-105 animate-pulse-slow scale-125 md:scale-100"
+                className="object-contain w-full h-auto drop-shadow-none transform transition-all duration-700 hover:scale-105 animate-pulse-slow scale-100"
                 data-ai-hint="product lineup pharmacy"
                 priority
                 style={{
@@ -104,7 +138,7 @@ export default async function HomePage() {
           <div className="text-center mb-10 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
             <h2 className="text-3xl md:text-4xl font-headline font-semibold mb-3">Nossos Produtos</h2>
             <p className="text-lg text-foreground/70 max-w-2xl mx-auto">
-              Medicamentos manipulados com a mais alta qualidade e eficácia, desenvolvidos especialmente para suas necessidades de saúde.
+             Explore nossas categorias de manipulados, cosméticos e suplementos, todos com a mais alta qualidade e eficácia.
             </p>
           </div>
           <ProductList products={products.slice(0,4)} /> {/* Animation applied via ProductCard's index prop */}

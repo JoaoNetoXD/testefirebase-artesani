@@ -9,7 +9,7 @@ import { OrderService } from '@/lib/services/orderService';
 import { ProductService } from '@/lib/services/productService';
 import { CustomerService } from '@/lib/services/customerService';
 import { InventoryService } from '@/lib/services/inventoryService';
-import type { Order, Product, Customer } from '@/lib/types';
+import type { Order, Product } from '@/lib/types';
 import Image from 'next/image';
 
 export default function AdminDashboardPage() {

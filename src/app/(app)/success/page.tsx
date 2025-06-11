@@ -92,7 +92,7 @@ function SuccessContent() {
           )}
           
           <p className="text-xs text-card-foreground/70">
-            Acompanhe o status do seu pedido na seção "Meus Pedidos" da sua conta.
+            Acompanhe o status do seu pedido na seção &quot;Meus Pedidos&quot; da sua conta.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-3 pt-4">

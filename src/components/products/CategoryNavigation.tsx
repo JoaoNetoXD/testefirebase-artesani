@@ -10,8 +10,12 @@ interface CategoryNavigationProps {
 
 export function CategoryNavigation({ categories, currentCategorySlug }: CategoryNavigationProps) {
   return (
-    <nav className="mb-8">
-      <h2 className="text-2xl font-headline mb-4 text-center md:text-left">Navegue por Categorias</h2>
+    <nav className="mb-8 -mt-12">
+      <div className="flex justify-center mb-4">
+        <div className="bg-primary-foreground/5 text-primary-foreground hover:bg-primary-foreground/10 rounded-full text-lg shadow-md shadow-black/20 animate-pulse-light px-6 py-2">
+            Navegue por Categorias
+        </div>
+      </div>
       <div className="flex flex-wrap gap-2 justify-center md:justify-start">
         <Link href="/" passHref>
           <Button 
