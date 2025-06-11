@@ -11,7 +11,7 @@ import {
   Settings, 
   Archive, 
   ArrowLeftRight,
-  PackagePlus // Changed icon
+  PlusCircle
 } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
 import { cn } from '@/lib/utils';
@@ -20,7 +20,6 @@ import { Button } from '@/components/ui/button';
 const adminNavLinks = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/products', label: 'Produtos', icon: Package },
-  { href: '/admin/products/new', label: 'Novo Produto', icon: PackagePlus }, // Changed label and icon, removed special class
   { href: '/admin/orders', label: 'Pedidos', icon: ShoppingBag },
   { href: '/admin/customers', label: 'Clientes', icon: Users },
   { href: '/admin/inventory', label: 'Estoque', icon: Archive },
@@ -32,44 +31,52 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 min-h-screen bg-card text-card-foreground p-4 flex-col fixed top-0 left-0 shadow-xl border-r border-border hidden md:flex">
-      <div className="mb-6 mt-2 flex justify-center">
-        <Logo width={60} height={60} />
+    <aside className="w-64 min-h-screen bg-card text-card-foreground p-4 flex-col fixed top-0 left-0 shadow-2xl border-r border-border/50 hidden md:flex z-50">
+      <div className="mb-8 mt-4 flex justify-center">
+        <Link href="/" aria-label="Voltar para a loja">
+          <Logo width={50} height={50} />
+        </Link>
       </div>
-      <nav className="flex-grow space-y-1.5">
-        {adminNavLinks.map((link) => {
-          const isActive = pathname === link.href || 
-                           (link.href !== '/admin' && pathname.startsWith(link.href) && link.href !== '/admin/products/new') ||
-                           (link.href === '/admin/products' && pathname.startsWith('/admin/products/edit')); 
-                           
-          const isNewProductActive = link.href === '/admin/products/new' && pathname === '/admin/products/new';
+      
+      <div className="flex-grow flex flex-col justify-between">
+        <nav className="space-y-2">
+          {adminNavLinks.map((link) => {
+            const isActive = pathname === link.href ||
+                             (link.href !== '/admin' && pathname.startsWith(link.href));
 
-          return (
-            <Link
-              key={link.label}
-              href={link.href}
-              className={cn(
-                "flex items-center space-x-3 p-2.5 rounded-md transition-colors text-sm font-medium",
-                (isActive || isNewProductActive)
-                  ? "bg-primary text-primary-foreground shadow-sm" 
-                  : "hover:bg-muted hover:text-primary"
-                // link.className was removed as special styling for AI button is no longer needed
-              )}
-              aria-current={isActive || isNewProductActive ? "page" : undefined}
-            >
-              <link.icon className="h-5 w-5" />
-              <span>{link.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
-      <div className="mt-auto border-t border-border pt-4">
-        <Button variant="outline" className="w-full" asChild>
-            <Link href="/" className="flex items-center justify-center">
-                <ArrowLeftRight className="mr-2 h-4 w-4" />
-                Voltar para a Loja
-            </Link>
-        </Button>
+            return (
+              <Link
+                key={link.label}
+                href={link.href}
+                className={cn(
+                  "flex items-center space-x-3 py-2.5 px-4 rounded-lg transition-colors text-sm font-medium",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-inner" 
+                    : "hover:bg-muted/80 hover:text-foreground text-muted-foreground"
+                )}
+                aria-current={isActive ? "page" : undefined}
+              >
+                <link.icon className="h-5 w-5" />
+                <span>{link.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="space-y-4">
+            <Button variant="secondary" className="w-full" asChild>
+                <Link href="/admin/products/new" className="flex items-center justify-center">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Novo Produto
+                </Link>
+            </Button>
+            <Button variant="ghost" className="w-full text-muted-foreground hover:text-foreground" asChild>
+                <Link href="/" className="flex items-center justify-center">
+                    <ArrowLeftRight className="mr-2 h-4 w-4" />
+                    Ir para a Loja
+                </Link>
+            </Button>
+        </div>
       </div>
     </aside>
   );

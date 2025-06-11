@@ -1,4 +1,3 @@
-
 "use client";
 import Image from 'next/image';
 import type { Product } from '@/lib/types';
@@ -106,23 +105,23 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
         </div>
 
         {/* Product Info */}
-        <Card className="shadow-xl">
-          <CardContent className="p-6 space-y-5">
-            <h1 className="text-3xl md:text-4xl font-headline font-bold text-card-foreground">{product.name}</h1>
+        <Card className="shadow-xl bg-white border-primary/20">
+          <CardContent className="p-6 space-y-3">
+            <h1 className="text-2xl md:text-3xl font-headline font-bold text-gray-800">{product.name}</h1>
             
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-              <div className="flex text-yellow-400">
-                {[...Array(5)].map((_, i) => <Star key={i} className={cn("h-5 w-5", i < 4 ? "fill-current" : "")} />)}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
+              <div className="flex text-yellow-500">
+                {[...Array(5)].map((_, i) => <Star key={i} className={cn("h-5 w-5", i < 4 ? "fill-current" : "text-gray-300")} />)}
               </div>
               <span className="whitespace-nowrap">(123 avaliações)</span>
               {categoryName && (
                 <>
-                  <span className="hidden sm:inline">|</span>
+                  <span className="hidden sm:inline text-gray-300">|</span>
                   <span className="whitespace-nowrap">
                     Categoria: 
                     <Link 
                       href={`/category/${categorySlug}`} 
-                      className="text-accent hover:underline ml-1"
+                      className="text-primary hover:underline ml-1 font-medium"
                     >
                       {categoryName}
                     </Link>
@@ -131,22 +130,22 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
               )}
             </div>
 
-            <p className="text-3xl font-semibold text-primary">
+            <p className="text-3xl font-bold text-primary">
               R$ {product.price.toFixed(2).replace('.', ',')}
             </p>
             
-            <p className="text-base text-card-foreground/80 leading-relaxed">{product.description}</p>
+            <p className="text-sm text-gray-600 leading-relaxed pt-1">{product.description}</p>
 
             {product.stock > 0 ? (
-              <p className="text-sm text-green-600 font-semibold">Em estoque ({product.stock} unidades disponíveis)</p>
+              <p className="text-sm text-green-600 font-semibold pt-1">Em estoque ({product.stock} unidades disponíveis)</p>
             ) : (
-              <p className="text-sm text-destructive font-semibold">Fora de estoque</p>
+              <p className="text-sm text-red-500 font-semibold pt-1">Fora de estoque</p>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row gap-2 pt-3">
               <Button
                 size="lg"
-                className="w-full sm:flex-1 bg-accent hover:bg-accent/90 text-accent-foreground rounded-md"
+                className="w-full sm:flex-1 bg-accent hover:bg-accent/90 text-accent-foreground rounded-md shadow-sm"
                 onClick={handleAddToCart}
                 disabled={product.stock === 0}
               >
@@ -155,19 +154,19 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
               </Button>
               <Button
                 size="lg"
-                variant={currentIsFavorite ? "destructive" : "default"}
+                variant="outline"
                 className={cn(
-                  "w-full sm:flex-1 rounded-md",
-                  !currentIsFavorite && "bg-primary text-primary-foreground hover:bg-primary/90"
+                  "w-full sm:flex-1 rounded-md border-primary text-primary hover:bg-primary hover:text-primary-foreground",
+                  currentIsFavorite && "bg-primary text-primary-foreground"
                 )}
                 onClick={handleToggleFavorite}
                 aria-label={currentIsFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
               >
-                <Heart className={cn("mr-2 h-5 w-5", currentIsFavorite ? "fill-destructive" : "")} /> 
-                {currentIsFavorite ? "Remover Favorito" : "Adicionar Favorito"}
+                <Heart className={cn("mr-2 h-5 w-5", currentIsFavorite && "fill-current")} /> 
+                {currentIsFavorite ? "Favorito" : "Adicionar Favorito"}
               </Button>
             </div>
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary px-0">
+            <Button variant="ghost" size="sm" className="text-gray-500 hover:text-primary px-0 mt-2">
               <Share2 className="mr-2 h-4 w-4" /> Compartilhar este produto
             </Button>
           </CardContent>

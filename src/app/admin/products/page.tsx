@@ -52,8 +52,7 @@ export default function AdminProductsPage() {
 
   const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase())
+    product.category_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleDeleteProduct = async (productId: string, productName: string) => {
@@ -62,17 +61,17 @@ export default function AdminProductsPage() {
       if (success) {
         toast({
           title: "Produto Excluído",
-          description: `${productName} foi excluído com sucesso.`,
+          description: `"${productName}" foi excluído com sucesso.`,
         });
-        loadProducts();
+        loadProducts(); // Recarrega a lista de produtos
       } else {
-        throw new Error('Falha ao excluir produto');
+        throw new Error('Falha ao excluir produto no serviço');
       }
     } catch (error) {
       console.error('Erro ao excluir produto:', error);
       toast({
-        title: "Erro",
-        description: "Não foi possível excluir o produto.",
+        title: "Erro ao Excluir",
+        description: "Não foi possível excluir o produto. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -147,7 +146,7 @@ export default function AdminProductsPage() {
                             {product.name}
                         </Link>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">{product.category}</TableCell>
+                    <TableCell className="hidden md:table-cell">{product.category_name}</TableCell>
                     <TableCell className="text-right">R$ {product.price.toFixed(2).replace('.',',')}</TableCell>
                     <TableCell className="text-right hidden sm:table-cell">{product.stock}</TableCell>
                     <TableCell className="text-center hidden lg:table-cell">
@@ -175,14 +174,13 @@ export default function AdminProductsPage() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Tem certeza que deseja excluir o produto &quot;{product.name}&quot;? 
-                              Esta ação é simulada e não excluirá o produto de verdade neste ambiente de demonstração. Em um ambiente real, esta ação seria irreversível.
+                              Tem certeza que deseja excluir o produto &quot;{product.name}&quot;? Esta ação não pode ser desfeita.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
                             <AlertDialogAction onClick={() => handleDeleteProduct(product.id, product.name)} className="bg-destructive hover:bg-destructive/90">
-                              Excluir (Simulado)
+                              Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
