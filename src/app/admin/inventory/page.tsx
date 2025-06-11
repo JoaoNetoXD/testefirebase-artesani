@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Edit, AlertCircle, PackagePlus, Search } from 'lucide-react';
 import { ProductService } from '@/lib/services/productService';
+import { InventoryService } from '@/lib/services/inventoryService';
 import type { Product } from '@/lib/types';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -48,7 +49,7 @@ export default function AdminInventoryPage() {
 
   const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (product.category_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -60,15 +61,13 @@ export default function AdminInventoryPage() {
   const handleSaveStock = async () => {
     if (editingStock) {
       try {
-        // Aqui você implementaria a atualização do estoque no Supabase
-        // await ProductService.updateStock(editingStock.productId, newStockValue);
+        await InventoryService.updateStock(editingStock.productId, newStockValue);
         
         toast({
           title: "Estoque Atualizado",
           description: `Estoque do produto ID ${editingStock.productId} atualizado para ${newStockValue}.`,
         });
         
-        // Atualizar a lista de produtos
         const updatedProducts = products.map(product => 
           product.id === editingStock.productId 
             ? { ...product, stock: newStockValue }
@@ -145,7 +144,7 @@ export default function AdminInventoryPage() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Image 
-                          src={product.imageUrl} 
+                          src={(product.images && product.images.length > 0) ? product.images[0] : 'https://placehold.co/80x80.png'} 
                           alt={product.name} 
                           width={50} 
                           height={50} 
@@ -157,7 +156,7 @@ export default function AdminInventoryPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{product.category}</TableCell>
+                    <TableCell>{product.category_name}</TableCell>
                     <TableCell>R$ {product.price.toFixed(2)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

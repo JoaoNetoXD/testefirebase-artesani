@@ -18,6 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import Image from 'next/image';
+import Papa from 'papaparse';
 
 export default function AdminCustomersPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,6 +39,28 @@ export default function AdminCustomersPage() {
 
     fetchCustomers();
   }, []);
+
+  const handleExportCSV = () => {
+    const dataToExport = filteredCustomers.map(customer => ({
+      ID: customer.id,
+      Nome: customer.name,
+      Email: customer.email,
+      Total_Gasto: `R$ ${customer.totalSpent.toFixed(2)}`,
+      Pedidos: customer.orders,
+      Membro_Desde: new Date(customer.joined).toLocaleDateString('pt-BR'),
+    }));
+
+    const csv = Papa.unparse(dataToExport);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'clientes.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const filteredCustomers = customers.filter(customer => 
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -61,7 +84,7 @@ export default function AdminCustomersPage() {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <h1 className="text-3xl font-headline">Gerenciamento de Clientes</h1>
         <div className="flex gap-2">
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleExportCSV}>
                 <Download className="mr-2 h-4 w-4" /> Exportar Clientes (CSV)
             </Button>
         </div>

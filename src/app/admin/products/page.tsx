@@ -19,7 +19,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ProductService } from '@/lib/services/productService';
 import type { Product } from '@/lib/types';
 
@@ -50,12 +50,18 @@ export default function AdminProductsPage() {
     loadProducts();
   }, [loadProducts]);
 
-  const filteredProducts = products.filter(product => 
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = useMemo(() => 
+    products.filter(product => 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    ), [products, searchTerm]);
 
   const handleDeleteProduct = async (productId: string, productName: string) => {
+    const originalProducts = [...products];
+    
+    // Optimistic UI update
+    setProducts(currentProducts => currentProducts.filter(p => p.id !== productId));
+
     try {
       const success = await ProductService.deleteProduct(productId);
       if (success) {
@@ -63,19 +69,50 @@ export default function AdminProductsPage() {
           title: "Produto Excluído",
           description: `"${productName}" foi excluído com sucesso.`,
         });
-        loadProducts(); // Recarrega a lista de produtos
+        // No need to call loadProducts() again as we updated the state optimistically
       } else {
         throw new Error('Falha ao excluir produto no serviço');
       }
     } catch (error) {
       console.error('Erro ao excluir produto:', error);
+      // Revert the state if the deletion fails
+      setProducts(originalProducts);
       toast({
         title: "Erro ao Excluir",
-        description: "Não foi possível excluir o produto. Tente novamente.",
+        description: `Não foi possível excluir o produto "${productName}". A lista foi restaurada.`,
         variant: "destructive"
       });
     }
   };
+  
+  const handleToggleProductStatus = async (product: Product) => {
+    // This is a placeholder for changing product status, e.g., 'active' to 'draft'
+    const newStatus = product.status === 'active' ? 'draft' : 'active';
+    const originalProducts = [...products];
+    
+    // Optimistic UI update
+    setProducts(currentProducts => 
+      currentProducts.map(p => p.id === product.id ? { ...p, status: newStatus } : p)
+    );
+
+    try {
+      // Assume a service method exists to update the product status
+      // const updatedProduct = await ProductService.updateProduct(product.id, { status: newStatus });
+      toast({
+        title: "Status Alterado",
+        description: `O status de "${product.name}" foi alterado para ${newStatus}.`,
+      });
+    } catch (error) {
+      console.error('Erro ao alterar status do produto:', error);
+      setProducts(originalProducts);
+      toast({
+        title: "Erro ao Alterar Status",
+        description: "Não foi possível alterar o status. A alteração foi revertida.",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   if (loading) {
     return (
@@ -90,7 +127,7 @@ export default function AdminProductsPage() {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <h1 className="text-3xl font-headline">Gerenciamento de Produtos</h1>
         <Link href="/admin/products/new" passHref>
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto">
+          <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90 w-full sm:w-auto">
             <PlusCircle className="mr-2 h-5 w-5" /> Adicionar Novo Produto
           </Button>
         </Link>
@@ -133,7 +170,7 @@ export default function AdminProductsPage() {
                   <TableRow key={product.id} className="hover:bg-muted/50">
                     <TableCell>
                       <Image 
-                        src={product.images[0] || 'https://placehold.co/80x80.png'} 
+                        src={(product.images && product.images.length > 0) ? product.images[0] : 'https://placehold.co/80x80.png'} 
                         alt={product.name} 
                         width={50} 
                         height={50} 
@@ -150,13 +187,16 @@ export default function AdminProductsPage() {
                     <TableCell className="text-right">R$ {product.price.toFixed(2).replace('.',',')}</TableCell>
                     <TableCell className="text-right hidden sm:table-cell">{product.stock}</TableCell>
                     <TableCell className="text-center hidden lg:table-cell">
-                      {product.stock === 0 ? (
-                        <Badge variant="destructive">Esgotado</Badge>
-                      ) : product.stock <= 10 ? (
-                        <Badge variant="outline" className="border-yellow-500 text-yellow-600">Baixo Estoque</Badge>
-                      ) : (
-                        <Badge className="bg-green-500 hover:bg-green-600 text-primary-foreground">Em Estoque</Badge>
-                      )}
+                      <Badge 
+                        variant={product.stock === 0 ? "destructive" : product.stock <= 10 ? "outline" : "default"}
+                        className={
+                          product.stock > 10 ? "bg-green-100 text-green-800 border-green-200" : 
+                          product.stock <= 10 && product.stock > 0 ? "bg-yellow-100 text-yellow-800 border-yellow-200" : 
+                          "bg-red-100 text-red-800 border-red-200"
+                        }
+                      >
+                        {product.stock === 0 ? "Esgotado" : product.stock <= 10 ? "Baixo Estoque" : "Em Estoque"}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button variant="outline" size="icon" asChild title="Editar Produto">
@@ -174,7 +214,7 @@ export default function AdminProductsPage() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Tem certeza que deseja excluir o produto &quot;{product.name}&quot;? Esta ação não pode ser desfeita.
+                              Tem certeza que deseja excluir o produto &quot;{product.name}&quot;? Esta ação não pode ser desfeita e removerá o produto permanentemente.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -194,8 +234,9 @@ export default function AdminProductsPage() {
         ) : (
           <div className="text-center py-12 text-muted-foreground">
             <Search className="mx-auto h-12 w-12 mb-4" />
-            <p className="text-lg">Nenhum produto encontrado com os critérios atuais.</p>
-            <p className="text-sm">Tente ajustar sua busca ou filtros.</p>
+            <p className="text-lg">Nenhum produto encontrado.</p>
+            {searchTerm && <p className="text-sm">Tente ajustar sua busca ou filtros.</p>}
+            {!searchTerm && <p className="text-sm">Comece adicionando um novo produto.</p>}
           </div>
         )}
       </div>

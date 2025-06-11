@@ -2,92 +2,80 @@ import { supabase } from '@/lib/supabase';
 import type { Customer } from '@/lib/types';
 
 export class CustomerService {
+  private static log(level: 'info' | 'error', message: string, data?: any) {
+    const emoji = level === 'info' ? '✅' : '💥';
+    console.log(`${emoji} [CustomerService] ${message}`, data || '');
+  }
+
   static async getAllCustomers(): Promise<Customer[]> {
     if (!supabase) {
-      const errorMsg = 'Supabase não está configurado. Verifique as variáveis de ambiente.';
-      console.error('Erro ao buscar clientes:', errorMsg);
-      throw new Error(errorMsg);
+      this.log('error', 'Supabase client is not initialized.');
+      return [];
     }
 
-    try {
-      // Primeiro, buscar os profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+    this.log('info', 'Fetching all customers and their order stats...');
+    const { data, error } = await supabase.rpc('get_all_customer_stats');
 
-      if (profilesError) {
-        console.error('Erro ao buscar profiles:', profilesError);
-        throw new Error(`Erro na consulta de profiles: ${profilesError.message}`);
-      }
-
-      // Depois, buscar os pedidos para cada profile
-      const customers = await Promise.all(
-        (profiles || []).map(async (profile) => {
-          const { data: orders, error: ordersError } = await supabase
-            .from('orders')
-            .select('id, total, created_at')
-            .eq('user_id', profile.id); // Assumindo que a coluna é 'user_id'
-
-          if (ordersError) {
-            console.warn(`Erro ao buscar pedidos para ${profile.id}:`, ordersError);
-          }
-
-          const userOrders = orders || [];
-          const totalSpent = userOrders.reduce((sum: number, order: any) => sum + (order.total || 0), 0);
-          const orderCount = userOrders.length;
-
-          return {
-            id: profile.id,
-            name: profile.name || 'Nome não informado',
-            email: profile.email || '',
-            totalSpent,
-            orders: orderCount,
-            joined: profile.created_at,
-            avatar: profile.avatar_url || `https://placehold.co/40x40.png?text=${(profile.name || 'U').charAt(0).toUpperCase()}`
-          };
-        })
-      );
-
-      return customers;
-    } catch (error) {
-      console.error('Erro ao buscar clientes:', error);
-      throw error;
+    if (error) {
+      this.log('error', 'Failed to fetch customer stats via RPC.', error);
+      return [];
     }
+
+    const customers = (data || []).map(c => ({
+      id: c.id,
+      name: c.full_name || 'Usuário',
+      email: c.email,
+      totalSpent: c.total_spent || 0,
+      orderCount: c.order_count || 0,
+      joined: c.joined_at,
+      avatar: c.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.full_name || c.email)}&background=0D8A6A&color=fff`,
+    }));
+    
+    this.log('info', 'Successfully fetched all customer stats.', customers);
+    return customers;
   }
 
   static async getCustomerById(customerId: string): Promise<Customer | null> {
     if (!supabase) {
-      console.error('Supabase não está configurado');
+      this.log('error', 'Supabase client is not initialized.');
       return null;
     }
 
+    this.log('info', `Fetching details for customer ID: ${customerId}...`);
     const { data, error } = await supabase
       .from('profiles')
       .select(`
-        *,
-        orders (id, total, created_at)
+        id,
+        full_name,
+        email,
+        avatar_url,
+        created_at,
+        orders (id, total, created_at, status)
       `)
       .eq('id', customerId)
       .single();
 
     if (error) {
-      console.error('Erro ao buscar cliente:', error);
+      this.log('error', `Failed to fetch customer ID: ${customerId}.`, error);
       return null;
     }
 
     const orders = data.orders || [];
-    const totalSpent = orders.reduce((sum: number, order: any) => sum + (order.total || 0), 0);
-    const orderCount = orders.length;
+    const totalSpent = orders.reduce((sum, order) => sum + order.total, 0);
 
-    return {
+    const customer = {
       id: data.id,
-      name: data.name || 'Nome não informado',
-      email: data.email || '',
+      name: data.full_name || 'Usuário',
+      email: data.email,
       totalSpent,
-      orders: orderCount,
+      orderCount: orders.length,
       joined: data.created_at,
-      avatar: data.avatar_url || `https://placehold.co/40x40.png?text=${(data.name || 'U').charAt(0).toUpperCase()}`
+      avatar: data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.full_name || data.email)}&background=0D8A6A&color=fff`,
+      // Include recent orders if needed
+      recentOrders: orders.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5)
     };
+    
+    this.log('info', `Successfully fetched details for customer ID: ${customerId}.`, customer);
+    return customer;
   }
 }

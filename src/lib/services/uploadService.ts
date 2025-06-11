@@ -1,81 +1,108 @@
 import { supabase } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 export class UploadService {
+  private static log(level: 'info' | 'error', message: string, data?: any) {
+    const emoji = level === 'info' ? '✅' : '💥';
+    console.log(`${emoji} [UploadService] ${message}`, data || '');
+  }
+
+  private static sanitizeSlug(slug: string): string {
+    return slug
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '')
+      .substring(0, 50); // Limita o comprimento por segurança
+  }
+
   static async uploadProductImage(file: File, productSlug: string): Promise<string | null> {
-    console.log('🚀 uploadProductImage iniciado para:', file.name);
-    
     if (!supabase) {
-      console.error('❌ Supabase não configurado');
+      this.log('error', 'Supabase client is not initialized.');
+      return null;
+    }
+    if (!file || !productSlug) {
+      this.log('error', 'File or product slug is missing.');
+      return null;
+    }
+    
+    const sanitizedSlug = this.sanitizeSlug(productSlug);
+    this.log('info', `Starting image upload for slug: ${sanitizedSlug}`, { name: file.name, size: file.size, type: file.type });
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${uuidv4()}.${fileExt}`;
+    const filePath = `products/${sanitizedSlug}/${fileName}`;
+
+    this.log('info', `Generated file path: ${filePath}`);
+
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      this.log('error', 'Supabase upload failed.', uploadError);
+      return null;
+    }
+    this.log('info', 'File uploaded successfully to storage.', uploadData);
+    
+    const { data: urlData } = supabase.storage
+      .from('product-images')
+      .getPublicUrl(filePath);
+
+    if (!urlData.publicUrl) {
+      this.log('error', 'Failed to get public URL.', { path: filePath });
       return null;
     }
 
-    try {
-      console.log('📁 Processando arquivo:', { name: file.name, size: file.size, type: file.type });
-      
-      // Gerar nome único para o arquivo
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${productSlug}-${Date.now()}.${fileExt}`;
-      const filePath = `products/${fileName}`;
-      
-      console.log('📁 Caminho do arquivo gerado:', filePath);
-
-      // Upload do arquivo
-      console.log('⏳ Iniciando upload para o Supabase...');
-      const { data, error } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file);
-
-      if (error) {
-        console.error('❌ Erro no upload para Supabase:', error);
-        return null;
-      }
-
-      console.log('✅ Upload realizado com sucesso:', data);
-
-      // Obter URL pública
-      console.log('🔗 Obtendo URL pública...');
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
-
-      console.log('🌐 URL pública gerada:', publicUrl);
-      return publicUrl;
-    } catch (error) {
-      console.error('❌ Erro geral no upload:', error);
-      return null;
-    }
+    this.log('info', 'Public URL retrieved successfully.', { url: urlData.publicUrl });
+    return urlData.publicUrl;
   }
 
   static async uploadMultipleImages(files: File[], productSlug: string): Promise<string[]> {
-    console.log('📸 uploadMultipleImages iniciado para', files.length, 'arquivos');
+    if (!files || files.length === 0) {
+      this.log('info', 'No files to upload.');
+      return [];
+    }
+
+    this.log('info', `Starting upload for ${files.length} images for slug: ${productSlug}`);
     
-    const uploadPromises = files.map((file, index) => {
-      console.log(`📁 Criando promise ${index + 1}/${files.length} para:`, file.name);
-      return this.uploadProductImage(file, productSlug);
-    });
-    
-    console.log('⏳ Aguardando todos os uploads...');
+    const uploadPromises = files.map(file => this.uploadProductImage(file, productSlug));
     const results = await Promise.all(uploadPromises);
+    const validUrls = results.filter((url): url is string => url !== null);
     
-    console.log('📊 Resultados dos uploads:', results);
-    const validUrls = results.filter(url => url !== null) as string[];
-    console.log('✅ URLs válidas:', validUrls);
-    
+    this.log('info', `Finished uploading. ${validUrls.length}/${files.length} successful.`);
     return validUrls;
   }
-}
-
-// Procure pela função que gera o nome do arquivo e modifique para:
-const generateFileName = (originalName: string, productName: string): string => {
-  const timestamp = Date.now();
-  const extension = originalName.split('.').pop();
-  // Limitar o nome do produto a 20 caracteres e sanitizar
-  const sanitizedProductName = productName
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '-')
-    .substring(0, 20)
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
   
-  return `${sanitizedProductName}-${timestamp}.${extension}`;
-};
+  static async deleteImage(imageUrl: string): Promise<boolean> {
+    if (!supabase) {
+      this.log('error', 'Supabase client is not initialized.');
+      return false;
+    }
+    if (!imageUrl) {
+      this.log('error', 'Image URL is missing.');
+      return false;
+    }
+    
+    // Extrai o caminho do arquivo da URL completa
+    const url = new URL(imageUrl);
+    const filePath = decodeURIComponent(url.pathname.split('/product-images/')[1]);
+
+    if (!filePath) {
+      this.log('error', 'Could not extract file path from URL.', { imageUrl });
+      return false;
+    }
+
+    this.log('info', `Attempting to delete image from storage: ${filePath}`);
+    
+    const { error } = await supabase.storage
+      .from('product-images')
+      .remove([filePath]);
+
+    if (error) {
+      this.log('error', 'Failed to delete image from storage.', error);
+      return false;
+    }
+
+    this.log('info', `Image deleted successfully: ${filePath}`);
+    return true;
+  }
+}

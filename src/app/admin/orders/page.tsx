@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import Papa from 'papaparse';
 
 const getStatusBadgeDetails = (status: string) => {
     switch (status) {
@@ -64,6 +65,28 @@ export default function AdminOrdersPage() {
     fetchOrders();
   }, []);
 
+  const handleExportCSV = () => {
+    const dataToExport = filteredOrders.map(order => ({
+      ID_do_Pedido: order.id,
+      Cliente: order.customer_name || 'N/A',
+      Data: new Date(order.created_at).toLocaleDateString('pt-BR'),
+      Total: `R$ ${order.total.toFixed(2)}`,
+      Status: order.status,
+      Pagamento: order.payment_method || 'N/A',
+    }));
+
+    const csv = Papa.unparse(dataToExport);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'pedidos.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (order.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -86,7 +109,7 @@ export default function AdminOrdersPage() {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <h1 className="text-3xl font-headline">Gerenciamento de Pedidos</h1>
-        <Button variant="outline">
+        <Button variant="outline" onClick={handleExportCSV}>
            <Download className="mr-2 h-4 w-4" /> Exportar Pedidos (CSV)
         </Button>
       </div>
