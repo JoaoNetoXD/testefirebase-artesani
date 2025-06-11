@@ -112,30 +112,28 @@
 }
 
 /* Adicione no final do arquivo */
+@keyframes swing {
+  0% {
+    transform: rotate(3deg);
+  }
+  100% {
+    transform: rotate(-3deg);
+  }
+}
+
+.swing-animation {
+  animation: swing 2s ease-in-out infinite alternate;
+}
+
+.btn-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
 @keyframes float {
   0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  25% {
-    transform: translateY(-10px) rotate(0.5deg);
+    transform: translateY(0);
   }
   50% {
-    transform: translateY(-5px) rotate(-0.5deg);
+    transform: translateY(-10px);
   }
-  75% {
-    transform: translateY(-15px) rotate(0.3deg);
-  }
-}
-
-@keyframes pulse-slow {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.95;
-  }
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 4s ease-in-out infinite;
 }

@@ -72,7 +72,7 @@ export function Header() {
     <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-50 rounded-b-xl">
       {/* Cabeçalho Principal */}
       <div className="container mx-auto px-4 py-2 flex items-center justify-between gap-4 md:hidden"> {/* Ocultar em desktop */}
-        <Logo width={60} height={60} priority />
+        <Logo width={69} height={69} priority />
         <div className="flex items-center space-x-1.5">
           {loading && (
             <div className="flex items-center space-x-1.5 text-sm p-2">
@@ -119,7 +119,7 @@ export function Header() {
       
       {/* Cabeçalho Principal Desktop */}
       <div className="container mx-auto px-4 py-3 hidden md:flex items-center justify-between gap-4">
-        <Logo width={72} height={72} priority />
+        <Logo width={83} height={83} priority />
         <nav className="flex items-center space-x-5 font-medium">
           {mainNavLinks.slice(0, 5).map((link) => (
             <Link key={link.label} href={link.href} className="hover:text-secondary transition-colors pb-1 border-b-2 border-transparent hover:border-secondary">
@@ -176,44 +176,11 @@ export function Header() {
         </div>
       </div>
 
-      {/* Seção de Categorias e Busca Mobile (abaixo do header principal no mobile) */}
-      <div className="md:hidden bg-primary"> {/* Mantém o fundo primary para esta seção inteira */}
-        {/* Seção Superior Mobile (Logo, Ícones já estão acima) - Botões de Categoria */}
-        <div className="px-4 pb-5 pt-1 rounded-b-2xl shadow-lg"> {/* Fundo primário já vem do pai, padding-bottom aumentado */}
-          <div className="flex items-center justify-center gap-2">
-            <Link href="/category/manipulados" passHref className="flex-grow">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex-grow w-full border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full text-xs"
-              >
-                Manipulados
-              </Button>
-            </Link>
-            <Link href="/category/cosmeticos" passHref className="flex-grow">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex-grow w-full border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full text-xs"
-              >
-                Cosméticos
-              </Button>
-            </Link>
-            <Link href="/category/suplementos" passHref className="flex-grow">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex-grow w-full border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full text-xs"
-              >
-                Suplementos
-              </Button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Seção da Barra de Busca - Posicionada para parecer 'suspensa' abaixo */}
-        <div className="px-4 -mt-4 mb-3 relative z-10"> {/* -mt-4 para puxar para cima, mb-3 para espaço abaixo */}
-          <div className="relative w-full bg-card rounded-full shadow-lg transition-all duration-300 ease-in-out group transform hover:scale-[1.015] hover:shadow-xl focus-within:scale-[1.015] focus-within:shadow-xl">
+      {/* Seção de Busca e Categorias Mobile (abaixo do header principal no mobile) */}
+      <div className="md:hidden bg-primary pb-3"> {/* Mantém o fundo e adiciona padding-bottom */}
+        {/* Seção da Barra de Busca */}
+        <div className="px-4 pt-2 pb-3">
+          <div className="relative w-full bg-card rounded-full shadow-md transition-all duration-300 ease-in-out group transform hover:scale-[1.01] hover:shadow-lg focus-within:scale-[1.01] focus-within:shadow-lg">
             <Search
               className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-card-foreground/60 transition-colors duration-300 group-focus-within:text-accent"
             />
@@ -225,6 +192,39 @@ export function Header() {
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
             />
+          </div>
+        </div>
+
+        {/* Botões de Categoria */}
+        <div className="px-4">
+          <div className="flex items-center justify-center gap-2">
+            <Link href="/category/manipulados" passHref className="flex-grow">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-grow w-full bg-primary-foreground/5 text-primary-foreground hover:bg-primary-foreground/10 rounded-full text-xs shadow-md shadow-black/20"
+              >
+                Manipulados
+              </Button>
+            </Link>
+            <Link href="/category/cosmeticos" passHref className="flex-grow">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-grow w-full bg-primary-foreground/5 text-primary-foreground hover:bg-primary-foreground/10 rounded-full text-xs shadow-md shadow-black/20"
+              >
+                Cosméticos
+              </Button>
+            </Link>
+            <Link href="/category/suplementos" passHref className="flex-grow">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-grow w-full bg-primary-foreground/5 text-primary-foreground hover:bg-primary-foreground/10 rounded-full text-xs shadow-md shadow-black/20"
+              >
+                Suplementos
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

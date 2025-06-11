@@ -22,7 +22,7 @@ export default async function HomePage() {
   return (
     <div className="text-foreground"> {/* Ensure text color contrasts with dark background */}
       {/* Hero Section */}
-      <section className="py-12 md:py-20 overflow-hidden"> {/* Added overflow-hidden for animations */}
+      <section className="py-4 md:py-20 overflow-hidden"> {/* Reduced vertical padding for mobile */}
         <div className="container mx-auto px-4 grid md:grid-cols-2 items-center gap-8 md:gap-12">
           {/* Left Column: Text Content */}
           <div className="space-y-6 text-center md:text-left animate-fade-in-up">
@@ -84,7 +84,8 @@ export default async function HomePage() {
                   WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.8) 85%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,1) 8%, rgba(0,0,0,1) 92%, transparent 100%)',
                   maskComposite: 'intersect',
                   WebkitMaskComposite: 'source-in',
-                  animation: 'float 6s ease-in-out infinite'
+                  animation: 'float 6s ease-in-out infinite',
+                  willChange: 'transform', // Correct fix for rendering bug
                 }}
               />
             </div>
