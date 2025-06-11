@@ -69,126 +69,121 @@ export function Header() {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-      <div className="bg-primary text-primary-foreground/90">
-        <div className="container mx-auto px-4 py-1.5 flex flex-col sm:flex-row items-center justify-between text-xs">
-          <div className="flex items-center gap-4">
-            <a href="tel:+558632218576" className="flex items-center gap-1 hover:text-primary-foreground">
-              <Phone size={14} />
-              (86) 3221-8576
-            </a>
-            <a href="mailto:artesani.marketplace@gmail.com" className="flex items-center gap-1 hover:text-primary-foreground">
-              <Mail size={14} />
-              artesani.marketplace@gmail.com
-            </a>
-          </div>
-          <div className="flex items-center gap-1 mt-1 sm:mt-0">
-            <Info size={14} />
-            Frete grátis até 3km Teresina-PI
-          </div>
-        </div>
-      </div>
+    <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-50">
+      {/* Barra de Informações Superior Removida */}
 
-      <div className="bg-primary text-primary-foreground shadow-md">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <Logo width={60} height={60} priority />
+      {/* Cabeçalho Principal */}
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <Logo width={72} height={72} priority /> {/* Logo aumentada */}
 
-          <nav className="hidden lg:flex items-center space-x-5 font-medium">
-            {mainNavLinks.slice(0, 5).map((link) => (
-              <Link key={link.label} href={link.href} className="hover:text-secondary transition-colors pb-1 border-b-2 border-transparent hover:border-secondary">
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          
-          <div className="flex flex-1 justify-end items-center space-x-1.5 md:space-x-3">
-            <div className="flex items-center space-x-1.5">
-              {loading && (
-                <div className="flex items-center space-x-1.5 text-sm p-2">
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span className="hidden lg:inline">Carregando...</span>
-                </div>
-              )}
-              {!loading && currentUser && (
-                <>
-                  <Link href="/account" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors p-2 rounded-md hover:bg-primary-foreground/10">
-                    <User size={20} />
-                    <span className="hidden lg:inline">{currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || "Minha Conta"}</span>
-                  </Link>
-                </>
-              )}
-              {!loading && !currentUser && (
-                <Link href="/login" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors text-sm p-2 rounded-md hover:bg-primary-foreground/10">
+        <nav className="hidden lg:flex items-center space-x-5 font-medium">
+          {mainNavLinks.slice(0, 5).map((link) => (
+            <Link key={link.label} href={link.href} className="hover:text-secondary transition-colors pb-1 border-b-2 border-transparent hover:border-secondary">
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+        
+        <div className="flex items-center space-x-1.5 md:space-x-3">
+          <div className="flex items-center space-x-1.5">
+            {loading && (
+              <div className="flex items-center space-x-1.5 text-sm p-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="hidden lg:inline">Carregando...</span>
+              </div>
+            )}
+            {!loading && currentUser && (
+              <>
+                <Link href="/account" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors p-2 rounded-md hover:bg-primary-foreground/10">
                   <User size={20} />
-                  <span className="hidden lg:inline">Entrar</span>
+                  <span className="hidden lg:inline">{currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || "Minha Conta"}</span>
                 </Link>
-              )}
-            </div>
+              </>
+            )}
+            {!loading && !currentUser && (
+              <Link href="/login" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors text-sm p-2 rounded-md hover:bg-primary-foreground/10">
+                <User size={20} />
+                <span className="hidden lg:inline">Entrar</span>
+              </Link>
+            )}
+          </div>
 
-            <Link href="/account/favorites" passHref>
-              <Button variant="ghost" size="icon" aria-label="Meus Favoritos" className="relative hover:bg-primary-foreground/10">
-                <Heart />
-                {isMounted && favoriteItemCount > 0 && (
+          <Link href="/account/favorites" passHref>
+            <Button variant="ghost" size="icon" aria-label="Meus Favoritos" className="relative hover:bg-primary-foreground/10">
+              <Heart />
+              {isMounted && favoriteItemCount > 0 && (
+                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-accent-foreground bg-accent rounded-full">
+                  {favoriteItemCount}
+                </span>
+              )}
+            </Button>
+          </Link>
+
+          <Sheet open={isCartSheetOpen} onOpenChange={setIsCartSheetOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="Carrinho de Compras" className="relative hover:bg-primary-foreground/10">
+                <ShoppingCart />
+                {isMounted && cartItemCount > 0 && (
                   <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-accent-foreground bg-accent rounded-full">
-                    {favoriteItemCount}
+                    {cartItemCount}
                   </span>
                 )}
               </Button>
-            </Link>
-
-            <Sheet open={isCartSheetOpen} onOpenChange={setIsCartSheetOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Carrinho de Compras" className="relative hover:bg-primary-foreground/10">
-                  <ShoppingCart />
-                  {isMounted && cartItemCount > 0 && (
-                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-accent-foreground bg-accent rounded-full">
-                      {cartItemCount}
-                    </span>
-                  )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[320px] sm:w-[380px] bg-card text-card-foreground p-0 flex flex-col">
-                <SideCart closeSheet={() => setIsCartSheetOpen(false)} />
-              </SheetContent>
-            </Sheet>
-          </div>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[320px] sm:w-[380px] bg-card text-card-foreground p-0 flex flex-col">
+              <SideCart closeSheet={() => setIsCartSheetOpen(false)} />
+            </SheetContent>
+          </Sheet>
         </div>
+      </div>
 
-        {/* Mobile Search and Category Buttons Section */}
-        <div className="md:hidden bg-primary px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="flex gap-2 shrink-0">
-              <Link href="/category/manipulados" passHref>
-                <Button
-                  variant="ghost"
-                  size="sm" 
-                  className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
-                >
-                  Manipulados
-                </Button>
-              </Link>
-              <Link href="/category/cosmeticos" passHref>
-                <Button
-                  variant="ghost"
-                  size="sm" 
-                  className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
-                >
-                  Cosméticos
-                </Button>
-              </Link>
-            </div>
-            <div className="relative flex-grow">
-              <Input 
-                type="search" 
-                placeholder="Buscar..." 
-                className="bg-card text-card-foreground placeholder:text-card-foreground/60 rounded-full h-10 pl-10 pr-4 w-full text-sm" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-card-foreground/60" />
-            </div>
-          </div>
+      {/* Seção de Botões de Categoria para Mobile */}
+      <div className="md:hidden bg-primary px-4 pt-1 pb-3">
+        <div className="flex items-center justify-center gap-2">
+          <Link href="/category/manipulados" passHref>
+            <Button
+              variant="ghost"
+              size="sm" 
+              className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
+            >
+              Manipulados
+            </Button>
+          </Link>
+          <Link href="/category/cosmeticos" passHref>
+            <Button
+              variant="ghost"
+              size="sm" 
+              className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
+            >
+              Cosméticos
+            </Button>
+          </Link>
+          <Link href="/category/suplementos" passHref> {/* Novo botão Suplementos */}
+            <Button
+              variant="ghost"
+              size="sm" 
+              className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
+            >
+              Suplementos
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Nova Seção da Barra de Busca para Mobile */}
+      <div className="md:hidden bg-primary px-4 pb-3 border-t border-primary-foreground/20 group"> {/* Adicionado 'group' para focus-within no ícone */}
+        <div className="relative w-full">
+          <Input 
+            type="search" 
+            placeholder="Buscar produtos..." 
+            className="bg-card text-card-foreground placeholder:text-card-foreground/70 rounded-full h-10 pl-10 pr-4 w-full text-sm transition-all duration-300 ease-in-out focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-primary shadow-sm hover:shadow-md"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
+          />
+          <Search 
+            className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-card-foreground/70 transition-colors duration-300 group-focus-within:text-accent" 
+          />
         </div>
       </div>
     </header>
