@@ -57,11 +57,6 @@ export default function AdminProductsPage() {
     ), [products, searchTerm]);
 
   const handleDeleteProduct = async (productId: string, productName: string) => {
-    const originalProducts = [...products];
-    
-    // Optimistic UI update
-    setProducts(currentProducts => currentProducts.filter(p => p.id !== productId));
-
     try {
       const success = await ProductService.deleteProduct(productId);
       if (success) {
@@ -69,17 +64,15 @@ export default function AdminProductsPage() {
           title: "Produto Excluído",
           description: `"${productName}" foi excluído com sucesso.`,
         });
-        // No need to call loadProducts() again as we updated the state optimistically
+        await loadProducts(); // Recarrega a lista de produtos
       } else {
         throw new Error('Falha ao excluir produto no serviço');
       }
     } catch (error) {
       console.error('Erro ao excluir produto:', error);
-      // Revert the state if the deletion fails
-      setProducts(originalProducts);
       toast({
         title: "Erro ao Excluir",
-        description: `Não foi possível excluir o produto "${productName}". A lista foi restaurada.`,
+        description: `Não foi possível excluir o produto "${productName}".`,
         variant: "destructive"
       });
     }

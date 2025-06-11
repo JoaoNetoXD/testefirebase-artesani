@@ -176,28 +176,23 @@ export class ProductService {
   }
   
   static async deleteProduct(id: string): Promise<boolean> {
-    this.log('info', `Attempting to soft-delete product ID: ${id}`);
+    this.log('info', `Attempting to delete product ID: ${id}`);
     if (!supabase) {
       this.log('error', 'Supabase client is not initialized.');
       return false;
     }
 
-    // Soft delete mudando o status para 'archived' e 'is_active' para false
     const { error } = await supabase
       .from('products')
-      .update({ 
-        is_active: false, 
-        status: 'archived',
-        updated_at: new Date().toISOString() 
-      })
+      .delete()
       .eq('id', id);
 
     if (error) {
-      this.log('error', `Failed to soft-delete product ID: ${id}`, error);
+      this.log('error', `Failed to delete product ID: ${id}`, error);
       return false;
     }
 
-    this.log('info', `Product ID: ${id} soft-deleted successfully.`);
+    this.log('info', `Product ID: ${id} deleted successfully.`);
     return true;
   }
 }
