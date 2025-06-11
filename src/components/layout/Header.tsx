@@ -70,11 +70,9 @@ export function Header() {
 
   return (
     <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-50">
-      {/* Barra de Informações Superior Removida */}
-
       {/* Cabeçalho Principal */}
       <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
-        <Logo width={72} height={72} priority /> {/* Logo aumentada */}
+        <Logo width={72} height={72} priority />
 
         <nav className="hidden lg:flex items-center space-x-5 font-medium">
           {mainNavLinks.slice(0, 5).map((link) => (
@@ -158,7 +156,7 @@ export function Header() {
               Cosméticos
             </Button>
           </Link>
-          <Link href="/category/suplementos" passHref> {/* Novo botão Suplementos */}
+          <Link href="/category/suplementos" passHref>
             <Button
               variant="ghost"
               size="sm" 
@@ -171,19 +169,26 @@ export function Header() {
       </div>
 
       {/* Nova Seção da Barra de Busca para Mobile */}
-      <div className="md:hidden bg-primary px-4 pb-3 border-t border-primary-foreground/20 group"> {/* Adicionado 'group' para focus-within no ícone */}
-        <div className="relative w-full">
-          <Input 
-            type="search" 
-            placeholder="Buscar produtos..." 
-            className="bg-card text-card-foreground placeholder:text-card-foreground/70 rounded-full h-10 pl-10 pr-4 w-full text-sm transition-all duration-300 ease-in-out focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-primary shadow-sm hover:shadow-md"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
-          />
-          <Search 
-            className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-card-foreground/70 transition-colors duration-300 group-focus-within:text-accent" 
-          />
+      <div className="md:hidden bg-primary px-4 py-4"> {/* Ajustado padding e removida borda */}
+        <div className="relative w-full group"> {/* Adicionado group aqui para focus-within no ícone da lupa */}
+          <div className="
+            relative w-full bg-card rounded-full shadow-md 
+            transition-all duration-300 ease-in-out 
+            transform hover:scale-[1.015] hover:shadow-lg 
+            focus-within:scale-[1.015] focus-within:shadow-lg
+          ">
+            <Search 
+              className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-card-foreground/60 transition-colors duration-300 group-focus-within:text-accent" 
+            />
+            <Input 
+              type="search" 
+              placeholder="Buscar produtos..." 
+              className="bg-transparent text-card-foreground placeholder:text-card-foreground/50 rounded-full h-9 pl-10 pr-4 w-full text-sm border-0 focus:ring-0 focus:outline-none"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
+            />
+          </div>
         </div>
       </div>
     </header>
