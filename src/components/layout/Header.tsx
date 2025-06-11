@@ -18,7 +18,7 @@ import { Logo } from '@/components/shared/Logo';
 import SideCart from '@/components/cart/SideCart';
 
 export function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isCartSheetOpen, setIsCartSheetOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [isMounted, setIsMounted] = useState(false);
@@ -101,19 +101,7 @@ export function Header() {
             ))}
           </nav>
           
-          <div className="flex-1 flex justify-end items-center space-x-1.5 md:space-x-3">
-            <div className="relative w-full max-w-xs hidden md:block">
-              <Input 
-                type="search" 
-                placeholder="Buscar produtos..." 
-                className="bg-card text-card-foreground placeholder:text-card-foreground/60 rounded-full h-10 pl-10 pr-4 w-full" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-card-foreground/60" />
-            </div>
-
+          <div className="flex flex-1 justify-end items-center space-x-1.5 md:space-x-3">
             <div className="flex items-center space-x-1.5">
               {loading && (
                 <div className="flex items-center space-x-1.5 text-sm p-2">
@@ -148,7 +136,7 @@ export function Header() {
               </Button>
             </Link>
 
-            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+            <Sheet open={isCartSheetOpen} onOpenChange={setIsCartSheetOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="Carrinho de Compras" className="relative hover:bg-primary-foreground/10">
                   <ShoppingCart />
@@ -160,7 +148,7 @@ export function Header() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[320px] sm:w-[380px] bg-card text-card-foreground p-0 flex flex-col">
-                <SideCart closeSheet={() => setIsMenuOpen(false)} />
+                <SideCart closeSheet={() => setIsCartSheetOpen(false)} />
               </SheetContent>
             </Sheet>
           </div>
@@ -169,6 +157,26 @@ export function Header() {
         {/* Mobile Search and Category Buttons Section */}
         <div className="md:hidden bg-primary px-4 py-3">
           <div className="flex items-center gap-3">
+            <div className="flex gap-2 shrink-0">
+              <Link href="/category/manipulados" passHref>
+                <Button
+                  variant="ghost"
+                  size="sm" 
+                  className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
+                >
+                  Manipulados
+                </Button>
+              </Link>
+              <Link href="/category/cosmeticos" passHref>
+                <Button
+                  variant="ghost"
+                  size="sm" 
+                  className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
+                >
+                  Cosméticos
+                </Button>
+              </Link>
+            </div>
             <div className="relative flex-grow">
               <Input 
                 type="search" 
@@ -179,26 +187,6 @@ export function Header() {
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-card-foreground/60" />
-            </div>
-            <div className="flex gap-2 shrink-0">
-              <Link href="/category/manipulados" passHref>
-                <Button
-                  variant="ghost"
-                  size="sm" // h-9
-                  className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-3 text-xs h-10"
-                >
-                  Manipulados
-                </Button>
-              </Link>
-              <Link href="/category/cosmeticos" passHref>
-                <Button
-                  variant="ghost"
-                  size="sm" // h-9
-                  className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-3 text-xs h-10"
-                >
-                  Cosméticos
-                </Button>
-              </Link>
             </div>
           </div>
         </div>
