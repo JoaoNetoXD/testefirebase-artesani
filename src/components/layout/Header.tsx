@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetTrigger, SheetContent, SheetClose, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { CategoryService } from '@/lib/services/categoryService';
 import type { Category } from '@/lib/types';
-import { Search, ShoppingCart, User, Heart, Phone, Mail, Info, LogOut, Loader2, X } from 'lucide-react';
+import { Search, ShoppingCart, User, Heart, Phone, Mail, Info, LogOut, Loader2, X, Menu } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/hooks/useAuth';
@@ -71,8 +71,8 @@ export function Header() {
   return (
     <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-50 rounded-b-xl">
       {/* Cabeçalho Principal */}
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4 md:hidden"> {/* Ocultar em desktop */}
-        <Logo width={72} height={72} priority />
+      <div className="container mx-auto px-4 py-2 flex items-center justify-between gap-4 md:hidden"> {/* Ocultar em desktop */}
+        <Logo width={60} height={60} priority />
         <div className="flex items-center space-x-1.5">
           {loading && (
             <div className="flex items-center space-x-1.5 text-sm p-2">
@@ -177,33 +177,33 @@ export function Header() {
       </div>
 
       {/* Seção de Categorias e Busca Mobile (abaixo do header principal no mobile) */}
-      <div className="md:hidden bg-primary text-primary-foreground"> {/* Mantém o fundo primary para esta seção inteira */}
+      <div className="md:hidden bg-primary"> {/* Mantém o fundo primary para esta seção inteira */}
         {/* Seção Superior Mobile (Logo, Ícones já estão acima) - Botões de Categoria */}
-        <div className="px-4 pb-6 pt-1 rounded-b-2xl shadow-lg"> {/* Fundo primário já vem do pai, padding-bottom aumentado */}
+        <div className="px-4 pb-5 pt-1 rounded-b-2xl shadow-lg"> {/* Fundo primário já vem do pai, padding-bottom aumentado */}
           <div className="flex items-center justify-center gap-2">
-            <Link href="/category/manipulados" passHref>
+            <Link href="/category/manipulados" passHref className="flex-grow">
               <Button
                 variant="ghost"
                 size="sm"
-                className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
+                className="flex-grow w-full border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full text-xs"
               >
                 Manipulados
               </Button>
             </Link>
-            <Link href="/category/cosmeticos" passHref>
+            <Link href="/category/cosmeticos" passHref className="flex-grow">
               <Button
                 variant="ghost"
                 size="sm"
-                className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
+                className="flex-grow w-full border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full text-xs"
               >
                 Cosméticos
               </Button>
             </Link>
-            <Link href="/category/suplementos" passHref>
+            <Link href="/category/suplementos" passHref className="flex-grow">
               <Button
                 variant="ghost"
                 size="sm"
-                className="border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full px-4 text-xs h-10"
+                className="flex-grow w-full border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-full text-xs"
               >
                 Suplementos
               </Button>
@@ -212,15 +212,15 @@ export function Header() {
         </div>
 
         {/* Seção da Barra de Busca - Posicionada para parecer 'suspensa' abaixo */}
-        <div className="px-4 -mt-4 mb-4 relative z-10"> {/* -mt-4 para puxar para cima, mb-4 para espaço abaixo */}
+        <div className="px-4 -mt-4 mb-3 relative z-10"> {/* -mt-4 para puxar para cima, mb-3 para espaço abaixo */}
           <div className="relative w-full bg-card rounded-full shadow-lg transition-all duration-300 ease-in-out group transform hover:scale-[1.015] hover:shadow-xl focus-within:scale-[1.015] focus-within:shadow-xl">
-            <Search 
-              className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-card-foreground/60 transition-colors duration-300 group-focus-within:text-accent" 
+            <Search
+              className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-card-foreground/60 transition-colors duration-300 group-focus-within:text-accent"
             />
-            <Input 
-              type="search" 
-              placeholder="Buscar produtos..." 
-              className="bg-transparent text-card-foreground placeholder:text-card-foreground/50 rounded-full h-9 pl-10 pr-4 w-full text-sm border-0 focus:ring-0 focus:outline-none"
+            <Input
+              type="search"
+              placeholder="Buscar produtos..."
+              className="bg-transparent text-card-foreground placeholder:text-card-foreground/50 rounded-full h-7 pl-10 pr-4 w-full text-sm border-0 focus:ring-0 focus:outline-none"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
