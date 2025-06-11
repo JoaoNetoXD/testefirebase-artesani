@@ -6,18 +6,19 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetTrigger, SheetContent, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetTrigger, SheetContent, SheetClose, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { CategoryService } from '@/lib/services/categoryService';
 import type { Category } from '@/lib/types';
-import { Search, ShoppingCart, User, Menu, X, Heart, Phone, Mail, Info, LogOut, Loader2 } from 'lucide-react';
+import { Search, ShoppingCart, User, Heart, Phone, Mail, Info, LogOut, Loader2, X } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/shared/Logo';
+import SideCart from '@/components/cart/SideCart'; // Placeholder for now
 
 export function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // Ainda pode ser usado para o side cart
   const [searchTerm, setSearchTerm] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [isMounted, setIsMounted] = useState(false);
@@ -54,12 +55,6 @@ export function Header() {
   ];
 
   const mainNavLinks = navigationItems;
-
-  const accountLinks = [
-    { href: '/account', label: 'Minha Conta' },
-    { href: '/account/orders', label: 'Meus Pedidos' },
-    { href: '/account/favorites', label: 'Meus Favoritos' },
-  ];
 
   const cartItemCount = isMounted ? cart.reduce((sum, item) => sum + item.quantity, 0) : 0;
   const favoriteItemCount = isMounted ? favorites.length : 0;
@@ -106,37 +101,38 @@ export function Header() {
             ))}
           </nav>
           
-          <div className="flex-1 flex justify-end items-center space-x-3">
+          <div className="flex-1 flex justify-end items-center space-x-1.5 md:space-x-3">
             <div className="relative w-full max-w-xs hidden md:block">
               <Input 
                 type="search" 
                 placeholder="Buscar produtos..." 
                 className="bg-card text-card-foreground placeholder:text-card-foreground/60 rounded-full h-10 pl-10 pr-4 w-full" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-card-foreground/60" />
             </div>
 
-            {/* User Auth Section Wrapper - Always present on sm+ screens */}
-            <div className="hidden sm:flex items-center space-x-1.5">
+            {/* User Auth Section Wrapper - Visível em todas as telas */}
+            <div className="flex items-center space-x-1.5">
               {loading && (
-                <div className="flex items-center space-x-1.5 text-sm">
+                <div className="flex items-center space-x-1.5 text-sm p-2">
                   <Loader2 className="h-5 w-5 animate-spin" />
                   <span className="hidden lg:inline">Carregando...</span>
                 </div>
               )}
               {!loading && currentUser && (
                 <>
-                  <Link href="/account" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors">
+                  <Link href="/account" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors p-2 rounded-md hover:bg-primary-foreground/10">
                     <User size={20} />
                     <span className="hidden lg:inline">{currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || "Minha Conta"}</span>
                   </Link>
-                  <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Sair" className="hover:bg-primary-foreground/10">
-                    <LogOut />
-                  </Button>
+                  {/* Botão de Logout é melhor dentro da página de conta ou menu de perfil */}
                 </>
               )}
               {!loading && !currentUser && (
-                <Link href="/login" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors text-sm">
+                <Link href="/login" passHref className="flex items-center gap-1.5 hover:text-secondary transition-colors text-sm p-2 rounded-md hover:bg-primary-foreground/10">
                   <User size={20} />
                   <span className="hidden lg:inline">Entrar</span>
                 </Link>
@@ -155,72 +151,24 @@ export function Header() {
               </Button>
             </Link>
 
-            <Link href="/cart" passHref>
-              <Button variant="ghost" size="icon" aria-label="Carrinho de Compras" className="relative hover:bg-primary-foreground/10">
-                <ShoppingCart />
-                {isMounted && cartItemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-accent-foreground bg-accent rounded-full">
-                    {cartItemCount}
-                  </span>
-                )}
-              </Button>
-            </Link>
-          </div>
-
-          <div className="lg:hidden">
-            <Sheet>
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="hover:bg-primary-foreground/10">
-                  <Menu />
+                <Button variant="ghost" size="icon" aria-label="Carrinho de Compras" className="relative hover:bg-primary-foreground/10">
+                  <ShoppingCart />
+                  {isMounted && cartItemCount > 0 && (
+                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-accent-foreground bg-accent rounded-full">
+                      {cartItemCount}
+                    </span>
+                  )}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[320px] bg-card text-card-foreground p-0">
-                <div className="p-4 border-b border-border">
-                  <Logo width={60} height={60} />
-                </div>
-                <nav className="flex flex-col space-y-1 p-4">
-                  {mainNavLinks.map((link) => (
-                     <SheetClose asChild key={link.label}>
-                        <Link href={link.href} className="text-base hover:text-primary transition-colors p-3 rounded-md hover:bg-muted">
-                            {link.label}
-                        </Link>
-                    </SheetClose>
-                  ))}
-                  <hr className="my-2 border-border" />
-                  {loading && (
-                    <div className="flex items-center gap-2 p-3 text-muted-foreground">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>Carregando...</span>
-                    </div>
-                  )}
-                  {!loading && currentUser && (
-                    <>
-                      {accountLinks.map((link) => (
-                        <SheetClose asChild key={link.label}>
-                          <Link href={link.href} className="text-base hover:text-primary transition-colors p-3 rounded-md hover:bg-muted">
-                              {link.label}
-                          </Link>
-                        </SheetClose>
-                      ))}
-                      <SheetClose asChild>
-                        <button onClick={handleLogout} className="text-base text-destructive flex items-center gap-2 hover:text-primary transition-colors p-3 rounded-md hover:bg-muted w-full text-left">
-                            <LogOut size={20} /> Sair
-                        </button>
-                      </SheetClose>
-                    </>
-                  )}
-                  {!loading && !currentUser && (
-                     <SheetClose asChild>
-                        <Link href="/login" className="text-base flex items-center gap-2 hover:text-primary transition-colors p-3 rounded-md hover:bg-muted">
-                            <User size={20} />
-                            Entrar / Cadastrar
-                        </Link>
-                    </SheetClose>
-                  )}
-                </nav>
+              <SheetContent side="right" className="w-[320px] sm:w-[380px] bg-card text-card-foreground p-0 flex flex-col">
+                <SideCart closeSheet={() => setIsMenuOpen(false)} />
               </SheetContent>
             </Sheet>
           </div>
+
+          {/* O antigo Sheet de navegação mobile foi removido daqui */}
         </div>
         <div className="md:hidden bg-primary px-4 pb-3">
             <div className="relative w-full">
@@ -228,6 +176,9 @@ export function Header() {
                 type="search" 
                 placeholder="Buscar produtos..." 
                 className="bg-card text-card-foreground placeholder:text-card-foreground/60 rounded-full h-10 pl-10 pr-4 w-full" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-card-foreground/60" />
             </div>
