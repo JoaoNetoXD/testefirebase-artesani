@@ -1,6 +1,6 @@
 "use client";
 import type { ReactNode } from 'react';
-import React, from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase, supabaseServicesAvailable } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setCurrentUserProfile(null);
         setIsAdmin(false);
       }
-      // INITIAL_SESSION is the first event, so we know we're done loading.
+      
       if (event === 'INITIAL_SESSION') {
         setLoading(false);
       }
@@ -125,9 +125,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
       if (!data.user) throw new Error('Cadastro falhou, usuário não retornado.');
-
-      // The profile is now created by a trigger in Supabase, so this is no longer needed.
-      // We just need to wait a moment for the trigger to fire.
+      
       await new Promise(res => setTimeout(res, 500)); 
 
       toast({ title: "Cadastro realizado!", description: "Bem-vindo(a)! Verifique seu email para confirmação, se aplicável." });
@@ -150,7 +148,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
       if (error) throw error;
-      // onAuthStateChange will handle setting user and profile
+      
       const { data: { user } } = await supabase.auth.getUser();
       const profile = await fetchUserProfileInternal(user!.id);
       const userIsAdmin = profile?.role === 'admin';
