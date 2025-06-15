@@ -1,4 +1,3 @@
-
 "use client";
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -67,19 +66,23 @@ export default function AdminCategoriesPage() {
       if (editingCategory) {
         // Update
         const updatedCategory = await CategoryService.updateCategory(editingCategory.id, { name: categoryName, slug: categoryName.toLowerCase().replace(/\s+/g, '-') });
-        setCategories(categories.map(c => c.id === updatedCategory.id ? updatedCategory : c));
-        toast({
-          title: "Categoria Atualizada",
-          description: `A categoria foi atualizada para "${updatedCategory.name}".`,
-        });
+        if(updatedCategory) {
+          setCategories(categories.map(c => c.id === updatedCategory.id ? {...c, ...updatedCategory} : c));
+          toast({
+            title: "Categoria Atualizada",
+            description: `A categoria foi atualizada para "${updatedCategory.name}".`,
+          });
+        }
       } else {
         // Create
         const newCategory = await CategoryService.createCategory({ name: categoryName, slug: categoryName.toLowerCase().replace(/\s+/g, '-') });
-        setCategories([...categories, newCategory]);
-        toast({
-          title: "Categoria Adicionada",
-          description: `A categoria "${newCategory.name}" foi adicionada com sucesso.`,
-        });
+        if (newCategory) {
+            setCategories(prev => [...prev, { ...newCategory, product_count: 0 }]);
+            toast({
+                title: "Categoria Adicionada",
+                description: `A categoria "${newCategory.name}" foi adicionada com sucesso.`,
+            });
+        }
       }
       setCategoryName('');
       setEditingCategory(null);
@@ -96,18 +99,18 @@ export default function AdminCategoriesPage() {
   };
 
   const handleDeleteCategory = async (categoryId: string, categoryName: string) => {
-    try {
-      await CategoryService.deleteCategory(categoryId);
+    const result = await CategoryService.deleteCategory(categoryId);
+    
+    if (result.success) {
       setCategories(categories.filter(c => c.id !== categoryId));
       toast({
         title: "Categoria Excluída",
         description: `A categoria "${categoryName}" foi excluída com sucesso.`,
       });
-    } catch (error) {
-      console.error('Erro ao excluir categoria:', error);
+    } else {
       toast({
         title: "Erro ao Excluir",
-        description: "Não foi possível excluir a categoria. Verifique se ela não está associada a nenhum produto.",
+        description: result.message || "Não foi possível excluir a categoria.",
         variant: "destructive"
       });
     }
@@ -199,6 +202,7 @@ export default function AdminCategoriesPage() {
                 <TableRow className="border-b-primary-foreground/10">
                   <TableHead className="text-primary-foreground/80">Nome</TableHead>
                   <TableHead className="hidden sm:table-cell text-primary-foreground/80">Slug</TableHead>
+                   <TableHead className="text-center hidden sm:table-cell text-primary-foreground/80">Produtos</TableHead>
                   <TableHead className="text-right text-primary-foreground/80">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -207,6 +211,7 @@ export default function AdminCategoriesPage() {
                   <TableRow key={category.id} className="border-b-primary-foreground/10 hover:bg-primary-foreground/5">
                     <TableCell className="font-medium text-white">{category.name}</TableCell>
                     <TableCell className="hidden sm:table-cell text-primary-foreground/70">{category.slug}</TableCell>
+                    <TableCell className="text-center hidden sm:table-cell text-primary-foreground/70">{category.product_count}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end space-x-2">
                         <Button variant="outline" size="icon" title="Editar Categoria" onClick={() => startEditing(category)} className="bg-transparent border-primary-foreground/20 text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-white">
