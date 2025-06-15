@@ -1,7 +1,6 @@
-
 "use client";
 import type { ReactNode } from 'react';
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase, supabaseServicesAvailable } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -41,22 +40,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const { toast } = useToast();
 
+  const fetchUserProfileInternal = useCallback(async (userId: string): Promise<UserProfileData | null> => {
+    if (!supabase || !supabaseServicesAvailable) {
+      return null;
+    }
+    try {
+      const { data, error, status } = await supabase
+        .from('profiles')
+        .select('name, email, role')
+        .eq('id', userId)
+        .single();
+      
+      if (error && status !== 406) throw error;
+      
+      return data as UserProfileData | null;
+
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Erro desconhecido ao buscar perfil";
+      console.error("Erro ao buscar perfil do usuário:", message);
+      return null;
+    }
+  }, []);
+
   useEffect(() => {
     if (!supabase || !supabaseServicesAvailable) {
       console.warn("AuthContext: Supabase client is not available. Auth features are disabled.");
-      setCurrentUser(null);
-      setSession(null);
       setLoading(false);
       return;
     }
 
-    const getSessionAndProfile = async () => {
-      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        console.error('Error getting session:', sessionError.message);
-        setLoading(false);
-        return;
-      }
+    setLoading(true);
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       setSession(currentSession);
       const user = currentSession?.user ?? null;
       setCurrentUser(user);
@@ -69,25 +83,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setCurrentUserProfile(null);
         setIsAdmin(false);
       }
-      setLoading(false);
-    };
-
-    getSessionAndProfile();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      const user = session?.user ?? null;
-      setCurrentUser(user);
-
-      if (user) {
-        const profile = await fetchUserProfileInternal(user.id);
-        setCurrentUserProfile(profile);
-        setIsAdmin(profile?.role === 'admin');
-      } else {
-        setCurrentUserProfile(null);
-        setIsAdmin(false);
-      }
-      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+      // INITIAL_SESSION is the first event, so we know we're done loading.
+      if (event === 'INITIAL_SESSION') {
         setLoading(false);
       }
     });
@@ -95,7 +92,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchUserProfileInternal]);
+
 
   const notifySupabaseDisabled = () => {
     toast({ 
@@ -105,29 +103,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       duration: 10000
     });
     setLoading(false);
-  };
-
-  const fetchUserProfileInternal = async (userId: string): Promise<UserProfileData | null> => {
-    if (!supabase || !supabaseServicesAvailable) {
-      return null;
-    }
-    try {
-      const { data, error, status } = await supabase
-        .from('profiles')
-        .select('name, email, role')
-        .eq('id', userId)
-        .single();
-      
-      if (error && status !== 406) {
-        console.error('Erro na busca do perfil:', error);
-        throw error;
-      }
-      return data as UserProfileData | null;
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Erro desconhecido ao buscar perfil";
-      console.error("Erro ao buscar perfil do usuário:", message);
-      return null;
-    }
   };
 
   const register = async (name: string, email: string, pass: string) => {
@@ -151,21 +126,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       if (!data.user) throw new Error('Cadastro falhou, usuário não retornado.');
 
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            id: data.user.id,
-            name: name,
-            email: email,
-            phone: '',
-            role: 'user',
-          }
-        ]);
-      
-      if (profileError) {
-        console.warn('Erro ao criar perfil do usuário, mas o cadastro foi bem-sucedido:', profileError.message);
-      }
+      // The profile is now created by a trigger in Supabase, so this is no longer needed.
+      // We just need to wait a moment for the trigger to fire.
+      await new Promise(res => setTimeout(res, 500)); 
 
       toast({ title: "Cadastro realizado!", description: "Bem-vindo(a)! Verifique seu email para confirmação, se aplicável." });
       router.push('/'); 
@@ -185,17 +148,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     setLoading(true);
     try {
-      const { data: loginData, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
       if (error) throw error;
-      if (!loginData.user || !loginData.session) throw new Error('Login falhou, usuário ou sessão não retornados.');
-      
-      const profile = await fetchUserProfileInternal(loginData.user.id);
+      // onAuthStateChange will handle setting user and profile
+      const { data: { user } } = await supabase.auth.getUser();
+      const profile = await fetchUserProfileInternal(user!.id);
       const userIsAdmin = profile?.role === 'admin';
-
-      setCurrentUser(loginData.user);
-      setSession(loginData.session);
-      setCurrentUserProfile(profile);
-      setIsAdmin(userIsAdmin);
       
       toast({ title: "Login realizado!", description: "Bem-vindo(a) de volta!" });
       return { success: true, isAdminUser: userIsAdmin };
@@ -212,25 +170,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     if (!supabase || !supabaseServicesAvailable) {
       notifySupabaseDisabled();
-      setCurrentUser(null);
-      setCurrentUserProfile(null);
-      setIsAdmin(false);
-      setSession(null);
-      router.push('/login');
       return;
     }
-    setLoading(true);
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      toast({ title: "Logout realizado", description: "Até breve!" });
       router.push('/login');
+      toast({ title: "Logout realizado", description: "Até breve!" });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Tente novamente.";
       console.error("Erro no logout:", error);
       toast({ title: "Erro no Logout", description: message, variant: "destructive" });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -239,7 +189,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       notifySupabaseDisabled();
       return;
     }
-    setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`
@@ -250,24 +199,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const message = error instanceof Error ? error.message : "Tente novamente.";
       console.error("Erro ao resetar senha:", error);
       toast({ title: "Erro ao Enviar Email", description: message, variant: "destructive" });
-    } finally {
-      setLoading(false);
     }
   };
 
   const updateUserAccount = async (updateData: Partial<UserProfileData>) => {
     if (!currentUser || !supabase || !supabaseServicesAvailable) {
-      notifySupabaseDisabled();
       toast({ title: "Erro", description: "Você precisa estar logado para atualizar o perfil.", variant: "destructive" });
       return;
     }
-    setLoading(true);
     try {
-      const { ...dataToUpdate } = updateData;
-
       const { error } = await supabase
         .from('profiles')
-        .update(dataToUpdate)
+        .update(updateData)
         .eq('id', currentUser.id);
 
       if (error) throw error;
@@ -280,8 +223,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const message = error instanceof Error ? error.message : "Tente novamente.";
       console.error("Erro ao atualizar perfil:", error);
       toast({ title: "Erro ao Atualizar", description: message, variant: "destructive" });
-    } finally {
-      setLoading(false);
     }
   };
 

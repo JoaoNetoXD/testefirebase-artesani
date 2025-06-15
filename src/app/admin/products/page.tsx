@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, Edit, Trash2, Search, Filter } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Search, Filter, Package } from 'lucide-react';
 import Image from 'next/image';
 import {
   AlertDialog,
@@ -23,7 +23,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ProductService } from '@/lib/services/productService';
 import type { Product } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -59,18 +59,23 @@ export default function AdminProductsPage() {
     ), [products, searchTerm]);
 
   const handleDeleteProduct = async (productId: string, productName: string) => {
-    try {
-      await ProductService.deleteProduct(productId);
+    const originalProducts = [...products];
+    // Optimistic update
+    setProducts(prevProducts => prevProducts.filter(p => p.id !== productId));
+
+    const result = await ProductService.deleteProduct(productId);
+
+    if (result) {
       toast({
-        title: "Produto Excluído",
-        description: `"${productName}" foi excluído com sucesso.`,
+        title: "Produto Arquivado",
+        description: `"${productName}" foi arquivado e não está mais visível na loja.`,
       });
-      await loadProducts();
-    } catch (error) {
-      console.error('Erro ao excluir produto:', error);
+    } else {
+      // Revert on failure
+      setProducts(originalProducts);
       toast({
-        title: "Erro ao Excluir",
-        description: `Não foi possível excluir o produto "${productName}".`,
+        title: "Erro ao Arquivar",
+        description: `Não foi possível arquivar o produto "${productName}".`,
         variant: "destructive"
       });
     }
@@ -119,6 +124,12 @@ export default function AdminProductsPage() {
     </div>
   );
 
+  const getStatus = (stock: number) => {
+    if (stock === 0) return { text: "Esgotado", className: "bg-red-800/20 text-red-300 border-red-500/20" };
+    if (stock <= 10) return { text: "Estoque Baixo", className: "bg-yellow-800/20 text-yellow-300 border-yellow-500/20" };
+    return { text: "Em Estoque", className: "bg-green-800/20 text-green-300 border-green-500/20" };
+  };
+
   if (loading) {
     return <PageSkeleton />;
   }
@@ -128,10 +139,10 @@ export default function AdminProductsPage() {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
             <h1 className="text-4xl font-headline font-bold">Gerenciamento de Produtos</h1>
-            <p className="text-primary-foreground/70 mt-1">Adicione, edite e organize todos os seus produtos.</p>
+            <p className="text-primary-foreground/70 mt-1">Adicione, edite e organize todos os seus produtos ativos.</p>
         </div>
         <Link href="/admin/products/new" passHref>
-          <Button variant="outline" className="bg-transparent border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground w-full sm:w-auto">
+          <Button variant="secondary">
             <PlusCircle className="mr-2 h-5 w-5" /> Adicionar Novo Produto
           </Button>
         </Link>
@@ -172,74 +183,70 @@ export default function AdminProductsPage() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {filteredProducts.map((product) => (
-                    <TableRow key={product.id} className="border-b-primary-foreground/10 hover:bg-primary-foreground/5">
-                        <TableCell>
-                        <Image
-                            src={(product.images && product.images.length > 0) ? product.images[0] : '/placeholder-product.png'}
-                            alt={product.name}
-                            width={50}
-                            height={50}
-                            className="rounded-md object-cover border border-primary-foreground/20"
-                        />
-                        </TableCell>
-                        <TableCell className="font-medium max-w-[150px] sm:max-w-xs truncate text-white">
-                            <Link href={`/admin/products/edit/${product.slug}`} className="hover:text-secondary hover:underline">
-                                {product.name}
-                            </Link>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell text-primary-foreground/70">{product.category_name}</TableCell>
-                        <TableCell className="text-right text-primary-foreground/90">R$ {product.price.toFixed(2).replace('.',',')}</TableCell>
-                        <TableCell className="text-right hidden sm:table-cell text-primary-foreground/90">{product.stock}</TableCell>
-                        <TableCell className="text-center hidden lg:table-cell">
-                        <Badge
-                            className={
-                            product.stock > 10 ? "bg-green-800/20 text-green-300 border-green-500/20" :
-                            product.stock <= 10 && product.stock > 0 ? "bg-yellow-800/20 text-yellow-300 border-yellow-500/20" :
-                            "bg-red-800/20 text-red-300 border-red-500/20"
-                            }
-                        >
-                            {product.stock === 0 ? "Esgotado" : product.stock <= 10 ? "Baixo Estoque" : "Em Estoque"}
-                        </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                            <Button variant="outline" size="icon" asChild title="Editar Produto" className="bg-transparent border-primary-foreground/20 text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-white">
-                            <Link href={`/admin/products/edit/${product.slug}`}>
-                                <Edit className="h-4 w-4" />
-                            </Link>
-                            </Button>
-                            <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="icon" title="Excluir Produto">
-                                <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-background border-primary-foreground/20 text-primary-foreground">
-                                <AlertDialogHeader>
-                                <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                                <AlertDialogDescription className="text-primary-foreground/70">
-                                    Tem certeza que deseja excluir o produto &quot;{product.name}&quot;? Esta ação não pode ser desfeita e removerá o produto permanentemente.
-                                </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                <AlertDialogCancel className="bg-transparent border-primary-foreground/20 hover:bg-primary-foreground/10">Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteProduct(product.id, product.name)}>
-                                    Excluir
-                                </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                            </AlertDialog>
-                        </div>
-                        </TableCell>
-                    </TableRow>
-                    ))}
+                    {filteredProducts.map((product) => {
+                      const status = getStatus(product.stock);
+                      return (
+                      <TableRow key={product.id} className="border-b-primary-foreground/10 hover:bg-primary-foreground/5">
+                          <TableCell>
+                          <Image
+                              src={product.images?.[0] || '/placeholder-product.png'}
+                              alt={product.name}
+                              width={50}
+                              height={50}
+                              className="rounded-md object-cover border border-primary-foreground/20"
+                          />
+                          </TableCell>
+                          <TableCell className="font-medium max-w-[150px] sm:max-w-xs truncate text-white">
+                              <Link href={`/admin/products/edit/${product.slug}`} className="hover:text-secondary hover:underline">
+                                  {product.name}
+                              </Link>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell text-primary-foreground/70">{product.category_name}</TableCell>
+                          <TableCell className="text-right text-primary-foreground/90">R$ {product.price.toFixed(2).replace('.',',')}</TableCell>
+                          <TableCell className="text-right hidden sm:table-cell text-primary-foreground/90">{product.stock}</TableCell>
+                          <TableCell className="text-center hidden lg:table-cell">
+                          <Badge variant="outline" className={status.className}>
+                            {status.text}
+                          </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                          <div className="flex items-center justify-end space-x-2">
+                              <Button variant="outline" size="icon" asChild title="Editar Produto" className="bg-transparent border-primary-foreground/20 text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-white">
+                              <Link href={`/admin/products/edit/${product.slug}`}>
+                                  <Edit className="h-4 w-4" />
+                              </Link>
+                              </Button>
+                              <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                  <Button variant="destructive" size="icon" title="Arquivar Produto">
+                                  <Trash2 className="h-4 w-4" />
+                                  </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-background border-primary-foreground/20 text-primary-foreground">
+                                  <AlertDialogHeader>
+                                  <AlertDialogTitle>Confirmar Arquivamento</AlertDialogTitle>
+                                  <AlertDialogDescription className="text-primary-foreground/70">
+                                      Tem certeza que deseja arquivar o produto &quot;{product.name}&quot;? Ele será ocultado da loja mas não será excluído permanentemente.
+                                  </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                  <AlertDialogCancel className="bg-transparent border-primary-foreground/20 hover:bg-primary-foreground/10">Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteProduct(product.id, product.name)}>
+                                      Arquivar
+                                  </AlertDialogAction>
+                                  </AlertDialogFooter>
+                              </AlertDialogContent>
+                              </AlertDialog>
+                          </div>
+                          </TableCell>
+                      </TableRow>
+                    )})}
                 </TableBody>
                 </Table>
             </div>
             ) : (
             <div className="text-center py-16 text-primary-foreground/60">
-                <Search className="mx-auto h-12 w-12 mb-4" />
+                <Package className="mx-auto h-12 w-12 mb-4" />
                 <p className="text-lg font-semibold">Nenhum produto encontrado.</p>
                 {searchTerm && <p className="text-sm mt-1">Tente ajustar sua busca ou filtros.</p>}
                 {!searchTerm && <p className="text-sm mt-1">Comece adicionando um novo produto.</p>}
