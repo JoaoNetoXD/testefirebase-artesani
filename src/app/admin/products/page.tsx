@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, Edit, Trash2, Search, Filter, Package } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Search, Filter, Package, Archive, ArchiveX } from 'lucide-react';
 import Image from 'next/image';
 import {
   AlertDialog,
@@ -24,17 +24,22 @@ import { ProductService } from '@/lib/services/productService';
 import type { Product } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+type ProductStatusFilter = "active" | "archived" | "all";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<ProductStatusFilter>("active");
   const { toast } = useToast();
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await ProductService.getAllProducts();
+      const includeArchived = statusFilter === 'all' || statusFilter === 'archived';
+      const data = await ProductService.getAllProducts(includeArchived);
       setProducts(data);
     } catch (error) {
       console.error('Erro ao carregar produtos:', error);
@@ -46,36 +51,54 @@ export default function AdminProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, statusFilter]);
 
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
 
   const filteredProducts = useMemo(() =>
-    products.filter(product =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category_name?.toLowerCase().includes(searchTerm.toLowerCase())
-    ), [products, searchTerm]);
+    products.filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            product.category_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      if (statusFilter === 'all') return matchesSearch;
+      if (statusFilter === 'active') return product.is_active && matchesSearch;
+      if (statusFilter === 'archived') return !product.is_active && matchesSearch;
+      
+      return false;
+    }), [products, searchTerm, statusFilter]);
 
-  const handleDeleteProduct = async (productId: string, productName: string) => {
-    const originalProducts = [...products];
-    // Optimistic update
-    setProducts(prevProducts => prevProducts.filter(p => p.id !== productId));
-
-    const result = await ProductService.deleteProduct(productId);
-
+  const handleArchiveProduct = async (productId: string, productName: string) => {
+    const result = await ProductService.archiveProduct(productId);
     if (result) {
       toast({
         title: "Produto Arquivado",
         description: `"${productName}" foi arquivado e não está mais visível na loja.`,
       });
+      loadProducts();
     } else {
-      // Revert on failure
-      setProducts(originalProducts);
       toast({
         title: "Erro ao Arquivar",
         description: `Não foi possível arquivar o produto "${productName}".`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteProduct = async (productId: string, productName: string) => {
+    const { success, message } = await ProductService.deleteProduct(productId);
+
+    if (success) {
+      toast({
+        title: "Produto Excluído",
+        description: `"${productName}" foi excluído permanentemente.`,
+      });
+      loadProducts();
+    } else {
+      toast({
+        title: "Erro ao Excluir",
+        description: message,
         variant: "destructive"
       });
     }
@@ -124,7 +147,8 @@ export default function AdminProductsPage() {
     </div>
   );
 
-  const getStatus = (stock: number) => {
+  const getStatus = (stock: number, isActive: boolean) => {
+    if (!isActive) return { text: "Arquivado", className: "bg-gray-700/20 text-gray-300 border-gray-500/20" };
     if (stock === 0) return { text: "Esgotado", className: "bg-red-800/20 text-red-300 border-red-500/20" };
     if (stock <= 10) return { text: "Estoque Baixo", className: "bg-yellow-800/20 text-yellow-300 border-yellow-500/20" };
     return { text: "Em Estoque", className: "bg-green-800/20 text-green-300 border-green-500/20" };
@@ -139,7 +163,7 @@ export default function AdminProductsPage() {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
             <h1 className="text-4xl font-headline font-bold">Gerenciamento de Produtos</h1>
-            <p className="text-primary-foreground/70 mt-1">Adicione, edite e organize todos os seus produtos ativos.</p>
+            <p className="text-primary-foreground/70 mt-1">Adicione, edite e organize todos os seus produtos.</p>
         </div>
         <Link href="/admin/products/new" passHref>
           <Button variant="secondary">
@@ -161,10 +185,16 @@ export default function AdminProductsPage() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <Button variant="outline" className="h-11 bg-transparent border-primary-foreground/20 hover:bg-primary-foreground/10">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Filtros Avançados
-                </Button>
+                <Select value={statusFilter} onValueChange={(value: ProductStatusFilter) => setStatusFilter(value)}>
+                  <SelectTrigger className="w-full sm:w-[180px] h-11 bg-transparent border-primary-foreground/20">
+                    <SelectValue placeholder="Filtrar por status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border-primary-foreground/20 text-primary-foreground">
+                    <SelectItem value="active">Ativos</SelectItem>
+                    <SelectItem value="archived">Arquivados</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
+                  </SelectContent>
+                </Select>
             </div>
          </CardHeader>
         <CardContent>
@@ -184,7 +214,7 @@ export default function AdminProductsPage() {
                 </TableHeader>
                 <TableBody>
                     {filteredProducts.map((product) => {
-                      const status = getStatus(product.stock);
+                      const status = getStatus(product.stock, product.is_active);
                       return (
                       <TableRow key={product.id} className="border-b-primary-foreground/10 hover:bg-primary-foreground/5">
                           <TableCell>
@@ -193,10 +223,10 @@ export default function AdminProductsPage() {
                               alt={product.name}
                               width={50}
                               height={50}
-                              className="rounded-md object-cover border border-primary-foreground/20"
+                              className={`rounded-md object-cover border border-primary-foreground/20 ${!product.is_active ? 'opacity-50' : ''}`}
                           />
                           </TableCell>
-                          <TableCell className="font-medium max-w-[150px] sm:max-w-xs truncate text-white">
+                          <TableCell className={`font-medium max-w-[150px] sm:max-w-xs truncate ${product.is_active ? 'text-white' : 'text-primary-foreground/50'}`}>
                               <Link href={`/admin/products/edit/${product.slug}`} className="hover:text-secondary hover:underline">
                                   {product.name}
                               </Link>
@@ -218,8 +248,8 @@ export default function AdminProductsPage() {
                               </Button>
                               <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                  <Button variant="destructive" size="icon" title="Arquivar Produto">
-                                  <Trash2 className="h-4 w-4" />
+                                  <Button variant="outline" size="icon" title="Arquivar Produto" className="bg-yellow-800/20 text-yellow-300 border-yellow-500/20 hover:bg-yellow-800/40">
+                                      <Archive className="h-4 w-4" />
                                   </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent className="bg-background border-primary-foreground/20 text-primary-foreground">
@@ -231,9 +261,31 @@ export default function AdminProductsPage() {
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
                                   <AlertDialogCancel className="bg-transparent border-primary-foreground/20 hover:bg-primary-foreground/10">Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDeleteProduct(product.id, product.name)}>
+                                  <AlertDialogAction onClick={() => handleArchiveProduct(product.id, product.name)} className="bg-yellow-600 hover:bg-yellow-700">
                                       Arquivar
                                   </AlertDialogAction>
+                                  </AlertDialogFooter>
+                              </AlertDialogContent>
+                              </AlertDialog>
+                              <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                  <Button variant="destructive" size="icon" title="Excluir Produto">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-background border-primary-foreground/20 text-primary-foreground">
+                                  <AlertDialogHeader>
+                                  <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                                  <AlertDialogDescription className="text-primary-foreground/70">
+                                    Tem certeza que deseja excluir permanentemente o produto &quot;{product.name}&quot;? Esta ação não pode ser desfeita e removerá o produto de todas as listas.
+                                    <strong className="text-red-400 block mt-2">Esta ação só será possível se o produto não estiver associado a nenhum pedido.</strong>
+                                  </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel className="bg-transparent border-primary-foreground/20 hover:bg-primary-foreground/10">Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteProduct(product.id, product.name)} className="bg-red-600 hover:bg-red-700">
+                                        Excluir Permanentemente
+                                    </AlertDialogAction>
                                   </AlertDialogFooter>
                               </AlertDialogContent>
                               </AlertDialog>

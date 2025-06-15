@@ -12,16 +12,21 @@ export class ProductService {
 
   // --- Funções de Leitura ---
 
-  static async getAllProducts(): Promise<Product[]> {
+  static async getAllProducts(includeArchived = false): Promise<Product[]> {
     if (!supabase) {
       this.log('error', 'Supabase client is not initialized.');
       return [];
     }
-    const { data, error } = await supabase
+    let query = supabase
       .from('products')
       .select('*, category:categories(name)')
-      .eq('is_active', true)
       .order('created_at', { ascending: false });
+
+    if (!includeArchived) {
+      query = query.eq('is_active', true);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       this.log('error', 'Failed to fetch all products', error);
@@ -175,7 +180,7 @@ export class ProductService {
     return data;
   }
   
-  static async deleteProduct(id: string): Promise<boolean> {
+  static async archiveProduct(id: string): Promise<boolean> {
     this.log('info', `Attempting to soft delete product ID: ${id}`);
     if (!supabase) {
       this.log('error', 'Supabase client is not initialized.');
@@ -195,5 +200,53 @@ export class ProductService {
   
     this.log('info', `Product ID: ${id} soft deleted successfully.`);
     return true;
+  }
+
+  static async hasOrders(productId: string): Promise<boolean> {
+    if (!supabase) {
+      this.log('error', 'Supabase client is not initialized.');
+      return false;
+    }
+
+    const { data, error } = await supabase
+      .from('order_items')
+      .select('id')
+      .eq('product_id', productId)
+      .limit(1);
+
+    if (error) {
+      this.log('error', `Failed to check orders for product ID: ${productId}`, error);
+      return false;
+    }
+
+    return data && data.length > 0;
+  }
+
+  static async deleteProduct(id: string): Promise<{ success: boolean; message: string }> {
+    this.log('info', `Attempting to delete product ID: ${id}`);
+    if (!supabase) {
+      this.log('error', 'Supabase client is not initialized.');
+      return { success: false, message: 'Supabase client is not initialized.' };
+    }
+
+    const hasOrders = await this.hasOrders(id);
+    if (hasOrders) {
+      const message = `Product ID: ${id} has associated orders and cannot be deleted.`;
+      this.log('error', message);
+      return { success: false, message: 'Este produto não pode ser excluído pois está associado a pedidos.' };
+    }
+
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      this.log('error', `Failed to delete product ID: ${id}`, error);
+      return { success: false, message: 'Erro ao excluir o produto.' };
+    }
+
+    this.log('info', `Product ID: ${id} deleted successfully.`);
+    return { success: true, message: 'Produto excluído com sucesso.' };
   }
 }

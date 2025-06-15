@@ -86,6 +86,7 @@ export default function AdminCategoriesPage() {
       }
       setCategoryName('');
       setEditingCategory(null);
+      fetchCategories();
     } catch (error) {
       console.error('Erro ao salvar categoria:', error);
       toast({
@@ -105,7 +106,7 @@ export default function AdminCategoriesPage() {
       setCategories(categories.filter(c => c.id !== categoryId));
       toast({
         title: "Categoria Excluída",
-        description: `A categoria "${categoryName}" foi excluída com sucesso.`,
+        description: result.message || `A categoria "${categoryName}" foi excluída com sucesso.`,
       });
     } else {
       toast({
@@ -227,12 +228,14 @@ export default function AdminCategoriesPage() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
                               <AlertDialogDescription className="text-primary-foreground/70">
-                                Tem certeza que deseja excluir a categoria &quot;{category.name}&quot;? Esta ação não pode ser desfeita.
+                                Tem certeza que deseja excluir a categoria &quot;{category.name}&quot;? 
+                                <strong className="text-amber-400 block mt-2">Todos os produtos associados a esta categoria serão mantidos, mas ficarão sem categoria.</strong>
+                                Esta ação não pode ser desfeita.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel className="bg-transparent border-primary-foreground/20 hover:bg-primary-foreground/10">Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteCategory(category.id, category.name)}>
+                              <AlertDialogAction onClick={() => handleDeleteCategory(category.id, category.name)} className="bg-red-600 hover:bg-red-700">
                                 Excluir
                               </AlertDialogAction>
                             </AlertDialogFooter>

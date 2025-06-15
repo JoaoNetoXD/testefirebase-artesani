@@ -106,24 +106,18 @@ export class CategoryService {
 
     this.log('info', `Attempting to delete category ID: ${id}...`);
 
-    // 1. Verificar se a categoria tem produtos associados
-    const { data: products, error: productError } = await supabase
-        .from('products')
-        .select('id')
-        .eq('category_id', id)
-        .limit(1);
+    // 1. Desassociar produtos da categoria
+    const { error: productUpdateError } = await supabase
+      .from('products')
+      .update({ category_id: null })
+      .eq('category_id', id);
 
-    if (productError) {
-        this.log('error', `Failed to check for associated products for category ID: ${id}.`, productError);
-        return { success: false, message: 'Falha ao verificar produtos associados.' };
+    if (productUpdateError) {
+      this.log('error', `Failed to disassociate products from category ID: ${id}.`, productUpdateError);
+      return { success: false, message: 'Falha ao desassociar produtos da categoria.' };
     }
 
-    if (products && products.length > 0) {
-        this.log('error', `Cannot delete category ID: ${id} as it has associated products.`);
-        return { success: false, message: 'Não é possível excluir. Existem produtos associados a esta categoria.' };
-    }
-
-    // 2. Se não houver produtos, proceder com a exclusão
+    // 2. Proceder com a exclusão da categoria
     const { error: deleteError } = await supabase
         .from('categories')
         .delete()
@@ -135,6 +129,6 @@ export class CategoryService {
     }
 
     this.log('info', `Category ID: ${id} deleted successfully.`);
-    return { success: true };
+    return { success: true, message: 'Categoria excluída com sucesso e seus produtos foram desassociados.' };
   }
 }
