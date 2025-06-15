@@ -3,8 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Eye, Search, Download } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Eye, Search, Download, Users } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { CustomerService } from '@/lib/services/customerService';
 import type { Customer } from '@/lib/types';
 import {
@@ -19,184 +19,239 @@ import {
 } from "@/components/ui/alert-dialog";
 import Image from 'next/image';
 import Papa from 'papaparse';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminCustomersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchCustomers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const customersData = await CustomerService.getAllCustomers();
+      setCustomers(customersData);
+    } catch (error) {
+      console.error('Erro ao carregar clientes:', error);
+      toast({
+        title: "Erro ao Carregar",
+        description: "Não foi possível carregar a lista de clientes.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        const customersData = await CustomerService.getAllCustomers();
-        setCustomers(customersData);
-      } catch (error) {
-        console.error('Erro ao carregar clientes:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCustomers();
-  }, []);
+  }, [fetchCustomers]);
+
+  const filteredCustomers = useMemo(() =>
+    customers.filter(customer => 
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.id.toLowerCase().includes(searchTerm.toLowerCase())
+    ), [customers, searchTerm]);
 
   const handleExportCSV = () => {
-    const dataToExport = filteredCustomers.map(customer => ({
-      ID: customer.id,
-      Nome: customer.name,
-      Email: customer.email,
-      Total_Gasto: `R$ ${customer.totalSpent.toFixed(2)}`,
-      Pedidos: customer.orders,
-      Membro_Desde: new Date(customer.joined).toLocaleDateString('pt-BR'),
-    }));
+    try {
+      const dataToExport = filteredCustomers.map(({ id, name, email, totalSpent, orders, joined }) => ({
+        ID: id,
+        Nome: name,
+        Email: email,
+        'Total Gasto': totalSpent.toFixed(2).replace('.',','),
+        'Pedidos': orders,
+        'Membro Desde': new Date(joined).toLocaleDateString('pt-BR'),
+      }));
 
-    const csv = Papa.unparse(dataToExport);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'clientes.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const csv = Papa.unparse(dataToExport);
+      const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', 'clientes_artesani.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+          title: "Exportação Concluída",
+          description: "O arquivo CSV com os dados dos clientes foi baixado."
+      });
+    } catch (error) {
+      console.error("Erro ao exportar CSV:", error);
+      toast({
+          title: "Erro na Exportação",
+          description: "Não foi possível gerar o arquivo CSV.",
+          variant: "destructive"
+      });
+    }
   };
 
-  const filteredCustomers = customers.filter(customer => 
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.id.toLowerCase().includes(searchTerm.toLowerCase())
+  const PageSkeleton = () => (
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <div className="space-y-2">
+            <Skeleton className="h-9 w-72 bg-primary-foreground/10" />
+            <Skeleton className="h-4 w-96 bg-primary-foreground/10" />
+        </div>
+        <Skeleton className="h-11 w-full sm:w-56 bg-primary-foreground/10" />
+      </div>
+      <Card className="bg-primary-foreground/5 border-primary-foreground/10">
+        <CardHeader>
+          <Skeleton className="h-11 max-w-lg bg-primary-foreground/10" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {Array.from({length: 5}).map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-2">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-10 w-10 rounded-full bg-primary-foreground/10" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24 bg-primary-foreground/10" />
+                    <Skeleton className="h-3 w-32 bg-primary-foreground/10" />
+                  </div>
+                </div>
+                <div className="hidden md:block">
+                  <Skeleton className="h-4 w-32 bg-primary-foreground/10" />
+                </div>
+                <div className="hidden sm:block">
+                  <Skeleton className="h-8 w-24 bg-primary-foreground/10" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 
   if (loading) {
-    return (
-      <div className="space-y-8">
-        <h1 className="text-3xl font-headline">Gerenciamento de Clientes</h1>
-        <div className="bg-card p-6 rounded-lg shadow-md border border-border">
-          <p>Carregando clientes...</p>
-        </div>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <h1 className="text-3xl font-headline">Gerenciamento de Clientes</h1>
-        <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportCSV}>
-                <Download className="mr-2 h-4 w-4" /> Exportar Clientes (CSV)
-            </Button>
+        <div>
+          <h1 className="text-4xl font-headline font-bold">Gerenciamento de Clientes</h1>
+          <p className="text-primary-foreground/70 mt-1">Visualize e exporte os dados dos seus clientes.</p>
         </div>
+        <Button variant="outline" onClick={handleExportCSV} className="bg-transparent border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground w-full sm:w-auto">
+            <Download className="mr-2 h-4 w-4" /> Exportar Clientes (CSV)
+        </Button>
       </div>
-      <div className="bg-card p-4 sm:p-6 rounded-lg shadow-md border border-border">
-        <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input 
-              type="search" 
-              placeholder="Buscar por ID, nome ou email do cliente..." 
-              className="pl-10 h-11"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-        </div>
-        
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Total Gasto</TableHead>
-                <TableHead>Pedidos</TableHead>
-                <TableHead>Membro desde</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCustomers.map((customer) => (
-                <TableRow key={customer.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Image 
-                        src={customer.avatar} 
-                        alt={customer.name} 
-                        width={40} 
-                        height={40} 
-                        className="rounded-full object-cover border border-border"
-                      />
-                      <div>
-                        <p className="font-medium">{customer.name}</p>
-                        <p className="text-sm text-muted-foreground">ID: {customer.id}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{customer.email}</TableCell>
-                  <TableCell>R$ {customer.totalSpent.toFixed(2)}</TableCell>
-                  <TableCell>{customer.orders}</TableCell>
-                  <TableCell>{new Date(customer.joined).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell className="text-right">
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-1" />
-                          Ver Detalhes
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Detalhes do Cliente</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Informações detalhadas sobre {customer.name}.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-4">
-                            <Image 
-                              src={customer.avatar} 
-                              alt={customer.name} 
-                              width={60} 
-                              height={60} 
-                              className="rounded-full object-cover border border-border"
-                            />
-                            <div>
-                              <h3 className="font-semibold text-lg">{customer.name}</h3>
-                              <p className="text-muted-foreground">{customer.email}</p>
-                              <p className="text-sm text-muted-foreground">ID: {customer.id}</p>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-sm font-medium">Total Gasto</p>
-                              <p className="text-lg">R$ {customer.totalSpent.toFixed(2)}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium">Total de Pedidos</p>
-                              <p className="text-lg">{customer.orders}</p>
-                            </div>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">Membro desde</p>
-                            <p>{new Date(customer.joined).toLocaleDateString('pt-BR')}</p>
-                          </div>
-                        </div>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Fechar</AlertDialogCancel>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
+      <Card className="bg-primary-foreground/5 border-primary-foreground/10">
+        <CardHeader>
+          <div className="relative max-w-lg">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-foreground/40" />
+              <Input 
+                type="search" 
+                placeholder="Buscar por ID, nome ou email..." 
+                className="pl-10 h-11 bg-transparent border-primary-foreground/20 focus:border-primary-foreground/40 placeholder:text-primary-foreground/50"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b-primary-foreground/10">
+                  <TableHead className="text-primary-foreground/80">Cliente</TableHead>
+                  <TableHead className="hidden md:table-cell text-primary-foreground/80">Email</TableHead>
+                  <TableHead className="hidden lg:table-cell text-primary-foreground/80">Total Gasto</TableHead>
+                  <TableHead className="hidden sm:table-cell text-primary-foreground/80">Pedidos</TableHead>
+                  <TableHead className="hidden sm:table-cell text-primary-foreground/80">Membro desde</TableHead>
+                  <TableHead className="text-right text-primary-foreground/80">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {filteredCustomers.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              Nenhum cliente encontrado.
-            </div>
-          )}
-        </div>
-      </div>
+              </TableHeader>
+              <TableBody>
+                {filteredCustomers.map((customer) => (
+                  <TableRow key={customer.id} className="border-b-primary-foreground/10 hover:bg-primary-foreground/5">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Image 
+                          src={customer.avatar || '/default-avatar.png'} 
+                          alt={customer.name} 
+                          width={40} 
+                          height={40} 
+                          className="rounded-full object-cover border border-primary-foreground/20"
+                        />
+                        <div>
+                          <p className="font-medium text-white">{customer.name}</p>
+                          <p className="text-sm text-primary-foreground/60 md:hidden">{customer.email}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-primary-foreground/70">{customer.email}</TableCell>
+                    <TableCell className="hidden lg:table-cell text-primary-foreground/90">R$ {customer.totalSpent.toFixed(2)}</TableCell>
+                    <TableCell className="hidden sm:table-cell text-primary-foreground/90">{customer.orders}</TableCell>
+                    <TableCell className="hidden sm:table-cell text-primary-foreground/70">{new Date(customer.joined).toLocaleDateString('pt-BR')}</TableCell>
+                    <TableCell className="text-right">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="bg-transparent border-primary-foreground/20 text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-white">
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only sm:not-sr-only sm:ml-2">Ver</span>
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-background border-primary-foreground/20 text-primary-foreground">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-3">
+                                <Image src={customer.avatar || '/default-avatar.png'} alt={customer.name} width={48} height={48} className="rounded-full border border-primary-foreground/20"/>
+                                {customer.name}
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="text-primary-foreground/70 pt-2">
+                              Informações detalhadas sobre o cliente.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <div className="space-y-4 py-4 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-primary-foreground/70">ID do Cliente:</span>
+                                <span className="font-mono text-white">{customer.id}</span>
+                            </div>
+                             <div className="flex justify-between">
+                                <span className="text-primary-foreground/70">Email:</span>
+                                <span className="text-white">{customer.email}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-primary-foreground/70">Total Gasto:</span>
+                                <span className="font-semibold text-white">R$ {customer.totalSpent.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-primary-foreground/70">Total de Pedidos:</span>
+                                <span className="font-semibold text-white">{customer.orders}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-primary-foreground/70">Membro desde:</span>
+                                <span className="text-white">{new Date(customer.joined).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                          </div>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="bg-transparent border-primary-foreground/20 hover:bg-primary-foreground/10">Fechar</AlertDialogCancel>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            {filteredCustomers.length === 0 && (
+              <div className="text-center py-16 text-primary-foreground/60">
+                 <Users className="mx-auto h-12 w-12 mb-4" />
+                 <p className="text-lg font-semibold">Nenhum cliente encontrado.</p>
+                 {searchTerm && <p className="text-sm mt-1">Tente ajustar sua busca.</p>}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
