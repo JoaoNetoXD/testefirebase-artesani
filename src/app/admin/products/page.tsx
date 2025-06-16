@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { PlusCircle, Edit, Trash2, Search, Filter, Package, Archive, ArchiveX } from 'lucide-react';
-import Image from 'next/image';
+import Image from "next/legacy/image";
 import {
   AlertDialog,
   AlertDialogAction,

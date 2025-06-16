@@ -24,11 +24,31 @@ export default function AdminLayout({
     }
   }, [currentUser, loading, isAdmin, router]);
 
-  if (loading || !currentUser || !isAdmin) {
+  useEffect(() => {
+    if (!loading) {
+      if (!currentUser) {
+        router.push('/login?redirect=/admin');
+      } else if (!isAdmin) {
+        router.push('/');
+      }
+    }
+  }, [currentUser, loading, isAdmin, router]);
+
+  // Adicionar um timeout de segurança para evitar loading infinito
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
         <p className="ml-4 text-lg text-foreground">Verificando acesso...</p>
+      </div>
+    );
+  }
+
+  if (!currentUser || !isAdmin) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-4 text-lg text-foreground">Redirecionando...</p>
       </div>
     );
   }

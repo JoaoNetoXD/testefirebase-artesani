@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Package, Upload, X, ImagePlus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Product, Category } from '@/lib/types';
@@ -23,9 +24,10 @@ import {
 import { ProductService } from '@/lib/services/productService';
 import { CategoryService } from '@/lib/services/categoryService';
 import { UploadService } from '@/lib/services/uploadService';
-import Image from 'next/image';
+import Image from "next/legacy/image";
 import { useRouter } from 'next/navigation';
-import { ProductFormAI } from './ProductFormAI';
+// Remover esta linha:
+// import { ProductFormAI } from './ProductFormAI';
 
 const productFormSchema = z.object({
   name: z.string().min(3, "O nome deve ter no mínimo 3 caracteres."),
@@ -37,8 +39,15 @@ const productFormSchema = z.object({
   price: z.coerce.number().min(0.01, "O preço deve ser maior que R$0,01.").positive("O preço deve ser um número positivo."),
   stock: z.coerce.number().min(0, "O estoque não pode ser negativo.").int("O estoque deve ser um número inteiro."),
   category_id: z.string().uuid("A categoria é obrigatória."),
-  images: z.array(z.string().url("URL da imagem inválida.")).min(1, "Pelo menos uma imagem é obrigatória."),
+  images: z.array(z.string().url("URL da imagem inválida.")).optional(),
   is_active: z.boolean().default(true),
+})
+.refine((data) => {
+  // Validação customizada que considera tanto images existentes quanto imageFiles
+  return true; // A validação real será feita no componente
+}, {
+  message: "Pelo menos uma imagem é obrigatória.",
+  path: ["images"]
 });
 
 type ProductFormData = z.infer<typeof productFormSchema>;
@@ -133,7 +142,24 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
     }
   };
 
+  // Adicionar esta função antes do onSubmit
+  const validateImages = () => {
+    const existingImages = watch('images') || [];
+    const totalImages = existingImages.length + imageFiles.length;
+    return totalImages > 0;
+  };
+
   const onSubmit = async (data: ProductFormData) => {
+    // Validar imagens antes de prosseguir
+    if (!validateImages()) {
+      toast({
+        title: "Erro de validação",
+        description: "Pelo menos uma imagem é obrigatória.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -147,8 +173,17 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
         setIsUploading(false);
       }
       
-      const finalImageUrls = [...data.images, ...uploadedUrls];
+      // ✅ Limpar URLs existentes e recém-carregadas mais rigorosamente
+      const cleanExistingUrls = (data.images || []).map(url => 
+        url.replace(/[`"'\s\r\n\t]/g, '').trim()
+      ).filter(url => url && url.startsWith('http'));
       
+      const cleanUploadedUrls = uploadedUrls.map(url => 
+        url.replace(/[`"'\s\r\n\t]/g, '').trim()
+      ).filter(url => url && url.startsWith('http'));
+      
+      const finalImageUrls = [...cleanExistingUrls, ...cleanUploadedUrls];
+
       const productPayload = {
         ...data,
         images: finalImageUrls,
@@ -159,7 +194,7 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
       if (productToEdit) {
         // Delete old images that were removed
         const originalImages = productToEdit.images || [];
-        const imagesToDelete = originalImages.filter(img => !data.images.includes(img));
+        const imagesToDelete = originalImages.filter(img => !finalImageUrls.includes(img));
         for (const imgUrl of imagesToDelete) {
           await UploadService.deleteImage(imgUrl);
         }
@@ -172,15 +207,15 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
 
       toast({
         title: "Sucesso!",
-        description: `Produto ${productToEdit ? 'atualizado' : 'criado'} com sucesso.`,
+        description: productToEdit ? "Produto atualizado com sucesso!" : "Produto criado com sucesso!",
       });
-      router.push('/admin/products');
 
+      router.push('/admin/products');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
+      console.error('Erro ao salvar produto:', error);
       toast({
-        title: "Erro ao Salvar",
-        description: errorMessage,
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Ocorreu um erro inesperado.",
         variant: "destructive",
       });
     } finally {
@@ -202,10 +237,12 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
                 Preencha os detalhes abaixo. Campos marcados com * são obrigatórios.
                 </CardDescription>
             </div>
+            {/* Remover este bloco do ProductFormAI:
             <ProductFormAI 
                 productName={watch('name')}
                 onDescriptionGenerated={(desc) => setValue('description', desc, { shouldValidate: true, shouldDirty: true })}
             />
+            */}
         </div>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>

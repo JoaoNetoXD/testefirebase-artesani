@@ -6,13 +6,16 @@ export interface Product {
   price: number;
   stock: number;
   images: string[];
-  category_name: string; // Mudança: usar category_name em vez de category
+  category_id: string;
   slug: string;
   ingredients?: string;
-  intendedUses?: string;
+  intended_uses?: string;
+  tags?: string;
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
+  // Campo computado do JOIN
+  category_name?: string;
 }
 
 export interface Category {

@@ -52,8 +52,13 @@ export class UploadService {
       return null;
     }
 
-    this.log('info', 'Public URL retrieved successfully.', { url: urlData.publicUrl });
-    return urlData.publicUrl;
+    // ✅ CORREÇÃO MELHORADA: Limpar a URL mais rigorosamente
+    const cleanUrl = urlData.publicUrl
+      .replace(/[`"'\s\r\n\t]/g, '') // Remove backticks, aspas, espaços e quebras
+      .trim();
+    
+    this.log('info', 'Public URL retrieved successfully.', { url: cleanUrl });
+    return cleanUrl;
   }
 
   static async uploadMultipleImages(files: File[], productSlug: string): Promise<string[]> {

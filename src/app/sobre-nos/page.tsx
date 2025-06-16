@@ -2,7 +2,7 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
-import Image from 'next/image';
+import Image from "next/legacy/image";
 import { Target, Eye, Gem, BadgeCheck, ShieldCheck, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 

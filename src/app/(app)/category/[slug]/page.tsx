@@ -6,6 +6,8 @@ import { ProductService } from '@/lib/services/productService';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateStaticParams() {
   const categories = await CategoryService.getAllCategories();
   return categories.map((category) => ({

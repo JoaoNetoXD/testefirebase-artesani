@@ -12,7 +12,10 @@ import { useCart } from '@/hooks/useCart';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
-import { Logo } from '@/components/shared/Logo';
+// Alterar esta linha:
+// import { Logo } from '@/components/shared/Logo';
+// Para:
+import Logo from '@/components/shared/Logo';
 import SideCart from '@/components/cart/SideCart';
 
 export function Header() {

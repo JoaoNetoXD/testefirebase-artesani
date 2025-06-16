@@ -1,8 +1,10 @@
 import { supabase } from '@/lib/supabase';
 import type { Product } from '@/lib/types';
 
-// O tipo agora reflete que 'id', 'created_at', e 'updated_at' são gerenciados pelo DB
-type ProductInput = Omit<Product, 'id' | 'created_at' | 'updated_at' | 'slug'> & { slug?: string };
+// ✅ CORREÇÃO: Definição correta do tipo ProductInput
+type ProductInput = Omit<Product, 'id' | 'created_at' | 'updated_at' | 'category_name'> & {
+  slug?: string;
+};
 
 export class ProductService {
   private static log(level: 'info' | 'error', message: string, data?: any) {
@@ -129,32 +131,62 @@ export class ProductService {
       .replace(/-+/g, "-");
   }
 
-  static async createProduct(productData: ProductInput): Promise<Product | null> {
-    this.log('info', 'Attempting to create a new product...', productData);
+  static async createProduct(productData: Partial<Product>): Promise<Product | null> {
+    this.log('info', 'Attempting to create a new product...', productData);    
+    // ✅ Log adicional para debug
+    console.log('🔍 [DEBUG] ProductData recebido:', JSON.stringify(productData, null, 2));
+    
     if (!supabase) {
       this.log('error', 'Supabase client is not initialized.');
       return null;
     }
     
     const slug = productData.slug || this.generateSlug(productData.name);
-
+    
+    // ✅ Remover campos que não existem no banco
+    const { category_name, ...dbData } = productData as any;
+    
+    // ✅ Limpar URLs das imagens - CORREÇÃO MELHORADA
+    if (dbData.images && Array.isArray(dbData.images)) {
+      dbData.images = dbData.images
+        .map((url: string) => {
+          if (typeof url === 'string') {
+            // Remove backticks, aspas, espaços e quebras de linha mais rigorosamente
+            return url.replace(/[`"'\s\r\n\t]/g, '').trim();
+          }
+          return url;
+        })
+        .filter(url => url && typeof url === 'string' && url.startsWith('http'));
+    }
+    
+    // ✅ Log dos dados que serão enviados ao banco
+    console.log('🔍 [DEBUG] Dados limpos para o banco:', JSON.stringify({ ...dbData, slug }, null, 2));
+    
     const { data, error } = await supabase
       .from('products')
-      .insert([{ ...productData, slug, updated_at: new Date().toISOString(), is_active: true }])
-      .select()
+      .insert([{ 
+        ...dbData, 
+        slug, 
+        updated_at: new Date().toISOString(), 
+        is_active: true 
+      }])
+      .select('*, category:categories(name)')
       .single();
-
+  
     if (error) {
+      // ✅ Log detalhado do erro
+      console.error('🔍 [DEBUG] Erro completo do Supabase:', error);
       this.log('error', 'Failed to create product', {
         message: error.message,
         details: error.details,
-        code: error.code
+        code: error.code,
+        hint: error.hint
       });
       return null;
     }
-
+  
     this.log('info', 'Product created successfully!', data);
-    return data;
+    return data ? { ...data, category_name: data.category?.name || 'Sem Categoria' } : null;
   }
 
   static async updateProduct(id: string, productData: Partial<ProductInput>): Promise<Product | null> {

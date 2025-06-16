@@ -3,6 +3,8 @@ import { ProductService } from '@/lib/services/productService';
 import { ProductDetailClientContent } from '@/components/products/ProductDetailClientContent';
 import { notFound } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const product = await ProductService.getProductBySlug(slug);

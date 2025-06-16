@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { OrderService } from '@/lib/services/orderService';
 import type { Order } from '@/lib/types';
-import Image from 'next/image';
+import Image from "next/legacy/image";
 import Link from 'next/link';
 
 export default function OrderHistoryPage() {
@@ -70,7 +70,6 @@ export default function OrderHistoryPage() {
   return (
     <div>
       <h1 className="text-3xl font-headline mb-6">Histórico de Pedidos</h1>
-      
       {orders.length > 0 ? (
         <div className="space-y-6">
           {orders.map((order) => (
@@ -98,7 +97,7 @@ export default function OrderHistoryPage() {
                     {order.order_items.map((item) => (
                       <div key={item.id} className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg">
                         {item.products && ( // Changed from item.product to item.products to match OrderService structure
-                          <>
+                          (<>
                             <Image
                               src={(item.products.images && item.products.images.length > 0) ? item.products.images[0] : 'https://placehold.co/60x60.png'}
                               alt={item.products.name}
@@ -113,7 +112,7 @@ export default function OrderHistoryPage() {
                                 Quantidade: {item.quantity} | Preço: R$ {item.price.toFixed(2)}
                               </p>
                             </div>
-                          </>
+                          </>)
                         )}
                       </div>
                     ))}
