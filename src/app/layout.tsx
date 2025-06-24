@@ -6,7 +6,6 @@ import { CartProvider } from '@/context/CartContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { Inter } from 'next/font/google';
-import { TopBar } from '@/components/layout/TopBar'; // Importando a TopBar
 
 const inter = Inter({
   subsets: ['latin'],
@@ -31,8 +30,6 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             <FavoritesProvider>
-              {/* Adicionando a TopBar aqui, agora visível em todos os dispositivos */}
-              <TopBar />
               {children}
               <Toaster />
             </FavoritesProvider>

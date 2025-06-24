@@ -1,6 +1,5 @@
 
 import { ProductList } from '@/components/products/ProductList';
-import { CategoryNavigation } from '@/components/products/CategoryNavigation';
 import { CategoryService } from '@/lib/services/categoryService';
 import { ProductService } from '@/lib/services/productService';
 import { notFound } from 'next/navigation';
@@ -13,11 +12,9 @@ export async function generateStaticParams() {
   }));
 }
 
-export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
-  // Aguardar params antes de usar
+export default async function CategoryPage({ params }: { params: Promise<{ slug:string }> }) {
   const { slug } = await params;
   
-  // Buscar todas as categorias
   const categories = await CategoryService.getAllCategories();
   const currentCategory = categories.find(cat => cat.slug === slug);
   
@@ -25,48 +22,40 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
     notFound();
   }
 
-  // Buscar produtos reais do Supabase por categoria
   const products = await ProductService.getProductsByCategory(currentCategory.name);
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-headline mb-4">{currentCategory.name}</h1>
+      <div className="text-center mb-12">
+        <div className="inline-block bg-primary-foreground/5 rounded-full shadow-md shadow-black/20 animate-pulse-light hover:bg-primary-foreground/10">
+            <h1 className="text-4xl font-headline px-8 py-3 text-primary-foreground">{currentCategory.name}</h1>
+        </div>
         {currentCategory.description && (
-          <p className="text-lg text-muted-foreground mb-6">{currentCategory.description}</p>
+          <p className="text-lg text-muted-foreground mt-4 max-w-2xl mx-auto">{currentCategory.description}</p>
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <aside className="lg:col-span-1">
-          <CategoryNavigation categories={categories} currentCategorySlug={slug} />
-        </aside>
-        
-        <main className="lg:col-span-3">
-          {products.length > 0 ? (
-            <>
-              <div className="mb-6">
-                <p className="text-muted-foreground">
-                  {products.length} produto{products.length !== 1 ? 's' : ''} encontrado{products.length !== 1 ? 's' : ''}
-                </p>
-              </div>
-              <ProductList products={products} />
-            </>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground mb-4">
-                Nenhum produto encontrado nesta categoria.
+      <main>
+        {products.length > 0 ? (
+          <>
+            <div className="mb-6 text-center md:text-left">
+              <p className="text-muted-foreground">
+                {products.length} produto{products.length !== 1 ? 's' : ''} encontrado{products.length !== 1 ? 's' : ''}
               </p>
-              <Link href="/" className="text-primary hover:underline">
-                Voltar à página inicial
-              </Link>
             </div>
-          )}
-        </main>
-      </div>
+            <ProductList products={products} />
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-lg text-muted-foreground mb-4">
+              Nenhum produto encontrado nesta categoria.
+            </p>
+            <Link href="/" className="text-primary hover:underline">
+              Voltar à página inicial
+            </Link>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
-// REMOVE THE DUPLICATE IMPORTS BELOW
-// import Link from 'next/link';
-// import { ProductList } from '@/components/products/ProductList';

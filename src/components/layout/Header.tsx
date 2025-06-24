@@ -77,7 +77,7 @@ export function Header() {
               <User size={20} />
             </Link>
           )}
-          <Link href="/account/favorites" passHref>
+          <Link href="/favorites" passHref>
             <Button variant="ghost" size="icon" aria-label="Meus Favoritos" className="relative hover:bg-primary-foreground/10">
               <Heart />
               {isMounted && favoriteItemCount > 0 && (
@@ -135,7 +135,7 @@ export function Header() {
               </Link>
             )}
           </div>
-          <Link href="/account/favorites" passHref>
+          <Link href="/favorites" passHref>
             <Button variant="ghost" size="icon" aria-label="Meus Favoritos" className="relative hover:bg-primary-foreground/10">
               <Heart />
               {isMounted && favoriteItemCount > 0 && (

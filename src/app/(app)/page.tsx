@@ -63,11 +63,11 @@ export default async function HomePage() {
               Produtos manipulados, cosméticos e suplementos de alta qualidade, desenvolvidos especialmente para suas necessidades.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 w-full">
               {benefits.map((benefit, index) => (
                 <div
                   key={benefit.title}
-                  className="flex flex-col items-center md:items-start text-center md:text-left p-3 rounded-lg hover:bg-primary-foreground/5 transition-colors animate-fade-in-up"
+                  className="flex flex-col items-center text-center p-4 rounded-xl border border-white/10 hover:bg-primary-foreground/5 transition-colors animate-fade-in-up"
                   style={{ animationDelay: `${200 + index * 150}ms` }}
                 >
                   <benefit.icon className="h-8 w-8 text-secondary mb-2" />
@@ -77,22 +77,12 @@ export default async function HomePage() {
               ))}
             </div>
             <div
-              className="flex flex-col sm:flex-row gap-3 pt-6 justify-center md:justify-start animate-fade-in-up"
-              style={{ animationDelay: '700ms' }}
+              className="w-full flex flex-col items-center justify-center pt-8"
             >
-              <Link href="/category/manipulados" passHref>
-                <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto rounded-full px-8 py-3 text-base">
-                  Ver Catálogo
-                </Button>
-              </Link>
-              <Link href="/sobre-nos" passHref>
-                <Button size="lg" variant="outline" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground w-full sm:w-auto rounded-full px-8 py-3 text-base border-secondary hover:border-secondary/90">
-                  Sobre Nós
-                </Button>
-              </Link>
-            </div>
-             <div className="w-full text-center pt-8 md:hidden animate-bounce">
-                <ChevronDown className="h-8 w-8 text-secondary mx-auto" />
+                <CategoryNavigation categories={categories} />
+                 <div className="w-full text-center pt-8 animate-bounce">
+                    <ChevronDown className="h-8 w-8 text-secondary mx-auto" />
+                </div>
             </div>
           </div>
 
@@ -124,12 +114,6 @@ export default async function HomePage() {
               />
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="py-12" id="sobre">
-        <div className="container mx-auto px-4 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-          <CategoryNavigation categories={categories} />
         </div>
       </section>
 

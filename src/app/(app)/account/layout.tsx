@@ -1,7 +1,7 @@
 
 "use client";
 import Link from 'next/link';
-import { ListOrdered, User, Heart, LogOut, LayoutDashboard } from 'lucide-react';
+import { ListOrdered, User, LogOut, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,6 @@ const accountNavLinks = [
   { href: '/account', label: 'Visão Geral', icon: LayoutDashboard },
   { href: '/account/orders', label: 'Meus Pedidos', icon: ListOrdered },
   { href: '/account/profile', label: 'Meu Perfil', icon: User },
-  { href: '/account/favorites', label: 'Favoritos', icon: Heart },
 ];
 
 export default function AccountLayout({
