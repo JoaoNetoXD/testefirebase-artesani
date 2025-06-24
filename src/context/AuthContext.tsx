@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(currentSession);
       const user = currentSession?.user ?? null;
       setCurrentUser(user);
-
+  
       if (user) {
         const profile = await fetchUserProfileInternal(user.id);
         setCurrentUserProfile(profile);
@@ -84,11 +84,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsAdmin(false);
       }
       
-      if (event === 'INITIAL_SESSION') {
-        setLoading(false);
-      }
+      // CORREÇÃO: Definir loading como false para todos os eventos, não apenas INITIAL_SESSION
+      setLoading(false);
     });
-
+  
     return () => {
       authListener?.subscription.unsubscribe();
     };
@@ -146,8 +145,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-      if (error) throw error;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      if (error) {
+        console.error("Erro detalhado do login:", error);
+        throw error;
+      }
       
       const { data: { user } } = await supabase.auth.getUser();
       const profile = await fetchUserProfileInternal(user!.id);
@@ -156,7 +158,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({ title: "Login realizado!", description: "Bem-vindo(a) de volta!" });
       return { success: true, isAdminUser: userIsAdmin };
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Email ou senha inválidos.";
+      console.error('Erro de login:', error)
+      
+      if (error instanceof Error) {
+        // Verificar tipos específicos de erro do Supabase
+        if (error.message.includes('Invalid login credentials')) {
+          setError('Email ou senha incorretos. Verifique suas credenciais.')
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('Email não confirmado. Verifique sua caixa de entrada.')
+        } else if (error.message.includes('Too many requests')) {
+          setError('Muitas tentativas de login. Tente novamente em alguns minutos.')
+        } else {
+          setError(`Erro de autenticação: ${error.message}`)
+        }
+      } else {
+        setError('Erro desconhecido durante o login')
+      }
       console.error("Erro no login:", error);
       toast({ title: "Erro no Login", description: message, variant: "destructive" });
       return { success: false, isAdminUser: false };

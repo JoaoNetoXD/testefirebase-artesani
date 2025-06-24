@@ -14,7 +14,10 @@ import {
   PlusCircle,
   Folder
 } from 'lucide-react';
-import { Logo } from '@/components/shared/Logo';
+// Alterar esta linha:
+// import { Logo } from '@/components/shared/Logo';
+// Para:
+import Logo from '@/components/shared/Logo';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -36,7 +39,7 @@ export function AdminSidebar() {
     <aside className="w-64 min-h-screen bg-primary text-primary-foreground p-4 flex-col fixed top-0 left-0 shadow-2xl border-r border-border/10 hidden md:flex z-50">
       <div className="mb-8 mt-4 flex justify-center">
         <Link href="/" aria-label="Voltar para a loja">
-          <Logo width={50} height={50} />
+          <Logo withLink={false} />
         </Link>
       </div>
       

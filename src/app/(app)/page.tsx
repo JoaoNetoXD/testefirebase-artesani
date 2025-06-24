@@ -3,11 +3,13 @@ import { ProductList } from '@/components/products/ProductList';
 import { CategoryNavigation } from '@/components/products/CategoryNavigation';
 import { Button } from "@/components/ui/button";
 import { Truck, ClipboardList, Award, ChevronDown } from "lucide-react";
-import Image from 'next/image';
+import Image from "next/legacy/image";
 import Link from 'next/link';
 import { ProductService } from '@/lib/services/productService';
 import { CategoryService } from '@/lib/services/categoryService';
 import type { Product, Category } from '@/lib/types';
+
+export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const products: Product[] = await ProductService.getAllProducts();

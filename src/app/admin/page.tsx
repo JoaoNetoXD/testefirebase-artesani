@@ -10,7 +10,7 @@ import { ProductService } from '@/lib/services/productService';
 import { CustomerService } from '@/lib/services/customerService';
 import { InventoryService } from '@/lib/services/inventoryService';
 import type { Order, Product } from '@/lib/types';
-import Image from 'next/image';
+import Image from "next/legacy/image";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 

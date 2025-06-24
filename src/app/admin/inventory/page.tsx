@@ -8,7 +8,7 @@ import { Edit, AlertTriangle, Package, Search, Loader2 } from 'lucide-react';
 import { ProductService } from '@/lib/services/productService';
 import { InventoryService } from '@/lib/services/inventoryService';
 import type { Product } from '@/lib/types';
-import Image from 'next/image';
+import Image from "next/legacy/image";
 import Link from 'next/link';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {

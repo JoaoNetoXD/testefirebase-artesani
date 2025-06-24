@@ -1,42 +1,39 @@
-import Link from 'next/link';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 interface LogoProps {
-  className?: string;
+  withLink?: boolean;
   width?: number;
   height?: number;
   priority?: boolean;
 }
 
-const DEFAULT_WIDTH = 70;
-const DEFAULT_HEIGHT = 70;
-
-export function Logo({
-  className,
-  width = DEFAULT_WIDTH,
-  height = DEFAULT_HEIGHT,
-  priority = false,
-}: LogoProps) {
-  return (
-    <Link href="/" className={cn('inline-block align-middle', className)}>
-      <Image
-        src="/images/artesani-logo.png" // Certifique-se de que a imagem tem alta resolução.
-        alt="Farmácia Artesani Logo"
-        width={width}
-        height={height}
-        priority={priority}
-        unoptimized // Desabilita a otimização automática do Next.js
-        className="object-contain"
-        style={{
-          imageRendering: 'auto', // Remove o 'crisp-edges' para evitar distorções
-          filter: 'none',
-          transform: 'translateZ(0)',
-          backfaceVisibility: 'hidden',
-        }}
-        data-ai-hint="pharmacy logo"
-        loading={priority ? 'eager' : 'lazy'} // Carregamento preguiçoso ou imediato
-      />
-    </Link>
+export default function Logo({ withLink = true, width = 60, height = 60, priority = false }: LogoProps) {
+  const logoElement = (
+    <Image
+      src="/images/artesani-logo.png"
+      alt="Artesani Logo"
+      width={width}
+      height={height}
+      priority={priority}
+      unoptimized
+      style={{
+        width: 'auto',
+        height: 'auto',
+        maxWidth: `${width}px`,
+        maxHeight: `${height}px`,
+        objectFit: 'contain'
+      }}
+    />
   );
+
+  if (withLink) {
+    return (
+      <Link href="/" className="flex-shrink-0">
+        {logoElement}
+      </Link>
+    );
+  }
+
+  return <div className="flex-shrink-0">{logoElement}</div>;
 }
