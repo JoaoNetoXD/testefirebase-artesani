@@ -25,7 +25,6 @@ import { CategoryService } from '@/lib/services/categoryService';
 import { UploadService } from '@/lib/services/uploadService';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ProductFormAI } from './ProductFormAI';
 
 const productFormSchema = z.object({
   name: z.string().min(3, "O nome deve ter no mínimo 3 caracteres."),
@@ -202,10 +201,6 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
                 Preencha os detalhes abaixo. Campos marcados com * são obrigatórios.
                 </CardDescription>
             </div>
-            <ProductFormAI 
-                productName={watch('name')}
-                onDescriptionGenerated={(desc) => setValue('description', desc, { shouldValidate: true, shouldDirty: true })}
-            />
         </div>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
