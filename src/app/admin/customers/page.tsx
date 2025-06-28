@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import Image from "next/legacy/image";
+import Image from "next/image";
 import Papa from 'papaparse';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -59,12 +59,12 @@ export default function AdminCustomersPage() {
 
   const handleExportCSV = () => {
     try {
-      const dataToExport = filteredCustomers.map(({ id, name, email, totalSpent, orders, joined }) => ({
+      const dataToExport = filteredCustomers.map(({ id, name, email, totalSpent, orderCount, joined }) => ({
         ID: id,
         Nome: name,
         Email: email,
         'Total Gasto': totalSpent.toFixed(2).replace('.',','),
-        'Pedidos': orders,
+        'Pedidos': orderCount || 0,
         'Membro Desde': new Date(joined).toLocaleDateString('pt-BR'),
       }));
 
@@ -190,7 +190,7 @@ export default function AdminCustomersPage() {
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-primary-foreground/70">{customer.email}</TableCell>
                     <TableCell className="hidden lg:table-cell text-primary-foreground/90">R$ {customer.totalSpent.toFixed(2)}</TableCell>
-                    <TableCell className="hidden sm:table-cell text-primary-foreground/90">{customer.orders}</TableCell>
+                    <TableCell className="hidden sm:table-cell text-primary-foreground/90">{customer.orderCount || 0}</TableCell>
                     <TableCell className="hidden sm:table-cell text-primary-foreground/70">{new Date(customer.joined).toLocaleDateString('pt-BR')}</TableCell>
                     <TableCell className="text-right">
                       <AlertDialog>
@@ -225,7 +225,7 @@ export default function AdminCustomersPage() {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-primary-foreground/70">Total de Pedidos:</span>
-                                <span className="font-semibold text-white">{customer.orders}</span>
+                                <span className="font-semibold text-white">{customer.orderCount || 0}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-primary-foreground/70">Membro desde:</span>

@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import Image from "next/legacy/image";
+import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { useState, useEffect } from 'react';
 import { OrderService } from '@/lib/services/orderService';

@@ -1,14 +1,13 @@
-
 "use client";
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Edit, AlertTriangle, Package, Search, Loader2 } from 'lucide-react';
+import { Edit, AlertTriangle, Package, Search, Loader2, TrendingDown } from 'lucide-react';
 import { ProductService } from '@/lib/services/productService';
 import { InventoryService } from '@/lib/services/inventoryService';
 import type { Product } from '@/lib/types';
-import Image from "next/legacy/image";
+import Image from "next/image";
 import Link from 'next/link';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
@@ -23,29 +22,43 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
 
 export default function AdminInventoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
+  const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingStock, setEditingStock] = useState<{ productId: string; productName: string } | null>(null);
-  const [newStockValue, setNewStockValue] = useState<number | string>('');
+  const [editingStock, setEditingStock] = useState<{ productId: string; currentStock: number } | null>(null);
+  const [newStock, setNewStock] = useState(0);
   const { toast } = useToast();
 
-  const fetchProducts = useCallback(async () => {
+  const loadInventoryData = useCallback(async () => {
     setLoading(true);
     try {
-      const productsData = await ProductService.getAllProducts();
-      setProducts(productsData.sort((a,b) => a.stock - b.stock));
+      const [allProducts, lowStock] = await Promise.all([
+        InventoryService.getInventoryReport(),
+        InventoryService.getLowStockProducts(10)
+      ]);
+      
+      setProducts(allProducts);
+      setLowStockProducts(lowStock);
     } catch (error) {
-      console.error('Erro ao carregar produtos:', error);
-       toast({
-        title: "Erro ao Carregar",
-        description: "Não foi possível carregar os dados de estoque.",
-        variant: "destructive",
+      console.error('Erro ao carregar dados do inventário:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os dados do inventário.",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
@@ -53,65 +66,57 @@ export default function AdminInventoryPage() {
   }, [toast]);
 
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    loadInventoryData();
+  }, [loadInventoryData]);
 
-  const filteredProducts = useMemo(() =>
-    products.filter(product => 
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.category_name || '').toLowerCase().includes(searchTerm.toLowerCase())
-    ), [products, searchTerm]);
-
-  const handleOpenStockEditor = (productId: string, productName: string, currentStock: number) => {
-    setEditingStock({ productId, productName });
-    setNewStockValue(currentStock);
-  };
-  
-  const handleCloseStockEditor = () => {
-    setEditingStock(null);
-    setNewStockValue('');
-  };
-
-  const handleSaveStock = async () => {
-    if (!editingStock || newStockValue === '' || Number(newStockValue) < 0) {
-        toast({ title: "Valor Inválido", description: "Por favor, insira um valor de estoque válido (número maior ou igual a zero).", variant: "destructive" });
-        return;
-    }
+  const handleUpdateStock = async () => {
+    if (!editingStock) return;
 
     setIsSubmitting(true);
     try {
-      const stock = Number(newStockValue);
-      await InventoryService.updateStock(editingStock.productId, stock);
+      const success = await InventoryService.updateStock(editingStock.productId, newStock);
       
-      setProducts(prevProducts =>
-        prevProducts.map(p => 
-          p.id === editingStock.productId ? { ...p, stock } : p
-        ).sort((a,b) => a.stock - b.stock)
-      );
-      
-      toast({
-        title: "Estoque Atualizado",
-        description: `O estoque de "${editingStock.productName}" foi atualizado para ${stock}.`,
-      });
-      
-      handleCloseStockEditor();
-    } catch (error) {
-      console.error('Erro ao atualizar estoque:', error);
-      toast({
-        title: "Erro ao Salvar",
-        description: "Não foi possível atualizar o estoque do produto.",
-        variant: "destructive"
-      });
+      if (success) {
+        toast({
+          title: "Estoque Atualizado",
+          description: `Estoque atualizado para ${newStock} unidades.`,
+        });
+        setEditingStock(null);
+        await loadInventoryData();
+      } else {
+        toast({
+          title: "Erro",
+          description: "Não foi possível atualizar o estoque.",
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
-  
-  const getStatus = (stock: number) => {
-    if (stock === 0) return { text: "Esgotado", className: "bg-red-800/20 text-red-300 border-red-500/20" };
-    if (stock <= 10) return { text: "Estoque Baixo", className: "bg-yellow-800/20 text-yellow-300 border-yellow-500/20" };
-    return { text: "Em Estoque", className: "bg-green-800/20 text-green-300 border-green-500/20" };
+
+  const getStockStatus = (stock: number) => {
+    if (stock === 0) return { 
+      text: "Esgotado", 
+      className: "bg-red-500/20 text-red-400 border-red-500/20",
+      icon: <AlertTriangle className="h-3 w-3" />
+    };
+    if (stock <= 10) return { 
+      text: "Estoque Baixo", 
+      className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/20",
+      icon: <TrendingDown className="h-3 w-3" />
+    };
+    return { 
+      text: "Em Estoque", 
+      className: "bg-green-500/20 text-green-400 border-green-500/20",
+      icon: <Package className="h-3 w-3" />
+    };
   };
+
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.category_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const PageSkeleton = () => (
      <div className="space-y-8">
@@ -155,12 +160,18 @@ export default function AdminInventoryPage() {
     return <PageSkeleton />;
   }
 
+  const totalProducts = products.length;
+  const outOfStock = products.filter(p => p.stock === 0).length;
+  const lowStock = products.filter(p => p.stock > 0 && p.stock <= 10).length;
+
   return (
     <div className="space-y-8 animate-fade-in-up">
        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-4xl font-headline font-bold">Gerenciamento de Estoque</h1>
-          <p className="text-primary-foreground/70 mt-1">Monitore e ajuste os níveis de estoque dos seus produtos.</p>
+          <h1 className="text-4xl font-headline font-bold">Controle de Estoque</h1>
+          <p className="text-primary-foreground/70 mt-1">
+            Gerencie o estoque de todos os seus produtos em tempo real.
+          </p>
         </div>
       </div>
 
@@ -191,7 +202,7 @@ export default function AdminInventoryPage() {
               </TableHeader>
               <TableBody>
                 {filteredProducts.map((product) => {
-                  const status = getStatus(product.stock);
+                  const status = getStockStatus(product.stock);
                   return (
                     <TableRow key={product.id} className="border-b-primary-foreground/10 hover:bg-primary-foreground/5">
                       <TableCell>
@@ -213,18 +224,68 @@ export default function AdminInventoryPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-center hidden sm:table-cell">
-                        <Badge variant="outline" className={status.className}>{status.text}</Badge>
+                        <Badge variant="outline" className={status.className}>
+                          {status.icon}
+                          <span className="ml-1">{status.text}</span>
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button 
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenStockEditor(product.id, product.name, product.stock)}
-                          className="bg-transparent border-primary-foreground/20 text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-white"
-                        >
-                          <Edit className="h-4 w-4 sm:mr-2"/>
-                          <span className="hidden sm:inline">Ajustar</span>
-                        </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingStock({ productId: product.id, currentStock: product.stock });
+                                setNewStock(product.stock);
+                              }}
+                              className="bg-transparent border-primary-foreground/20 text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-white"
+                            >
+                              <Edit className="h-4 w-4 sm:mr-2"/>
+                              <span className="hidden sm:inline">Ajustar</span>
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Atualizar Estoque - {product.name}</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <Label>Estoque Atual</Label>
+                                <p className="text-sm text-primary-foreground/70">{product.stock} unidades</p>
+                              </div>
+                              <div>
+                                <Label htmlFor={`stock-${product.id}`}>Novo Estoque</Label>
+                                <Input
+                                  id={`stock-${product.id}`}
+                                  type="number"
+                                  min="0"
+                                  value={newStock}
+                                  onChange={(e) => setNewStock(parseInt(e.target.value) || 0)}
+                                  placeholder="Digite a nova quantidade"
+                                />
+                              </div>
+                              <div className="flex gap-2 justify-end">
+                                <Button variant="outline" onClick={() => setEditingStock(null)}>
+                                  Cancelar
+                                </Button>
+                                <Button 
+                                  onClick={handleUpdateStock}
+                                  disabled={isSubmitting}
+                                >
+                                  {isSubmitting ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Atualizando...
+                                    </>
+                                  ) : (
+                                    "Atualizar Estoque"
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       </TableCell>
                     </TableRow>
                   );
@@ -242,36 +303,110 @@ export default function AdminInventoryPage() {
         </CardContent>
       </Card>
 
-      {editingStock && (
-        <AlertDialog open onOpenChange={handleCloseStockEditor}>
-            <AlertDialogContent className="bg-background border-primary-foreground/20 text-primary-foreground">
-              <AlertDialogHeader>
-                <AlertDialogTitle>Editar Estoque</AlertDialogTitle>
-                <AlertDialogDescription className="text-primary-foreground/70">
-                  Altere a quantidade em estoque para <span className="font-semibold text-white">{editingStock.productName}</span>.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <div className="py-4">
-                <label htmlFor="stock-input" className="text-sm font-medium text-primary-foreground/80">Nova Quantidade</label>
-                <Input 
-                  id="stock-input"
-                  type="number" 
-                  value={newStockValue}
-                  onChange={(e) => setNewStockValue(e.target.value === '' ? '' : Number(e.target.value))}
-                  min="0"
-                  className="mt-2 h-11 bg-transparent border-primary-foreground/20 focus:border-primary-foreground/40"
-                  autoFocus
-                />
-              </div>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={handleCloseStockEditor} className="bg-transparent border-primary-foreground/20 hover:bg-primary-foreground/10">Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleSaveStock} disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Salvar
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+      {/* Cards de Estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Produtos</CardTitle>
+            <Package className="h-4 w-4 text-primary-foreground/60" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalProducts}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Estoque Baixo</CardTitle>
+            <TrendingDown className="h-4 w-4 text-yellow-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-400">{lowStock}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Esgotados</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-red-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-400">{outOfStock}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Alertas de Estoque Baixo */}
+      {lowStockProducts.length > 0 && (
+        <Card className="border-yellow-500/20 bg-yellow-500/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-yellow-400">
+              <AlertTriangle className="h-5 w-5" />
+              Alertas de Estoque Baixo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {lowStockProducts.map((product) => (
+                <div key={product.id} className="flex items-center justify-between py-2 px-3 bg-yellow-500/5 rounded-lg">
+                  <div>
+                    <p className="font-medium">{product.name}</p>
+                    <p className="text-sm text-primary-foreground/60">{product.category_name}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline" className="bg-yellow-500/20 text-yellow-400 border-yellow-500/20">
+                      {product.stock} restante{product.stock !== 1 ? 's' : ''}
+                    </Badge>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setEditingStock({ productId: product.id, currentStock: product.stock });
+                            setNewStock(product.stock);
+                          }}
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          Atualizar
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Atualizar Estoque</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div>
+                            <Label>Produto</Label>
+                            <p className="text-sm text-primary-foreground/70">{product.name}</p>
+                          </div>
+                          <div>
+                            <Label htmlFor="newStock">Novo Estoque</Label>
+                            <Input
+                              id="newStock"
+                              type="number"
+                              min="0"
+                              value={newStock}
+                              onChange={(e) => setNewStock(parseInt(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button onClick={handleUpdateStock}>
+                              Atualizar Estoque
+                            </Button>
+                            <Button variant="outline" onClick={() => setEditingStock(null)}>
+                              Cancelar
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

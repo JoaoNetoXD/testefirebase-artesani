@@ -1,4 +1,3 @@
-
 export interface Product {
   id: string;
   name: string;
@@ -24,6 +23,7 @@ export interface Category {
   slug: string;
   description?: string;
   created_at?: string;
+  product_count?: number;
 }
 
 export interface Order {
@@ -34,10 +34,13 @@ export interface Order {
   shipping_address?: any;
   payment_method?: string;
   payment_status?: string;
+  payment_intent_id?: string;
+  stripe_session_id?: string;
   created_at: string;
   updated_at?: string;
   order_items?: OrderItem[];
   customer_name?: string;
+  customer_email?: string;
 }
 
 export interface OrderItem {
@@ -47,6 +50,7 @@ export interface OrderItem {
   quantity: number;
   price: number;
   product?: Product;
+  products?: Product; // for compatibility with Supabase join
 }
 
 export interface Customer {
@@ -55,17 +59,14 @@ export interface Customer {
   email: string;
   totalSpent: number;
   orders: number;
+  orderCount: number;
   joined: string;
   avatar?: string;
+  recentOrders?: Order[];
 }
 
-export interface CartItem {
-  id: string;
-  name: string;
-  price: number;
+export interface CartItem extends Product {
   quantity: number;
-  images: string[];
-  description?: string;
 }
 
 export interface DashboardStats {
@@ -73,10 +74,6 @@ export interface DashboardStats {
   pendingOrders: number;
   totalProducts: number;
   newCustomers: number;
-}
-
-export interface CartItem extends Product {
-  quantity: number;
 }
 
 export interface User {
@@ -91,20 +88,6 @@ export interface User {
     zip: string;
     country: string;
   };
-}
-
-export interface Order {
-  id: string;
-  userId: string;
-  items: CartItem[];
-  total: number;
-  status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
-  paymentType: 'credit_card' | 'pix';
-  paymentIntentId?: string; // Stripe Payment Intent ID
-  stripeSessionId?: string; // Stripe Checkout Session ID
-  shippingAddress: User['address'];
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 // Novos tipos para Stripe

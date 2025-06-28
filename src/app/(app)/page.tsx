@@ -1,9 +1,8 @@
-
 import { ProductList } from '@/components/products/ProductList';
 import { CategoryNavigation } from '@/components/products/CategoryNavigation';
 import { Button } from "@/components/ui/button";
 import { Truck, ClipboardList, Award, ChevronDown } from "lucide-react";
-import Image from "next/legacy/image";
+import Image from "next/image";
 import Link from 'next/link';
 import { ProductService } from '@/lib/services/productService';
 import { CategoryService } from '@/lib/services/categoryService';
@@ -12,8 +11,22 @@ import type { Product, Category } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const products: Product[] = await ProductService.getAllProducts();
-  const categories: Category[] = await CategoryService.getAllCategories();
+  let products: Product[] = [];
+  let categories: Category[] = [];
+  let hasError = false;
+
+  try {
+    const [productsData, categoriesData] = await Promise.all([
+      ProductService.getAllProducts().catch(() => []),
+      CategoryService.getAllCategories().catch(() => [])
+    ]);
+    
+    products = productsData;
+    categories = categoriesData;
+  } catch (error) {
+    console.error('Erro ao carregar dados:', error);
+    hasError = true;
+  }
 
   const benefits = [
     { icon: Award, title: "Qualidade Garantida", description: "Produtos com certificação." },
@@ -127,14 +140,38 @@ export default async function HomePage() {
              Explore nossas categorias de manipulados, cosméticos e suplementos, todos com a mais alta qualidade e eficácia.
             </p>
           </div>
-          <ProductList products={products.slice(0,4)} /> {/* Animation applied via ProductCard's index prop */}
-          <div className="text-center mt-10 animate-fade-in-up" style={{ animationDelay: '500ms' }}>
-            <Link href="/products" passHref> {/* Link to all products page */}
-                 <Button size="lg" variant="outline" className="border-accent text-accent hover:bg-accent hover:text-accent-foreground rounded-full px-10 py-3 text-base">
-                    Ver todos os produtos
-                </Button>
-            </Link>
-          </div>
+          
+          {hasError ? (
+            <div className="text-center py-12 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <h3 className="text-lg font-semibold mb-2 text-red-800 dark:text-red-200">
+                Erro de Configuração
+              </h3>
+              <p className="text-red-600 dark:text-red-300 mb-4">
+                As variáveis de ambiente do Supabase não estão configuradas. 
+                Configure NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no arquivo .env.local
+              </p>
+            </div>
+          ) : products.length > 0 ? (
+            <>
+              <ProductList products={products.slice(0,4)} /> {/* Animation applied via ProductCard's index prop */}
+              <div className="text-center mt-10 animate-fade-in-up" style={{ animationDelay: '500ms' }}>
+                <Link href="/products" passHref> {/* Link to all products page */}
+                     <Button size="lg" variant="outline" className="border-accent text-accent hover:bg-accent hover:text-accent-foreground rounded-full px-10 py-3 text-base">
+                        Ver todos os produtos
+                    </Button>
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <h3 className="text-lg font-semibold mb-2">
+                Nenhum produto cadastrado
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                Configure seus produtos no painel administrativo para visualizá-los aqui.
+              </p>
+            </div>
+          )}
         </div>
       </section>
 

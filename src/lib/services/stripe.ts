@@ -13,14 +13,20 @@ function getStripe() {
   }
   
   return new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2024-12-18.acacia',
+    apiVersion: '2025-05-28.basil',
   });
 }
 
 // Inicializar Stripe no cliente
 const getStripePromise = () => {
+  if (typeof window === 'undefined') {
+    // Durante o build ou no servidor, retorna null
+    return null;
+  }
+  
   if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-    throw new Error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not defined');
+    console.warn('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not defined');
+    return null;
   }
   return loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 };

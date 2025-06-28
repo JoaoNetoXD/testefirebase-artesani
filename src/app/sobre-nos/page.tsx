@@ -2,7 +2,7 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
-import Image from "next/legacy/image";
+import Image from "next/image";
 import { Target, Eye, Gem, BadgeCheck, ShieldCheck, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -86,9 +86,10 @@ export default function SobreNosPage() {
                   <Image
                     src="https://i.imgur.com/Z9NogEk.png" 
                     alt="Dr. Guilherme Xavier - Farmacêutico Responsável na Farmácia Artesani Teresina"
-                    fill
+                    width={600}
+                    height={400}
                     sizes="(max-width: 768px) 90vw, (max-width: 1024px) 45vw, 600px"
-                    className="object-cover rounded-2xl shadow-2xl group-hover:scale-105 transition-transform duration-500 relative z-10"
+                    className="object-cover rounded-2xl shadow-2xl group-hover:scale-105 transition-transform duration-500 relative z-10 w-full h-full"
                     data-ai-hint="pharmacist portrait professional" 
                   />
                    <div className="absolute -bottom-6 -right-6 bg-gradient-to-r from-accent to-secondary text-white p-4 rounded-full shadow-2xl group-hover:scale-110 transition-transform z-20">

@@ -16,8 +16,9 @@ import { stripePromise } from '@/lib/services/stripe';
 interface PaymentFormProps {
   clientSecret: string | null;
   amount: number;
-  onSuccess: () => void;
+  onSuccess: (paymentIntentId: string) => void;
   onError: (error: string) => void;
+  paymentIntentId?: string;
 }
 
 function PaymentForm({ clientSecret, amount, onSuccess, onError }: PaymentFormProps) {
@@ -70,7 +71,7 @@ function PaymentForm({ clientSecret, amount, onSuccess, onError }: PaymentFormPr
         setError(errorMessage);
         onError(errorMessage);
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        onSuccess();
+        onSuccess(paymentIntent.id);
       } else {
         const errorMessage = paymentIntent?.status ? `Pagamento requer ação adicional: ${paymentIntent.status}` : 'Pagamento não concluído';
         setError(errorMessage);
@@ -134,12 +135,22 @@ function PaymentForm({ clientSecret, amount, onSuccess, onError }: PaymentFormPr
 
 interface StripePaymentFormProps {
   amount: number;
-  onSuccess: () => void;
+  onSuccess: (paymentIntentId: string) => void;
   onError: (error: string) => void;
+  customerInfo?: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    city: string;
+    state: string;
+    zip: string;
+  };
 }
 
-export default function StripePaymentForm({ amount, onSuccess, onError }: StripePaymentFormProps) {
+export default function StripePaymentForm({ amount, onSuccess, onError, customerInfo }: StripePaymentFormProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [isLoadingClientSecret, setIsLoadingClientSecret] = useState(true); 
 
   useEffect(() => {
@@ -161,10 +172,11 @@ export default function StripePaymentForm({ amount, onSuccess, onError }: Stripe
 
         const data = await response.json();
         
-        if (data.clientSecret) {
+        if (data.clientSecret && data.paymentIntentId) {
           setClientSecret(data.clientSecret);
+          setPaymentIntentId(data.paymentIntentId);
         } else {
-          onError('Erro ao inicializar pagamento: clientSecret não recebido.');
+          onError('Erro ao inicializar pagamento: dados incompletos.');
         }
       } catch (error: unknown) {
         console.error("Erro ao criar Payment Intent:", error);
@@ -248,6 +260,7 @@ export default function StripePaymentForm({ amount, onSuccess, onError }: Stripe
               amount={amount}
               onSuccess={onSuccess}
               onError={onError}
+              paymentIntentId={paymentIntentId || undefined}
             />
           </Elements>
         ) : (

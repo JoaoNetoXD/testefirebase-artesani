@@ -25,6 +25,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   updateUserAccount: (data: Partial<UserProfileData>) => Promise<void>;
   fetchUserProfile: (userId: string) => Promise<UserProfileData | null>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,23 +45,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!supabase || !supabaseServicesAvailable) {
       return null;
     }
+    
     try {
-      const { data, error, status } = await supabase
+      // Adicionar timeout para a query
+      const queryPromise = supabase
         .from('profiles')
         .select('name, email, role')
         .eq('id', userId)
         .single();
       
-      if (error && status !== 406) throw error;
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 8000);
+      });
+      
+      const { data, error, status } = await Promise.race([queryPromise, timeoutPromise]) as any;
+      
+      if (error && status !== 406) {
+        throw error;
+      }
       
       return data as UserProfileData | null;
 
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Erro desconhecido ao buscar perfil";
-      console.error("Erro ao buscar perfil do usuário:", message);
+      console.error("Error fetching user profile:", error);
+      
+      // Em caso de timeout ou erro, retornar um perfil básico para não travar o sistema
+      if (error instanceof Error && error.message === 'Profile fetch timeout') {
+        return {
+          name: 'Usuário',
+          email: '',
+          role: 'user' // Default role para evitar travamento
+        };
+      }
+      
       return null;
     }
-  }, []);
+  }, []); // supabase e supabaseServicesAvailable são constantes
 
   useEffect(() => {
     if (!supabase || !supabaseServicesAvailable) {
@@ -70,28 +90,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     setLoading(true);
+    
+    // Timeout de segurança para evitar loading infinito
+    const loadingTimeout = setTimeout(() => {
+      setLoading(false);
+    }, 10000); // 10 segundos
+
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      setSession(currentSession);
-      const user = currentSession?.user ?? null;
-      setCurrentUser(user);
-  
-      if (user) {
-        const profile = await fetchUserProfileInternal(user.id);
-        setCurrentUserProfile(profile);
-        setIsAdmin(profile?.role === 'admin');
-      } else {
+      try {
+        setSession(currentSession);
+        const user = currentSession?.user ?? null;
+        setCurrentUser(user);
+    
+        if (user) {
+          const profile = await fetchUserProfileInternal(user.id);
+          setCurrentUserProfile(profile);
+          const adminStatus = profile?.role === 'admin';
+          setIsAdmin(adminStatus);
+        } else {
+          setCurrentUserProfile(null);
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        console.error("Error in auth state change:", error);
+        // Em caso de erro, não deixar o loading travado
         setCurrentUserProfile(null);
         setIsAdmin(false);
+      } finally {
+        // Limpar o timeout e definir loading como false
+        clearTimeout(loadingTimeout);
+        setLoading(false);
       }
-      
-      // CORREÇÃO: Definir loading como false para todos os eventos, não apenas INITIAL_SESSION
-      setLoading(false);
     });
   
     return () => {
+      clearTimeout(loadingTimeout);
       authListener?.subscription.unsubscribe();
     };
-  }, [fetchUserProfileInternal]);
+  }, []); // Remover dependência que causa loop
 
 
   const notifySupabaseDisabled = () => {
@@ -160,19 +196,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error: unknown) {
       console.error('Erro de login:', error)
       
+      let message = "Tente novamente.";
       if (error instanceof Error) {
         // Verificar tipos específicos de erro do Supabase
         if (error.message.includes('Invalid login credentials')) {
-          setError('Email ou senha incorretos. Verifique suas credenciais.')
+          message = 'Email ou senha incorretos. Verifique suas credenciais.';
         } else if (error.message.includes('Email not confirmed')) {
-          setError('Email não confirmado. Verifique sua caixa de entrada.')
+          message = 'Email não confirmado. Verifique sua caixa de entrada.';
         } else if (error.message.includes('Too many requests')) {
-          setError('Muitas tentativas de login. Tente novamente em alguns minutos.')
+          message = 'Muitas tentativas de login. Tente novamente em alguns minutos.';
         } else {
-          setError(`Erro de autenticação: ${error.message}`)
+          message = `Erro de autenticação: ${error.message}`;
         }
       } else {
-        setError('Erro desconhecido durante o login')
+        message = 'Erro desconhecido durante o login';
       }
       console.error("Erro no login:", error);
       toast({ title: "Erro no Login", description: message, variant: "destructive" });
@@ -245,6 +282,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return fetchUserProfileInternal(userId);
   };
 
+  const refreshProfile = async () => {
+    if (!currentUser) {
+      return;
+    }
+    
+    try {
+      const profile = await fetchUserProfileInternal(currentUser.id);
+      setCurrentUserProfile(profile);
+      const adminStatus = profile?.role === 'admin';
+      setIsAdmin(adminStatus);
+    } catch (error) {
+      console.error("Error refreshing profile:", error);
+    }
+  };
+
   const value = {
     currentUser,
     currentUserProfile,
@@ -257,6 +309,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     resetPassword,
     updateUserAccount,
     fetchUserProfile,
+    refreshProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

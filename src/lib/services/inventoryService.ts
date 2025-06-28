@@ -7,7 +7,7 @@ export class InventoryService {
     console.log(`${emoji} [InventoryService] ${message}`, data || '');
   }
 
-  static async updateStock(productId: string, newStock: number, newStatus?: 'in_stock' | 'low_stock' | 'out_of_stock'): Promise<boolean> {
+  static async updateStock(productId: string, newStock: number): Promise<boolean> {
     if (!supabase) {
       this.log('error', 'Supabase client is not initialized.');
       return false;
@@ -15,18 +15,12 @@ export class InventoryService {
 
     this.log('info', `Updating stock for product ID: ${productId} to ${newStock}...`);
     
-    const updateData: { stock: number; status?: string; updated_at: string } = {
-      stock: newStock,
-      updated_at: new Date().toISOString(),
-    };
-
-    if (newStatus) {
-      updateData.status = newStatus;
-    }
-
     const { error } = await supabase
       .from('products')
-      .update(updateData)
+      .update({ 
+        stock: newStock,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', productId);
 
     if (error) {
@@ -57,12 +51,16 @@ export class InventoryService {
       return [];
     }
 
-    const products = (data || []).map(p => ({ ...p, category_name: p.category?.name || 'Sem Categoria' }));
+    const products = (data || []).map(p => ({ 
+      ...p, 
+      category_name: p.category?.name || 'Sem Categoria' 
+    }));
+    
     this.log('info', 'Successfully fetched low stock products.', products);
     return products;
   }
 
-  static async getInventoryReport(): Promise<any[]> {
+  static async getInventoryReport(): Promise<Product[]> {
     if (!supabase) {
       this.log('error', 'Supabase client is not initialized.');
       return [];
@@ -71,7 +69,7 @@ export class InventoryService {
     this.log('info', 'Generating inventory report...');
     const { data, error } = await supabase
       .from('products')
-      .select('id, name, stock, price, status, category_name')
+      .select('*, category:categories(name)')
       .eq('is_active', true)
       .order('name');
 
@@ -80,8 +78,13 @@ export class InventoryService {
       return [];
     }
     
-    this.log('info', 'Successfully generated inventory report.', data);
-    return data || [];
+    const products = (data || []).map(p => ({ 
+      ...p, 
+      category_name: p.category?.name || 'Sem Categoria' 
+    }));
+    
+    this.log('info', 'Successfully generated inventory report.', products);
+    return products;
   }
   
   static async adjustStock(productId: string, quantityChange: number): Promise<boolean> {
@@ -89,19 +92,38 @@ export class InventoryService {
       this.log('error', 'Supabase client is not initialized.');
       return false;
     }
+    
     this.log('info', `Adjusting stock for product ID: ${productId} by ${quantityChange}...`);
 
-    const { data, error } = await supabase.rpc('adjust_stock', {
-      product_id: productId,
-      quantity_change: quantityChange
-    });
+    // Primeiro buscar o estoque atual
+    const { data: currentProduct, error: fetchError } = await supabase
+      .from('products')
+      .select('stock')
+      .eq('id', productId)
+      .single();
+
+    if (fetchError) {
+      this.log('error', `Failed to fetch current stock for product ID: ${productId}.`, fetchError);
+      return false;
+    }
+
+    const newStock = Math.max(0, (currentProduct.stock || 0) + quantityChange);
+    
+    // Atualizar o estoque
+    const { error } = await supabase
+      .from('products')
+      .update({ 
+        stock: newStock,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', productId);
 
     if (error) {
-      this.log('error', `RPC Error adjusting stock for product ID: ${productId}.`, error);
+      this.log('error', `Failed to adjust stock for product ID: ${productId}.`, error);
       return false;
     }
     
-    this.log('info', `Stock adjusted successfully for product ID: ${productId}.`, data);
-    return data;
+    this.log('info', `Stock adjusted successfully for product ID: ${productId}. New stock: ${newStock}`);
+    return true;
   }
 }

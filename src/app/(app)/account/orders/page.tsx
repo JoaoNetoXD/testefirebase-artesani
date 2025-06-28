@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { OrderService } from '@/lib/services/orderService';
 import type { Order } from '@/lib/types';
-import Image from "next/legacy/image";
+import Image from "next/image";
 import Link from 'next/link';
 
 export default function OrderHistoryPage() {

@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import type { Category } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,7 @@ export function CategoryNavigation({ categories, currentCategorySlug }: Category
         </div>
       </div>
       <div className="flex flex-wrap gap-2 justify-center">
-        <Link href="/" passHref>
+        <Link href="/products" passHref>
           <Button 
             variant={!currentCategorySlug ? 'default' : 'outline'} 
             className={!currentCategorySlug 
@@ -27,18 +26,26 @@ export function CategoryNavigation({ categories, currentCategorySlug }: Category
             Todas
           </Button>
         </Link>
-        {categories.map((category) => (
-          <Link key={category.id} href={`/category/${category.slug}`} passHref>
-            <Button 
-              variant={currentCategorySlug === category.slug ? 'default' : 'outline'} 
-              className={currentCategorySlug === category.slug 
-                ? 'bg-accent text-accent-foreground hover:bg-accent/90 rounded-full' 
-                : 'border-muted text-foreground hover:bg-muted hover:text-foreground rounded-full'}
-            >
-              {category.name}
-            </Button>
-          </Link>
-        ))}
+        {categories.length > 0 ? (
+          categories.map((category) => (
+            <Link key={category.id} href={`/category/${category.slug}`} passHref>
+              <Button 
+                variant={currentCategorySlug === category.slug ? 'default' : 'outline'} 
+                className={currentCategorySlug === category.slug 
+                  ? 'bg-accent text-accent-foreground hover:bg-accent/90 rounded-full' 
+                  : 'border-muted text-foreground hover:bg-muted hover:text-foreground rounded-full'}
+              >
+                {category.name}
+              </Button>
+            </Link>
+          ))
+        ) : (
+          <div className="text-center py-4">
+            <p className="text-sm text-muted-foreground">
+              Configure suas categorias no painel administrativo
+            </p>
+          </div>
+        )}
       </div>
     </nav>
   );

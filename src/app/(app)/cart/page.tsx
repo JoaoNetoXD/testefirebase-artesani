@@ -1,6 +1,6 @@
 
 "use client";
-import Image from "next/legacy/image";
+import Image from "next/image";
 import Link from 'next/link';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';

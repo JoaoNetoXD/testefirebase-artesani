@@ -9,15 +9,20 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCart } from "@/hooks/useCart";
+import { useAuth } from "@/hooks/useAuth";
 import { CreditCard, Lock, Package, Smartphone } from "lucide-react";
-import Image from "next/legacy/image";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import StripePaymentForm from '@/components/checkout/StripePaymentForm';
+import { OrderService } from '@/lib/services/orderService';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CheckoutPage() {
   const { cart, totalPrice, clearCart } = useCart();
+  const { currentUser, loading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'checkout'>('card');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +35,19 @@ export default function CheckoutPage() {
     state: '',
     zip: '',
   });
+
+  // Verificar se o usuário está logado
+  if (!loading && !currentUser) {
+    return (
+      <div className="text-center py-12">
+        <h1 className="text-3xl font-headline mb-4">Login Necessário</h1>
+        <p className="text-muted-foreground mb-8">Você precisa estar logado para finalizar a compra.</p>
+        <Link href="/login?redirect=/checkout" passHref>
+          <Button size="lg" className="bg-primary text-primary-foreground">Fazer Login</Button>
+        </Link>
+      </div>
+    );
+  }
 
   if (cart.length === 0) {
     return (
@@ -47,12 +65,76 @@ export default function CheckoutPage() {
     setCustomerInfo(prev => ({ ...prev, [field]: value }));
   };
 
-  const handlePaymentSuccess = () => {
-    // Salvar pedido no banco de dados
-    // Limpar carrinho
-    clearCart();
-    // Redirecionar para página de sucesso
-    router.push('/success');
+  const createOrder = async (paymentIntentId?: string, stripeSessionId?: string) => {
+    if (!currentUser) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para finalizar a compra",
+        variant: "destructive"
+      });
+      router.push('/login');
+      return null;
+    }
+
+    try {
+      const orderItems = cart.map(item => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        price: item.price
+      }));
+
+      const shippingAddress = {
+        name: customerInfo.name,
+        email: customerInfo.email,
+        phone: customerInfo.phone,
+        address: customerInfo.address,
+        city: customerInfo.city,
+        state: customerInfo.state,
+        zip: customerInfo.zip
+      };
+
+      const order = await OrderService.createOrder({
+        user_id: currentUser.id,
+        total: totalPrice,
+        status: 'pending',
+        shipping_address: shippingAddress,
+        payment_method: paymentMethod === 'card' ? 'credit_card' : 'stripe_checkout',
+        payment_status: 'pending',
+        payment_intent_id: paymentIntentId,
+        stripe_session_id: stripeSessionId,
+        order_items: orderItems
+      });
+
+      if (order) {
+        return order;
+      } else {
+        throw new Error('Falha ao criar pedido');
+      }
+    } catch (error) {
+      console.error('Erro ao criar pedido:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível criar o pedido. Tente novamente.",
+        variant: "destructive"
+      });
+      return null;
+    }
+  };
+
+  const handlePaymentSuccess = async (paymentIntentId?: string) => {
+    // Criar pedido no banco de dados
+    const order = await createOrder(paymentIntentId);
+    
+    if (order) {
+      // Atualizar status do pedido para pago
+      await OrderService.updateOrderStatus(order.id, 'processing');
+      
+      // Limpar carrinho
+      clearCart();
+      
+      // Redirecionar para página de sucesso com ID do pedido
+      router.push(`/success?order=${order.id}`);
+    }
   };
 
   const handlePaymentError = (errorMessage: string) => {
@@ -65,6 +147,15 @@ export default function CheckoutPage() {
     setError(null);
 
     try {
+      // Primeiro criar o pedido
+      const order = await createOrder();
+      
+      if (!order) {
+        setError('Erro ao criar pedido');
+        setIsProcessing(false);
+        return;
+      }
+
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: {
@@ -72,17 +163,25 @@ export default function CheckoutPage() {
         },
         body: JSON.stringify({
           items: cart,
-          successUrl: `${window.location.origin}/success`,
+          successUrl: `${window.location.origin}/success?order=${order.id}`,
           cancelUrl: `${window.location.origin}/checkout`,
+          metadata: {
+            orderId: order.id,
+            userId: currentUser?.id
+          }
         }),
       });
 
       const data = await response.json();
       
-      if (data.url) {
+      if (data.url && data.sessionId) {
+        // Atualizar o pedido com o sessionId
+        await OrderService.updateOrder(order.id, { stripe_session_id: data.sessionId });
         window.location.href = data.url;
       } else {
         setError('Erro ao criar sessão de checkout');
+        // Cancelar o pedido se falhar
+        await OrderService.updateOrderStatus(order.id, 'cancelled');
       }
     } catch {
       setError('Erro ao processar checkout');
@@ -252,8 +351,9 @@ export default function CheckoutPage() {
           {paymentMethod === 'card' && isFormValid && (
             <StripePaymentForm
               amount={totalPrice}
-              onSuccess={handlePaymentSuccess}
+              onSuccess={(paymentIntentId) => handlePaymentSuccess(paymentIntentId)}
               onError={handlePaymentError}
+              customerInfo={customerInfo}
             />
           )}
 

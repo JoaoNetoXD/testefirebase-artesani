@@ -6,41 +6,49 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, Package, Home } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-
-interface OrderDetailItem {
-  name: string;
-  quantity: number;
-}
-
-interface OrderDetails {
-  id: string;
-  total: number;
-  paymentMethod: string;
-  customerName?: string;
-  items?: OrderDetailItem[];
-}
+import { OrderService } from '@/lib/services/orderService';
+import { useAuth } from '@/hooks/useAuth';
+import type { Order } from '@/lib/types';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
-  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const { currentUser } = useAuth();
+  const [orderDetails, setOrderDetails] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const paymentIntent = searchParams.get('payment_intent');
-    // const sessionId = searchParams.get('session_id'); // sessionId is available if needed
+    const fetchOrderDetails = async () => {
+      const orderId = searchParams.get('order');
+      
+      if (orderId) {
+        setLoading(true);
+        try {
+          const order = await OrderService.getOrderById(orderId);
+          if (order && order.user_id === currentUser?.id) {
+            setOrderDetails(order);
+          }
+        } catch (error) {
+          console.error('Erro ao buscar detalhes do pedido:', error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
 
-    // Simular dados do pedido - em um app real, você buscaria isso do backend ou estado global
-    // com base no payment_intent ou session_id
-    setOrderDetails({
-      id: 'ORD-' + Date.now().toString().slice(-6), // ID mais curto para exibição
-      total: parseFloat(searchParams.get('amount') || '150.00'), // Tenta pegar o valor do query param, se existir
-      paymentMethod: paymentIntent ? 'Cartão de Crédito' : 'Stripe Checkout',
-      customerName: searchParams.get('customer_name') || 'Cliente Artesani', // Simula nome do cliente
-      items: [ // Simula itens do pedido
-        { name: 'Produto Exemplo A', quantity: 1 },
-        { name: 'Produto Exemplo B', quantity: 2 },
-      ]
-    });
-  }, [searchParams]);
+    if (currentUser) {
+      fetchOrderDetails();
+    }
+  }, [searchParams, currentUser]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
@@ -58,15 +66,15 @@ function SuccessContent() {
             Obrigado pela sua compra! Seu pedido foi processado e em breve você receberá uma confirmação por email.
           </p>
           
-          {orderDetails && (
+          {orderDetails ? (
             <div className="bg-green-500/10 p-4 rounded-lg space-y-3 text-left border border-green-500/20">
               <div className="flex justify-between">
                 <span className="text-sm text-green-700">Pedido:</span>
-                <span className="text-sm font-semibold text-green-800">{orderDetails.id}</span>
+                <span className="text-sm font-semibold text-green-800">#{orderDetails.id.slice(0, 8)}</span>
               </div>
                <div className="flex justify-between">
                 <span className="text-sm text-green-700">Cliente:</span>
-                <span className="text-sm font-semibold text-green-800">{orderDetails.customerName}</span>
+                <span className="text-sm font-semibold text-green-800">{orderDetails.customer_name || 'Cliente Artesani'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-green-700">Total:</span>
@@ -74,20 +82,24 @@ function SuccessContent() {
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-green-700">Pagamento:</span>
-                <span className="text-sm font-semibold text-green-800">{orderDetails.paymentMethod}</span>
+                <span className="text-sm font-semibold text-green-800">{orderDetails.payment_method === 'credit_card' ? 'Cartão de Crédito' : 'Stripe Checkout'}</span>
               </div>
-              {orderDetails.items && orderDetails.items.length > 0 && (
+              {orderDetails.order_items && orderDetails.order_items.length > 0 && (
                 <div className="pt-1">
                   <span className="text-sm text-green-700 block mb-1">Itens:</span>
                   <ul className="list-none space-y-0.5 text-xs text-green-800/90">
-                    {orderDetails.items.map((item, index) => (
+                    {orderDetails.order_items.map((item, index) => (
                       <li key={index} className="flex justify-between">
-                        <span>{item.name} (x{item.quantity})</span>
+                        <span>{item.product?.name || 'Produto'} (x{item.quantity})</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
+            </div>
+          ) : (
+            <div className="bg-green-500/10 p-4 rounded-lg text-center border border-green-500/20">
+              <p className="text-sm text-green-700">Pedido processado com sucesso!</p>
             </div>
           )}
           

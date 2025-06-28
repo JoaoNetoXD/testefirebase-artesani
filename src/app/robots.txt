@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://artesani.com/sitemap.xml
+
+# Bloquear áreas administrativas
+Disallow: /admin/
+Disallow: /api/
+
+# Permitir produtos e categorias
+Allow: /products/
+Allow: /category/ 

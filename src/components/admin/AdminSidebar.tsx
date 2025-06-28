@@ -14,9 +14,6 @@ import {
   PlusCircle,
   Folder
 } from 'lucide-react';
-// Alterar esta linha:
-// import { Logo } from '@/components/shared/Logo';
-// Para:
 import Logo from '@/components/shared/Logo';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';

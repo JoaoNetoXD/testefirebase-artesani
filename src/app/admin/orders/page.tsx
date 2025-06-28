@@ -30,7 +30,7 @@ import Papa from 'papaparse';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import Image from "next/legacy/image";
+import Image from "next/image";
 
 const getStatusBadgeDetails = (status: string) => {
     switch (status.toLowerCase()) {
