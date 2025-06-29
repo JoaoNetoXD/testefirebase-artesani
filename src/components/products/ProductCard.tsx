@@ -1,4 +1,3 @@
-
 "use client";
 import Link from 'next/link';
 import SafeImage from "@/components/shared/SafeImage";
@@ -48,6 +47,11 @@ export function ProductCard({ product, index }: ProductCardProps) {
   const animationDelay = index ? `${index * 100}ms` : '0ms';
   const imageUrl = (product.images && product.images.length > 0) ? product.images[0] : 'https://placehold.co/600x400.png';
 
+  // Debug log
+  if (process.env.NODE_ENV === 'development') {
+    console.log('ProductCard rendering with image:', imageUrl, 'for product:', product.name);
+  }
+
   return (
     <Card 
       className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 h-full bg-card text-card-foreground animate-fade-in-up group"
@@ -58,12 +62,13 @@ export function ProductCard({ product, index }: ProductCardProps) {
           <div className="aspect-[4/3] w-full overflow-hidden rounded-t-lg">
             <SafeImage
               src={imageUrl}
-              alt={product.name}
+              alt={product.name || "Produto"}
               width={400}
               height={300}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               fallbackSrc="https://placehold.co/400x300.png"
+              priority={index === 0}
             />
           </div>
         </Link>

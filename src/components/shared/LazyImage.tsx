@@ -10,6 +10,7 @@ interface LazyImageProps {
   alt: string;
   width?: number;
   height?: number;
+  fill?: boolean;
   className?: string;
   priority?: boolean;
   placeholder?: 'blur' | 'empty';
@@ -24,122 +25,134 @@ export function LazyImage({
   alt,
   width,
   height,
+  fill = false,
   className,
   priority = false,
   placeholder = 'empty',
-  fallbackSrc,
+  fallbackSrc = 'https://placehold.co/400x300.png',
   sizes,
   onLoad,
   onError,
 }: LazyImageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState(src);
-  const imageRef = useRef<HTMLDivElement>(null);
+  const [imageSrc, setImageSrc] = useState(src);
+  const imgRef = useRef<HTMLImageElement>(null);
 
-  // Reset states when src changes
+  // Reset state when src changes
   useEffect(() => {
-    setIsLoading(true);
+    setImageSrc(src);
     setHasError(false);
-    setCurrentSrc(src);
+    setIsLoading(true);
   }, [src]);
 
   const handleLoad = () => {
     setIsLoading(false);
+    setHasError(false);
     onLoad?.();
   };
 
   const handleError = () => {
+    console.warn(`Failed to load image: ${imageSrc}`);
     setIsLoading(false);
-    setHasError(true);
     
-    if (fallbackSrc && currentSrc !== fallbackSrc) {
-      setCurrentSrc(fallbackSrc);
-      setHasError(false);
-      setIsLoading(true);
+    if (imageSrc !== fallbackSrc && fallbackSrc) {
+      setImageSrc(fallbackSrc);
+      setHasError(false); // Reset error state to try fallback
     } else {
-      onError?.();
+      setHasError(true);
     }
+    
+    onError?.();
   };
 
-  // Intersection Observer for lazy loading
-  useEffect(() => {
-    if (priority) return; // Skip lazy loading for priority images
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            // Image is in viewport, start loading
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      {
-        rootMargin: '50px', // Start loading 50px before entering viewport
-        threshold: 0.1,
-      }
-    );
-
-    if (imageRef.current) {
-      observer.observe(imageRef.current);
-    }
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [priority]);
-
-  if (hasError) {
+  // Validation for required props
+  if (!src || typeof src !== 'string') {
+    console.warn('LazyImage: src prop is required and must be a string');
     return (
-      <div
-        ref={imageRef}
-        className={cn(
-          'flex items-center justify-center bg-muted text-muted-foreground border border-border rounded-lg',
-          className
-        )}
-        style={{ width, height }}
-      >
+      <div className={cn("flex items-center justify-center bg-muted text-muted-foreground rounded-lg border", className)}>
         <div className="flex flex-col items-center gap-2 p-4">
           <ImageOff className="h-8 w-8" />
-          <p className="text-sm text-center">
-            Não foi possível carregar a imagem
-          </p>
+          <p className="text-sm">Imagem inválida</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div
-      ref={imageRef}
-      className={cn('relative overflow-hidden', className)}
-      style={{ width, height }}
-    >
-      {/* Loading skeleton */}
-      {isLoading && (
-        <div className="absolute inset-0 bg-muted animate-pulse rounded-lg" />
-      )}
+  if (!alt || typeof alt !== 'string') {
+    console.warn('LazyImage: alt prop is required for accessibility');
+  }
 
-      {/* Main image */}
+  // Show error state if image failed to load and no fallback is available
+  if (hasError && imageSrc === fallbackSrc) {
+    return (
+      <div 
+        className={cn("flex items-center justify-center bg-muted text-muted-foreground rounded-lg border", className)}
+        style={fill ? {} : { width: width || 400, height: height || 300 }}
+      >
+        <div className="flex flex-col items-center gap-2 p-4">
+          <ImageOff className="h-8 w-8" />
+          <p className="text-sm">Imagem não disponível</p>
+        </div>
+      </div>
+    );
+  }
+
+  const imageProps = {
+    ref: imgRef,
+    src: imageSrc,
+    alt: alt || 'Imagem',
+    className: cn(
+      className,
+      isLoading && 'opacity-0 transition-opacity duration-300',
+      !isLoading && 'opacity-100 transition-opacity duration-300'
+    ),
+    priority,
+    placeholder,
+    sizes,
+    onLoad: handleLoad,
+    onError: handleError,
+  };
+
+  // Handle fill prop for Next.js Image
+  if (fill) {
+    return (
       <Image
-        src={currentSrc}
-        alt={alt}
-        width={width}
-        height={height}
-        sizes={sizes}
-        priority={priority}
-        placeholder={placeholder}
-        className={cn(
-          'transition-opacity duration-300',
-          isLoading ? 'opacity-0' : 'opacity-100',
-          'w-full h-full object-cover'
-        )}
-        onLoad={handleLoad}
-        onError={handleError}
-        loading={priority ? 'eager' : 'lazy'}
+        {...imageProps}
+        fill
+        style={{ objectFit: 'cover' }}
       />
-    </div>
+    );
+  }
+
+  // Ensure width and height are valid numbers
+  const finalWidth = width && typeof width === 'number' && width > 0 ? width : 400;
+  const finalHeight = height && typeof height === 'number' && height > 0 ? height : 300;
+
+  return (
+    <Image
+      {...imageProps}
+      width={finalWidth}
+      height={finalHeight}
+    />
+  );
+}
+
+// Loading skeleton component
+export function ImageSkeleton({ 
+  className, 
+  width = 400, 
+  height = 300 
+}: { 
+  className?: string; 
+  width?: number; 
+  height?: number; 
+}) {
+  return (
+    <div 
+      className={cn("animate-pulse bg-muted rounded-lg", className)}
+      style={{ width, height }}
+    />
   );
 }
 
@@ -152,16 +165,20 @@ interface ProductImageProps {
   className?: string;
   priority?: boolean;
   sizes?: string;
+  width?: number;
+  height?: number;
 }
 
 export function ProductImage({ 
   product, 
   className, 
   priority = false,
-  sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+  sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw",
+  width = 400,
+  height = 400
 }: ProductImageProps) {
   const primaryImage = product.images?.[0];
-  const fallbackImage = '/images/product-placeholder.jpg';
+  const fallbackImage = 'https://placehold.co/400x400.png';
 
   return (
     <LazyImage
@@ -171,11 +188,13 @@ export function ProductImage({
       priority={priority}
       fallbackSrc={fallbackImage}
       sizes={sizes}
-      width={400}
-      height={400}
+      width={width}
+      height={height}
     />
   );
 }
+
+export default LazyImage;
 
 // Gallery component with lazy loading
 interface ImageGalleryProps {
