@@ -1,7 +1,7 @@
 
 "use client";
-import Image from "next/image";
 import Link from 'next/link';
+import SafeImage from "@/components/shared/SafeImage";
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -56,14 +56,14 @@ export function ProductCard({ product, index }: ProductCardProps) {
       <CardHeader className="p-0 relative">
         <Link href={`/products/${product.slug}`} passHref className="block">
           <div className="aspect-[4/3] w-full overflow-hidden rounded-t-lg">
-            <Image
+            <SafeImage
               src={imageUrl}
               alt={product.name}
               width={400}
               height={300}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              data-ai-hint="product photo"
+              fallbackSrc="https://placehold.co/400x300.png"
             />
           </div>
         </Link>

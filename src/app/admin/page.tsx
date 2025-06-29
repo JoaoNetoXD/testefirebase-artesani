@@ -10,7 +10,7 @@ import { ProductService } from '@/lib/services/productService';
 import { CustomerService } from '@/lib/services/customerService';
 import { InventoryService } from '@/lib/services/inventoryService';
 import type { Order, Product } from '@/lib/types';
-import Image from "next/image";
+import SafeImage from "@/components/shared/SafeImage";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 
@@ -215,12 +215,13 @@ export default function AdminDashboardPage() {
                         <div className="divide-y divide-primary-foreground/10">
                             {lowStockProducts.map((product) => (
                             <div key={product.id} className="flex items-center space-x-3 p-3 hover:bg-primary-foreground/10 transition-colors">
-                                <Image
+                                <SafeImage
                                 src={(product.images && product.images.length > 0) ? product.images[0] : 'https://placehold.co/48x48.png'}
                                 alt={product.name}
                                 width={48}
                                 height={48}
                                 className="rounded-md object-cover border border-primary-foreground/20"
+                                fallbackSrc="https://placehold.co/48x48.png"
                                 />
                                 <div className="flex-1">
                                 <p className="font-semibold text-sm text-white truncate">{product.name}</p>

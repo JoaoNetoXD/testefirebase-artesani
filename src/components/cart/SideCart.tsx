@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet';
 import { useCart } from '@/hooks/useCart';
-import Image from "next/image";
+import SafeImage from "@/components/shared/SafeImage";
 import Link from 'next/link';
 import { Trash2, PlusCircle, MinusCircle, ShoppingBag } from 'lucide-react';
 
@@ -43,12 +43,12 @@ export default function SideCart({ closeSheet }: SideCartProps) {
               {cart.map((item) => (
                 <div key={item.id} className="flex items-start gap-3 p-3 border rounded-lg bg-card shadow-sm">
                   <div className="relative w-20 h-20 rounded-md overflow-hidden shrink-0">
-                    <Image
+                    <SafeImage
                       src={(item.images && item.images.length > 0) ? item.images[0] : 'https://placehold.co/80x80.png'}
                       alt={item.name}
                       fill
                       className="object-cover"
-                      data-ai-hint="product thumbnail"
+                      fallbackSrc="https://placehold.co/80x80.png"
                     />
                   </div>
                   <div className="flex-grow">

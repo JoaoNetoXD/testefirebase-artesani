@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+import SafeImage from "@/components/shared/SafeImage";
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -68,14 +68,14 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
         {/* Image Gallery */}
         <div className="space-y-4">
           <div className="relative aspect-square w-full overflow-hidden rounded-lg shadow-lg border border-border">
-            <Image
+            <SafeImage
               src={selectedImage}
               alt={product.name}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-contain"
-              data-ai-hint="product photography"
               priority
+              fallbackSrc="https://placehold.co/600x600.png"
             />
           </div>
           {product.images && product.images.length > 1 && (
@@ -90,13 +90,13 @@ export function ProductDetailClientContent({ product, relatedProducts }: Product
                   onClick={() => setSelectedImage(img)}
                   aria-label={`Ver imagem ${index + 1} de ${product.name}`}
                 >
-                  <Image
+                  <SafeImage
                     src={img}
                     alt={`${product.name} - thumbnail ${index + 1}`}
                     fill
                     className="object-cover"
-                    data-ai-hint="product thumbnail"
                     sizes="100px"
+                    fallbackSrc="https://placehold.co/100x100.png"
                   />
                 </button>
               ))}

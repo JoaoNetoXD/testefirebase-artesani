@@ -1,6 +1,6 @@
 
 "use client";
-import Image from "next/image";
+import SafeImage from "@/components/shared/SafeImage";
 import Link from 'next/link';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
@@ -32,13 +32,13 @@ export default function CartPage() {
           {cart.map((item) => (
             <Card key={item.id} className="flex flex-col sm:flex-row items-center p-4 gap-4 shadow-sm">
               <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-md overflow-hidden shrink-0">
-                <Image 
+                <SafeImage 
                   src={(item.images && item.images.length > 0) ? item.images[0] : 'https://placehold.co/128x128.png'} 
                   alt={item.name} 
                   width={128} 
                   height={128} 
                   className="w-full h-full object-cover" 
-                  data-ai-hint="product thumbnail" 
+                  fallbackSrc="https://placehold.co/128x128.png"
                 />
               </div>
               <div className="flex-grow">

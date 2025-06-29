@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
 import { CreditCard, Lock, Package, Smartphone } from "lucide-react";
-import Image from "next/image";
+import SafeImage from "@/components/shared/SafeImage";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import StripePaymentForm from '@/components/checkout/StripePaymentForm';
@@ -208,12 +208,13 @@ export default function CheckoutPage() {
             {cart.map(item => (
               <div key={item.id} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
-                  <Image 
+                  <SafeImage 
                     src={(item.images && item.images.length > 0) ? item.images[0] : 'https://placehold.co/40x40.png'} 
                     alt={item.name} 
                     width={40} 
                     height={40} 
                     className="rounded" 
+                    fallbackSrc="https://placehold.co/40x40.png"
                   />
                   <span>{item.name} (x{item.quantity})</span>
                 </div>
