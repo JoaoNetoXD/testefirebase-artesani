@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { OrderService } from '@/lib/services/orderService';
 import type { Order } from '@/lib/types';
-import Image from "next/image";
+import SafeImage from "@/components/shared/SafeImage";
 import Link from 'next/link';
 
 export default function OrderHistoryPage() {
@@ -98,13 +98,13 @@ export default function OrderHistoryPage() {
                       <div key={item.id} className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg">
                         {item.products && ( // Changed from item.product to item.products to match OrderService structure
                           (<>
-                            <Image
+                            <SafeImage
                               src={(item.products.images && item.products.images.length > 0) ? item.products.images[0] : 'https://placehold.co/60x60.png'}
                               alt={item.products.name}
                               width={60}
                               height={60}
                               className="rounded object-cover"
-                              data-ai-hint="product thumbnail"
+                              fallbackSrc="https://placehold.co/60x60.png"
                             />
                             <div className="flex-1">
                               <p className="font-medium">{item.products.name}</p>

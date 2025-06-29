@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { PlusCircle, Edit, Trash2, Search, Filter, Package, Archive, ArchiveX } from 'lucide-react';
-import Image from "next/image";
+import SafeImage from "@/components/shared/SafeImage";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -218,12 +218,13 @@ export default function AdminProductsPage() {
                       return (
                       <TableRow key={product.id} className="border-b-primary-foreground/10 hover:bg-primary-foreground/5">
                           <TableCell>
-                          <Image
-                              src={product.images?.[0] || '/placeholder-product.png'}
+                          <SafeImage
+                              src={product.images?.[0] || 'https://placehold.co/50x50.png'}
                               alt={product.name}
                               width={50}
                               height={50}
                               className={`rounded-md object-cover border border-primary-foreground/20 ${!product.is_active ? 'opacity-50' : ''}`}
+                              fallbackSrc="https://placehold.co/50x50.png"
                           />
                           </TableCell>
                           <TableCell className={`font-medium max-w-[150px] sm:max-w-xs truncate ${product.is_active ? 'text-white' : 'text-primary-foreground/50'}`}>

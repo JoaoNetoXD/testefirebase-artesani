@@ -2,7 +2,7 @@ import { ProductList } from '@/components/products/ProductList';
 import { CategoryNavigation } from '@/components/products/CategoryNavigation';
 import { Button } from "@/components/ui/button";
 import { Truck, ClipboardList, Award, ChevronDown } from "lucide-react";
-import Image from "next/image";
+import SafeImage from "@/components/shared/SafeImage";
 import Link from 'next/link';
 import { ProductService } from '@/lib/services/productService';
 import { CategoryService } from '@/lib/services/categoryService';
@@ -51,25 +51,15 @@ export default async function HomePage() {
               style={{ animationDelay: '400ms' }}
             >
               <div className="relative w-full max-w-md">
-                <Image
+                <SafeImage
                   src="/images/products/3produtosincial.png"
                   alt="Produtos Artesani em destaque"
                   width={1600}
                   height={1200}
                   sizes="(max-width: 768px) 110vw, 850px"
                   className="object-contain w-full h-auto drop-shadow-none transform transition-all duration-700 hover:scale-105 scale-110"
-                  data-ai-hint="product lineup pharmacy"
                   priority
-                  style={{
-                    filter: 'drop-shadow(0 0 0 transparent)',
-                    background: 'transparent',
-                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.8) 85%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,1) 8%, rgba(0,0,0,1) 92%, transparent 100%)',
-                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.8) 85%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,1) 8%, rgba(0,0,0,1) 92%, transparent 100%)',
-                    maskComposite: 'intersect',
-                    WebkitMaskComposite: 'source-in',
-                    animation: 'float 6s ease-in-out infinite',
-                    willChange: 'transform',
-                  }}
+                  fallbackSrc="https://placehold.co/1600x1200.png"
                 />
               </div>
             </div>
@@ -107,25 +97,15 @@ export default async function HomePage() {
             style={{ animationDelay: '400ms' }}
           >
             <div className="relative w-full max-w-4xl overflow-hidden rounded-3xl md:rounded-2xl">
-              <Image
+              <SafeImage
                 src="/images/products/3produtosincial.png"
                 alt="Produtos Artesani em destaque"
                 width={1600}
                 height={1200}
                 sizes="(max-width: 768px) 130vw, (max-width: 1024px) 65vw, 850px"
                 className="object-contain w-full h-auto drop-shadow-none transform transition-all duration-700 hover:scale-105 animate-pulse-slow scale-100"
-                data-ai-hint="product lineup pharmacy"
                 priority
-                style={{
-                  filter: 'drop-shadow(0 0 0 transparent)',
-                  background: 'transparent',
-                  maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.8) 85%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,1) 8%, rgba(0,0,0,1) 92%, transparent 100%)',
-                  WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.8) 85%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,1) 8%, rgba(0,0,0,1) 92%, transparent 100%)',
-                  maskComposite: 'intersect',
-                  WebkitMaskComposite: 'source-in',
-                  animation: 'float 6s ease-in-out infinite',
-                  willChange: 'transform', // Correct fix for rendering bug
-                }}
+                fallbackSrc="https://placehold.co/1600x1200.png"
               />
             </div>
           </div>
