@@ -216,7 +216,7 @@ export default function AdminDashboardPage() {
                             {lowStockProducts.map((product) => (
                             <div key={product.id} className="flex items-center space-x-3 p-3 hover:bg-primary-foreground/10 transition-colors">
                                 <Image
-                                src={product.images[0] || '/placeholder-product.png'}
+                                src={(product.images && product.images.length > 0) ? product.images[0] : 'https://placehold.co/48x48.png'}
                                 alt={product.name}
                                 width={48}
                                 height={48}

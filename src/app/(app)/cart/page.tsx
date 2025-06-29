@@ -31,8 +31,15 @@ export default function CartPage() {
         <div className="lg:col-span-2 space-y-6">
           {cart.map((item) => (
             <Card key={item.id} className="flex flex-col sm:flex-row items-center p-4 gap-4 shadow-sm">
-              <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-md overflow-hidden shrink-0">
-                <Image src={item.images[0]} alt={item.name} fill className="object-cover" data-ai-hint="product thumbnail" />
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-md overflow-hidden shrink-0">
+                <Image 
+                  src={(item.images && item.images.length > 0) ? item.images[0] : 'https://placehold.co/128x128.png'} 
+                  alt={item.name} 
+                  width={128} 
+                  height={128} 
+                  className="w-full h-full object-cover" 
+                  data-ai-hint="product thumbnail" 
+                />
               </div>
               <div className="flex-grow">
                 <Link href={`/products/${item.slug}`} passHref>

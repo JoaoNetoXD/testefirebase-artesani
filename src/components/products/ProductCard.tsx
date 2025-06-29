@@ -55,13 +55,14 @@ export function ProductCard({ product, index }: ProductCardProps) {
     >
       <CardHeader className="p-0 relative">
         <Link href={`/products/${product.slug}`} passHref className="block">
-          <div className="aspect-[4/3] relative w-full overflow-hidden rounded-t-lg">
+          <div className="aspect-[4/3] w-full overflow-hidden rounded-t-lg">
             <Image
               src={imageUrl}
               alt={product.name}
-              fill
+              width={400}
+              height={300}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               data-ai-hint="product photo"
             />
           </div>

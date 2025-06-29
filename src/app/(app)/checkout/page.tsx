@@ -208,7 +208,13 @@ export default function CheckoutPage() {
             {cart.map(item => (
               <div key={item.id} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
-                  <Image src={item.images[0]} alt={item.name} width={40} height={40} className="rounded" />
+                  <Image 
+                    src={(item.images && item.images.length > 0) ? item.images[0] : 'https://placehold.co/40x40.png'} 
+                    alt={item.name} 
+                    width={40} 
+                    height={40} 
+                    className="rounded" 
+                  />
                   <span>{item.name} (x{item.quantity})</span>
                 </div>
                 <span>R$ {(item.price * item.quantity).toFixed(2).replace('.',',')}</span>

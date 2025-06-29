@@ -250,7 +250,7 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 pt-4">
                   {watch('images')?.map((url) => (
                     <div key={url} className="relative group aspect-square">
-                      <Image src={url} alt="Imagem existente" fill className="object-cover rounded-md border border-primary-foreground/20" />
+                      <Image src={url} alt="Imagem existente" width={150} height={150} className="w-full h-full object-cover rounded-md border border-primary-foreground/20" />
                       <Button type="button" variant="destructive" size="icon" onClick={() => removeImage(url, true)} className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
                         <Trash2 className="h-3 w-3" />
                       </Button>
@@ -258,7 +258,7 @@ export function ProductForm({ productToEdit }: ProductFormProps) {
                   ))}
                   {previews.map((previewUrl) => (
                      <div key={previewUrl} className="relative group aspect-square">
-                      <Image src={previewUrl} alt="Prévia da nova imagem" fill className="object-cover rounded-md border-2 border-secondary" />
+                      <Image src={previewUrl} alt="Prévia da nova imagem" width={150} height={150} className="w-full h-full object-cover rounded-md border-2 border-secondary" />
                       <Button type="button" variant="destructive" size="icon" onClick={() => removeImage(previewUrl, false)} className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
                          <Trash2 className="h-3 w-3" />
                       </Button>
